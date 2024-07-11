@@ -28,7 +28,7 @@ class WopiController extends ControllerBase {
 
     static function permissionDenied() {
         return new Response(
-            "Authentication failed.",
+            'Authentication failed.',
             Response::HTTP_FORBIDDEN,
             ['content-type' => 'text/plain'],
         );
@@ -45,8 +45,13 @@ class WopiController extends ControllerBase {
         $file = CoolUtils::getFileById($id);
         $mtime = date_create_immutable_from_format('U', $file->getChangedTime());
         $user = User::load($jwt_payload->uid);
-        $is_admin = in_array('administrator', $user->getRoles());
-        $is_anonymous = in_array('anonymous', $user->getRoles());
+        $permissions = CoolUtils::getUserPermissions($user);
+        $can_write = $jwt_payload->wri;
+
+        if ($can_write && $can_write != $permissions['is_collaborator']) {
+            \Drupal::logger('cool')->error('Token and user permissions do not match.');
+            return static::permissionDenied();
+        }
 
         $user_picture = $user->user_picture->entity;
         if ($user_picture) {
@@ -63,9 +68,9 @@ class WopiController extends ControllerBase {
                 'avatar' => $avatarUrl,
                 'mail' => $user->getEmail(),
             ],
-            'UserCanWrite' => $jwt_payload->wri,
-            'IsAdminUser' => $is_admin,
-            'IsAnonymousUser' => $is_anonymous,
+            'UserCanWrite' => $can_write,
+            'IsAdminUser' => $permissions['is_admin'],
+            'IsAnonymousUser' => $permissions['is_anonymous']
         ];
 
         $jsonPayload = json_encode($payload);
@@ -81,9 +86,14 @@ class WopiController extends ControllerBase {
     function wopiGetFile(string $id, Request $request) {
         $token = $request->query->get('access_token');
 
-        if (!CoolUtils::verifyTokenForId($token, $id)) {
+        $jwt_payload = CoolUtils::verifyTokenForId($token, $id);
+        if ($jwt_payload == null) {
             return static::permissionDenied();
         }
+
+        $user = User::load($jwt_payload->uid);
+        $accountSwitcher = \Drupal::service('account_switcher');
+        $accountSwitcher->switchTo($user);
 
         $file = CoolUtils::getFileById($id);
         $mimetype = $file->getMimeType();
@@ -93,6 +103,7 @@ class WopiController extends ControllerBase {
             Response::HTTP_OK,
             ['content-type' => $mimetype]
         );
+        $accountSwitcher->switchBack();
         return $response;
     }
 
@@ -112,6 +123,10 @@ class WopiController extends ControllerBase {
 
         $media = \Drupal::entityTypeManager()->getStorage('media')->load($id);
         $user = User::load($jwt_payload->uid);
+
+        $accountSwitcher = \Drupal::service('account_switcher');
+        $accountSwitcher->switchTo($user);
+
         $file = CoolUtils::getFile($media);
 
         if ($timestamp) {
@@ -177,6 +192,8 @@ class WopiController extends ControllerBase {
             Response::HTTP_OK,
             ['content-type' => 'application/json']
         );
+
+        $accountSwitcher->switchBack();
         return $response;
     }
 

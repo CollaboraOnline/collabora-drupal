@@ -14,11 +14,37 @@ namespace Drupal\collabora_online\Cool;
 use Drupal\Core\Url;
 use Drupal\file\Entity\File;
 use Drupal\media\Entity\Media;
+use Drupal\user\Entity\User;
 use Firebase\JWT\JWT;
 use Firebase\JWT\Key;
 use Drupal\collabora_online\Cool\CoolRequest;
 
 class CoolUtils {
+    /** Get the permissions for the user
+     * @paranm $user {User|AccountProxy} The user to check the roles from.
+     */
+    public static function getUserPermissions($user) {
+        $default_config = \Drupal::config('collabora_online.settings');
+        $viewer_role = $default_config->get('cool')['viewer_role'];
+        $collaborator_role = $default_config->get('cool')['collaborator_role'];
+        $administrator_role = $default_config->get('cool')['administrator_role'];
+
+        $roles = $user->getRoles();
+
+        $is_admin = in_array($administrator_role, $roles);
+        $is_collaborator = in_array($collaborator_role, $roles) || $is_admin;
+        $is_viewer = in_array($viewer_role, $roles) || $is_collaborator;
+
+        $permissions = [
+            'is_anonymous' => in_array('anonymous', $roles),
+            'is_admin' => $is_admin,
+            'is_collaborator' => $is_collaborator,
+            'is_viewer' => $is_viewer,
+        ];
+
+        return $permissions;
+    }
+
     /** Get the file from the Media entity */
     public static function getFile(Media $media) {
         $fid = $media->getSource()->getSourceFieldValue($media);

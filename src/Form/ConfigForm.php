@@ -74,6 +74,24 @@ class ConfigForm extends ConfigFormBase {
             '#default_value' => $config->get('cool')['disable_cert_check'],
         ];
 
+        $form['viewer_role'] = [
+            '#type' => 'textfield',
+            '#title' => $this->t('The user role for viewers'),
+            '#default_value' => $config->get('cool')['viewer_role'],
+        ];
+
+        $form['collaborator_role'] = [
+            '#type' => 'textfield',
+            '#title' => $this->t('The user role for collaborators'),
+            '#default_value' => $config->get('cool')['collaborator_role'],
+        ];
+
+        $form['administrator_role'] = [
+            '#type' => 'textfield',
+            '#title' => $this->t('The user role for administrators'),
+            '#default_value' => $config->get('cool')['administrator_role'],
+        ];
+
         return parent::buildForm($form, $form_state);
     }
 
@@ -89,6 +107,9 @@ class ConfigForm extends ConfigFormBase {
             ->set('cool.key_id', $form_state->getValue('key_id'))
             ->set('cool.access_token_ttl', $form_state->getValue('access_token_ttl'))
             ->set('cool.disable_cert_check', $form_state->getValue('disable_cert_check'))
+            ->set('cool.viewer_role', $form_state->getValue('viewer_role'))
+            ->set('cool.collaborator_role', $form_state->getValue('collaborator_role'))
+            ->set('cool.administrator_role', $form_state->getValue('administrator_role'))
             ->save();
 
         parent::submitForm($form, $form_state);
