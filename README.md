@@ -119,6 +119,17 @@ You also must set the viewer for this kind of media.
   _Collabora Online Preview_.
 - Click _Save_.
 
+### User permissions
+
+By default, the user role `administrator` is mapped to the Collabora
+Online administrator. This allow accessing the console.
+
+The user role `anonymous` by default disallow editing and is treated
+as anonymous user by Collabora Online.
+
+The user role `authenticated` is the default permission for
+collaboration, i.e. edit a document with Collabora Online.
+
 ### Other configuration
 
 If you need to change the accepted extensions to upload, go to

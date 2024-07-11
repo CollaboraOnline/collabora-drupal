@@ -14,11 +14,26 @@ namespace Drupal\collabora_online\Cool;
 use Drupal\Core\Url;
 use Drupal\file\Entity\File;
 use Drupal\media\Entity\Media;
+use Drupal\user\Entity\User;
 use Firebase\JWT\JWT;
 use Firebase\JWT\Key;
 use Drupal\collabora_online\Cool\CoolRequest;
 
 class CoolUtils {
+    /** Get the permissions for the user */
+    public static function getUserPermissions(User $user) {
+
+        $roles = $user->getRoles();
+
+        $permissions = [
+            'is_admin' => in_array('administrator', $roles),
+            'is_anonymous' => in_array('anonymous', $roles),
+            'is_collaborator' => in_array('authenticated', $roles)
+        ];
+
+        return $permissions;
+    }
+
     /** Get the file from the Media entity */
     public static function getFile(Media $media) {
         $fid = $media->getSource()->getSourceFieldValue($media);
