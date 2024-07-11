@@ -104,7 +104,7 @@ Login as an admin, and got to the admnistration section.
 
 - Go to _Structure_ > _Content types_
 - Find the appropriate content and click _Manage fields_.
-- Click _+ Create a new field_ (or if you alread have created one you
+- Click _+ Create a new field_ (or if you already have created one you
   can re-use one)
 - Enter a label, select _Media_, click _Continue_
 - At the bottom for _Media type_, select _Document_. Click _Save
@@ -118,6 +118,23 @@ You also must set the viewer for this kind of media.
 - In the _Field_ section, select in the _Format_ column, choose
   _Collabora Online Preview_.
 - Click _Save_.
+
+### User permissions
+
+There are three levels of permissions. _Administrator_,
+_Collaborator_, and _Viewer_, in order of most privileges to the
+least. Each lesser privilege is included in the higher level.
+_Administrator_ includes _Collaborator_, and _Collaborator_ includes
+_Viewer_.
+
+By default, the user role `administrator` is mapped to the Collabora
+Online administrator. This allow accessing the console.
+
+The user role `authenticated` is the default permission for
+collaboration, i.e. edit a document with Collabora Online.
+
+The user role `anonymous` by default disallows editing and is the
+minimal permission for viewing documents in Collabora Online.
 
 ### Other configuration
 
