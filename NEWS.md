@@ -1,3 +1,7 @@
+0.9.0-beta4 -
+
+
+
 0.9.0-beta3 - 2024-06-27
 
 - WOPI CheckFileInfo now return IsAdminUser and IsAnonymousUser
