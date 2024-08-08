@@ -55,11 +55,22 @@ class ViewerController extends ControllerBase {
             'closebutton' => 'true',
         ];
 
+        $user = \Drupal::currentUser();
+        $permissions = CoolUtils::getUserPermissions($user);
+
+        if (!$permissions['is_viewer']) {
+            $error_msg = 'Authentication failed. User roles: ' . print_r($user->getRoles(), true);
+            \Drupal::logger('cool')->error($error_msg);
+            return new Response(
+                $error_msg,
+                Response::HTTP_FORBIDDEN,
+                ['content-type' => 'text/plain']
+            );
+        }
+
         if ($edit) {
             /* Make sure that the user is authenticated if edit is true */
-            $roles = \Drupal::currentUser()->getRoles();
-            $is_authenticated = in_array('authenticated', $roles);
-            $edit = $edit && $is_authenticated;
+            $edit = $edit && $permissions->is_collaborator;
         }
 
         $render_array = CoolUtils::getViewerRender($media, $edit, $options);

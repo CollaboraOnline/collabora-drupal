@@ -121,14 +121,20 @@ You also must set the viewer for this kind of media.
 
 ### User permissions
 
+There are three levels of permissions. _Administrator_,
+_Collaborator_, and _Viewer_, in order of most privileges to the
+least. Each lesser privilege is included in the level above. So
+_Administrator_ includes _Collaborator_, and _Collaborator_ includes
+_Viewer_.
+
 By default, the user role `administrator` is mapped to the Collabora
 Online administrator. This allow accessing the console.
 
-The user role `anonymous` by default disallow editing and is treated
-as anonymous user by Collabora Online.
-
 The user role `authenticated` is the default permission for
 collaboration, i.e. edit a document with Collabora Online.
+
+The user role `anonymous` by default disallow editing and is the
+minimal permission for viewing documents in Collabora Online.
 
 ### Other configuration
 
