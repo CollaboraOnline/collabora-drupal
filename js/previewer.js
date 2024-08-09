@@ -28,8 +28,15 @@ function closePreview() {
             return;
         }
 
-        if (msg.MessageId === "UI_Close") {
+        switch (msg.MessageId) {
+        case "App_LoadingStatus":
+            if (msg.Values && msg.Values.Status == "Document_Loaded") {
+                postReady();
+            }
+            break;
+        case "UI_Close":
             closePreview();
+            break;
         }
     }
 

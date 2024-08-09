@@ -10,16 +10,14 @@
  */
 
 function loadDocument(wopiClient, wopiSrc, options = null) {
-    let needPostMessage = false;
+    let hasCloseButton = false;
     let wopiUrl = `${wopiClient}WOPISrc=${wopiSrc}`;
     if (options && options.closebutton == true) {
         wopiUrl += '&closebutton=true';
-        needPostMessage = true;
+        hasCloseButton = true;
     }
 
-    if (needPostMessage) {
-        window.addEventListener("message", receiveMessage, false);
-    }
+    window.addEventListener("message", receiveMessage.bind(null, hasCloseButton), false);
 
     let formElem = document.getElementById("collabora-submit-form");
 
@@ -35,22 +33,37 @@ function postMessage(msg) {
     document.getElementById("collabora-online-viewer").contentWindow.postMessage(JSON.stringify(msg), '*');
 }
 
-function receiveMessage(event) {
+function postReady() {
+    postMessage({ MessageId: "Host_PostmessageReady" });
+}
+
+function receiveMessage(hasCloseButton, event) {
     let msg = JSON.parse(event.data);
     if (!msg) {
         return;
     }
 
-    if (msg.MessageId === "UI_Close") {
-        if (msg.Values && msg.Values.EverModified) {
-            let reply = { MessageId: "Action_Close" };
-            postMessage(reply);
+    switch (msg.MessageId) {
+
+    case "App_LoadingStatus":
+        if (msg.Values && msg.Values.Status == "Document_Loaded") {
+            postReady();
         }
-        if (window.parent.location == window.location) {
-            history.back();
-        } else {
-            /* we send back the UI_Close message to the parent frame. */
-            window.parent.postMessage(event.data);
+        break;
+
+    case "UI_Close":
+        if (hasCloseButton) {
+            if (msg.Values && msg.Values.EverModified) {
+                let reply = { MessageId: "Action_Close" };
+                postMessage(reply);
+            }
+            if (window.parent.location == window.location) {
+                history.back();
+            } else {
+                /* we send back the UI_Close message to the parent frame. */
+                window.parent.postMessage(event.data);
+            }
         }
+        break;
     }
 }
