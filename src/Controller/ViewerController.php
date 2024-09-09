@@ -16,7 +16,6 @@ use Drupal\collabora_online\Cool\CoolUtils;
 use Drupal\Core\Controller\ControllerBase;
 use Drupal\Core\Render\RendererInterface;
 use Drupal\media\Entity\Media;
-use Symfony\Component\DependencyInjection\ContainerInterface;
 use Symfony\Component\HttpFoundation\Response;
 
 /**
@@ -25,30 +24,14 @@ use Symfony\Component\HttpFoundation\Response;
 class ViewerController extends ControllerBase {
 
   /**
-   * The renderer service.
-   *
-   * @var \Drupal\Core\Render\RendererInterface
-   */
-  private $renderer;
-
-  /**
    * The controller constructor.
    *
    * @param \Drupal\Core\Render\RendererInterface $renderer
    *   The renderer service.
    */
-  public function __construct(RendererInterface $renderer) {
-    $this->renderer = $renderer;
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public static function create(ContainerInterface $container): self {
-    return new self(
-      $container->get('renderer'),
-    );
-  }
+  public function __construct(
+    protected readonly RendererInterface $renderer,
+  ) {}
 
   /**
    * Returns a raw page for the iframe embed.
