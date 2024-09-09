@@ -44,10 +44,9 @@ class WopiController extends ControllerBase {
         $file = CoolUtils::getFileById($id);
         $mtime = date_create_immutable_from_format('U', $file->getChangedTime());
         $user = User::load($jwt_payload->uid);
-        $permissions = CoolUtils::getUserPermissions($user);
         $can_write = $jwt_payload->wri;
 
-        if ($can_write && $can_write != $permissions['is_collaborator']) {
+        if ($can_write && $can_write != $user->hasPermission('edit any media in collabora')) {
             \Drupal::logger('cool')->error('Token and user permissions do not match.');
             return static::permissionDenied();
         }
@@ -68,7 +67,7 @@ class WopiController extends ControllerBase {
                 'mail' => $user->getEmail(),
             ],
             'UserCanWrite' => $can_write,
-            'IsAdminUser' => $permissions['is_admin'],
+            'IsAdminUser' => $user->hasPermission('administer collabora instance'),
             'IsAnonymousUser' => $user->isAnonymous(),
         ];
 

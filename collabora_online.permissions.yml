@@ -1,0 +1,7 @@
+preview media in collabora:
+  title: 'Preview media in Collabora'
+edit any media in collabora:
+  title: 'Edit any media in Collabora'
+administer collabora instance:
+  title: 'Administer the Collabora instance'
+  restrict access: true
