@@ -123,9 +123,26 @@ function collabora_online_entity_operation(EntityInterface $entity) {
  * Checks access for the new media operations provided by this module.
  */
 function collabora_online_media_access(MediaInterface $media, string $operation, AccountInterface $account): AccessResultInterface {
-    $permission = match ($operation) {
-        'preview' => 'preview any media in collabora',
-        'edit' => 'edit any media in collabora',
-    };
-    return AccessResult::allowedIfHasPermission($account, $permission);
+    $type = $media->bundle();
+    switch ($operation) {
+        case 'preview in collabora':
+            return AccessResult::allowedIfHasPermission($account, "preview $type in collabora");
+
+        case 'edit in collabora':
+            if ($account->hasPermission("edit any $type in collabora")) {
+                return AccessResult::allowed()->cachePerPermissions();
+            }
+            if ($account->hasPermission("edit own $type in collabora")) {
+                // Use '==' because Drupal sometimes loads integers as strings.
+                $is_owner = ($account->id() && $account->id() == $media->getOwnerId());
+                return AccessResult::allowedIf($is_owner)
+                    ->cachePerPermissions()
+                    ->cachePerUser()
+                    ->addCacheableDependency($media);
+            }
+            return AccessResult::neutral()->cachePerPermissions();
+
+        default:
+            return AccessResult::neutral();
+    }
 }
