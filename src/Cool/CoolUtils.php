@@ -14,10 +14,8 @@ namespace Drupal\collabora_online\Cool;
 use Drupal\Core\Url;
 use Drupal\file\Entity\File;
 use Drupal\media\Entity\Media;
-use Drupal\user\Entity\User;
 use Firebase\JWT\JWT;
 use Firebase\JWT\Key;
-use Drupal\collabora_online\Cool\CoolRequest;
 
 class CoolUtils {
     /** Get the permissions for the user

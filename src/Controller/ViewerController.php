@@ -11,14 +11,12 @@
 
 namespace Drupal\collabora_online\Controller;
 
+use Drupal\collabora_online\Cool\CoolUtils;
 use Drupal\Core\Controller\ControllerBase;
 use Drupal\Core\Render\RendererInterface;
-use Drupal\collabora_online\Cool\CoolUtils;
-use Drupal\file\Entity\File;
 use Drupal\media\Entity\Media;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 use Symfony\Component\HttpFoundation\Response;
-use Symfony\Component\HttpFoundation\Request;
 
 /**
  * Provides route responses for the Collabora module.

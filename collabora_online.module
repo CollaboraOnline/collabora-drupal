@@ -9,10 +9,8 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
-use Drupal\Core\Entity\EntityInterface;
 use Drupal\collabora_online\Cool\CoolUtils;
-use Drupal\file\Entity\File;
-use Drupal\media\Entity\Media;
+use Drupal\Core\Entity\EntityInterface;
 
 /**
  * Implements hook_theme().

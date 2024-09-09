@@ -11,9 +11,9 @@
 
 namespace Drupal\collabora_online\Plugin\Field\FieldFormatter;
 
-use Drupal\Core\Field\Plugin\Field\FieldFormatter\EntityReferenceFormatterBase;
-use Drupal\Core\Field\FieldItemListInterface;
 use Drupal\collabora_online\Cool\CoolUtils;
+use Drupal\Core\Field\FieldItemListInterface;
+use Drupal\Core\Field\Plugin\Field\FieldFormatter\EntityReferenceFormatterBase;
 
 /**
  * Plugin implementation of the 'collabora_preview' formatter.

@@ -11,15 +11,14 @@
 
 namespace Drupal\collabora_online\Controller;
 
+use Drupal\collabora_online\Cool\CoolUtils;
 use Drupal\Core\Controller\ControllerBase;
 use Drupal\Core\File\FileSystemInterface;
-use Drupal\collabora_online\Cool\CoolUtils;
 use Drupal\file\Entity\File;
-use Drupal\media\Entity\Media;
 use Drupal\user\Entity\User;
 use Symfony\Component\HttpFoundation\BinaryFileResponse;
-use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpFoundation\Request;
+use Symfony\Component\HttpFoundation\Response;
 
 /**
  * Provides WOPI route responses for the Collabora module.
