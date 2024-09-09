@@ -34,7 +34,6 @@ class CoolUtils {
         $is_viewer = in_array($viewer_role, $roles) || $is_collaborator;
 
         $permissions = [
-            'is_anonymous' => in_array('anonymous', $roles),
             'is_admin' => $is_admin,
             'is_collaborator' => $is_collaborator,
             'is_viewer' => $is_viewer,

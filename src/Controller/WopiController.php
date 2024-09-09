@@ -69,7 +69,7 @@ class WopiController extends ControllerBase {
             ],
             'UserCanWrite' => $can_write,
             'IsAdminUser' => $permissions['is_admin'],
-            'IsAnonymousUser' => $permissions['is_anonymous']
+            'IsAnonymousUser' => $user->isAnonymous(),
         ];
 
         $jsonPayload = json_encode($payload);
