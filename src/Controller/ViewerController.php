@@ -53,9 +53,7 @@ class ViewerController extends ControllerBase {
             'closebutton' => 'true',
         ];
 
-        $user = \Drupal::currentUser();
-
-        if (!$user->hasPermission('preview media in collabora')) {
+        if (!$media->access('preview in collabora')) {
             $error_msg = 'Authentication failed.';
             \Drupal::logger('cool')->error($error_msg);
             return new Response(
@@ -66,7 +64,7 @@ class ViewerController extends ControllerBase {
         }
 
         /* Make sure that the user is a collaborator if edit is true */
-        $edit = $edit && $user->hasPermission('edit any media in collabora');
+        $edit = $edit && $media->access('edit in collabora');
 
         $render_array = CoolUtils::getViewerRender($media, $edit, $options);
 

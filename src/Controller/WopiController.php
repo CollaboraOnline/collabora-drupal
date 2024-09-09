@@ -41,12 +41,19 @@ class WopiController extends ControllerBase {
             return static::permissionDenied();
         }
 
+        /** @var \Drupal\media\MediaInterface|null $media */
+        $media = \Drupal::entityTypeManager()->getStorage('media')->load($id);
+        if (!$media) {
+            // @todo Use default mechanism for access denied response.
+            return static::permissionDenied();
+        }
+
         $file = CoolUtils::getFileById($id);
         $mtime = date_create_immutable_from_format('U', $file->getChangedTime());
         $user = User::load($jwt_payload->uid);
         $can_write = $jwt_payload->wri;
 
-        if ($can_write && !$user->hasPermission('edit any media in collabora')) {
+        if ($can_write && !$media->access('edit in collabora', $user)) {
             \Drupal::logger('cool')->error('Token and user permissions do not match.');
             return static::permissionDenied();
         }
