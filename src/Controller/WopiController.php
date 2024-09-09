@@ -46,7 +46,7 @@ class WopiController extends ControllerBase {
         $user = User::load($jwt_payload->uid);
         $can_write = $jwt_payload->wri;
 
-        if ($can_write && $can_write != $user->hasPermission('edit any media in collabora')) {
+        if ($can_write && !$user->hasPermission('edit any media in collabora')) {
             \Drupal::logger('cool')->error('Token and user permissions do not match.');
             return static::permissionDenied();
         }
