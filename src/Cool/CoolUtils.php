@@ -38,21 +38,6 @@ class CoolUtils {
         $media->set($name, $source);
     }
 
-    /** Get the media source entity for the file.
-     *  It will get the first in the list if there are more than one.
-     */
-    public static function getMediaSourceForFile(File $file) {
-        $media_entities = \Drupal::entityTypeManager()->getStorage('media')->loadByProperties([
-            'field_media_document' => $file->id(),
-        ]);
-        if (!is_array($media_entities)) {
-            \Drupal::logger('cool')->error('Media for file ' . $file->id() . ' not found.');
-            return NULL;
-        }
-
-        return array_pop($media_entities);
-    }
-
     /** Obtain the signing key from the key storage */
     static function getKey() {
         $default_config = \Drupal::config('collabora_online.settings');

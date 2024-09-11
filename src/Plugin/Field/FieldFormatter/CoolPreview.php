@@ -14,6 +14,7 @@ namespace Drupal\collabora_online\Plugin\Field\FieldFormatter;
 use Drupal\collabora_online\Cool\CoolUtils;
 use Drupal\Core\Field\FieldItemListInterface;
 use Drupal\Core\Field\Plugin\Field\FieldFormatter\EntityReferenceFormatterBase;
+use Drupal\media\MediaInterface;
 
 /**
  * Plugin implementation of the 'collabora_preview' formatter.
@@ -27,6 +28,7 @@ use Drupal\Core\Field\Plugin\Field\FieldFormatter\EntityReferenceFormatterBase;
  * )
  */
 class CoolPreview extends EntityReferenceFormatterBase {
+
     /**
      * {@inheritdoc}
      */
@@ -41,13 +43,13 @@ class CoolPreview extends EntityReferenceFormatterBase {
      */
     public function viewElements(FieldItemListInterface $items, $langcode) {
         $element = [];
+        $media = $items->getEntity();
+        if (!$media instanceof MediaInterface) {
+            // Entity types other than 'media' are not supported.
+            return [];
+        }
 
         foreach ($this->getEntitiesToView($items, $langcode) as $delta => $file) {
-            $media = CoolUtils::getMediaSourceForFile($file);
-            if (!$media) {
-                continue;
-            }
-
             $url = CoolUtils::getEditorUrl($media, false);
 
             $render_array = [
