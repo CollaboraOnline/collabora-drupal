@@ -12,6 +12,7 @@
 namespace Drupal\collabora_online\Plugin\Field\FieldFormatter;
 
 use Drupal\collabora_online\Cool\CoolUtils;
+use Drupal\Core\Cache\CacheableMetadata;
 use Drupal\Core\Field\FieldItemListInterface;
 use Drupal\Core\Field\Plugin\Field\FieldFormatter\EntityReferenceFormatterBase;
 use Drupal\media\MediaInterface;
@@ -47,6 +48,15 @@ class CoolPreview extends EntityReferenceFormatterBase {
         if (!$media instanceof MediaInterface) {
             // Entity types other than 'media' are not supported.
             return [];
+        }
+
+        $access_result = $media->access('preview in collabora', NULL, TRUE);
+        (new CacheableMetadata())
+            ->addCacheableDependency($access_result)
+            ->applyTo($elements);
+
+        if (!$access_result->isAllowed()) {
+            return $elements;
         }
 
         foreach ($this->getEntitiesToView($items, $langcode) as $delta => $file) {
