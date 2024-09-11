@@ -42,7 +42,7 @@ class CoolPreview extends EntityReferenceFormatterBase {
      * {@inheritdoc}
      */
     public function viewElements(FieldItemListInterface $items, $langcode) {
-        $element = [];
+        $elements = [];
         $media = $items->getEntity();
         if (!$media instanceof MediaInterface) {
             // Entity types other than 'media' are not supported.
@@ -59,8 +59,8 @@ class CoolPreview extends EntityReferenceFormatterBase {
             $render_array['#theme'] = 'collabora_online_preview';
             $render_array['#attached']['library'][] = 'collabora_online/cool.previewer';
             // Render each element as markup.
-            $element[$delta] = $render_array;
+            $elements[$delta] = $render_array;
         }
-        return $element;
+        return $elements;
     }
 }
