@@ -29,13 +29,25 @@ function getDiscovery($server) {
   $default_config = \Drupal::config('collabora_online.settings');
   $disable_checks = (bool) $default_config->get('cool')['disable_cert_check'];
 
-  $stream_context = stream_context_create([
-    'ssl' => [
-      'verify_peer'       => !$disable_checks,
-      'verify_peer_name'  => !$disable_checks,
-    ],
+  // Previously, file_get_contents() was used to fetch the discovery xml data.
+  // Depending on the environment, it can happen that file_get_contents() will
+  // hang at the end of a stream, expecting more data.
+  // With curl, this does not happen.
+  // @todo Refactor this and use e.g. Guzzle http client.
+  $curl = curl_init($discovery_url);
+  curl_setopt_array($curl, [
+    CURLOPT_RETURNTRANSFER => TRUE,
+    // Previously, when this request was done with file_get_contents() and
+    // stream_context_create(), the 'verify_peer' and 'verify_peer_name'
+    // options were set.
+    // @todo Check if an equivalent to 'verify_peer_name' exists for curl.
+    CURLOPT_SSL_VERIFYPEER => !$disable_checks,
   ]);
-  $res = file_get_contents($discovery_url, FALSE, $stream_context);
+  $res = curl_exec($curl);
+
+  if ($res === FALSE) {
+    \Drupal::logger('cool')->error('Cannot fetch from @url.', ['@url' => $discovery_url]);
+  }
   return $res;
 }
 
