@@ -84,10 +84,10 @@ function collabora_online_entity_operation(EntityInterface $entity) {
         return [];
     }
 
+    /** @var \Drupal\media\MediaInterface $media */
     $media = $entity;
 
-    $account = \Drupal::currentUser()->getAccount();
-    if (!$entity->access("view", $account)) {
+    if (!$media->access('preview in collabora')) {
         return [];
     }
 
@@ -106,7 +106,7 @@ function collabora_online_entity_operation(EntityInterface $entity) {
         ]
     ];
 
-    if (CoolUtils::canEdit($file) && $media->access("update", $account)) {
+    if (CoolUtils::canEdit($file) && $media->access('edit in collabora')) {
         $entries['collabora_online_edit'] = [
             'title' => t("Edit in Collabora Online"),
             'weight' => 50,
