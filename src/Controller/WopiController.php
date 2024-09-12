@@ -50,6 +50,8 @@ class WopiController extends ControllerBase {
 
         $file = CoolUtils::getFileById($id);
         $mtime = date_create_immutable_from_format('U', $file->getChangedTime());
+        // @todo What if the uid in the payload is not set?
+        // @todo What if $user is NULL?
         $user = User::load($jwt_payload->uid);
         $can_write = $jwt_payload->wri;
 
