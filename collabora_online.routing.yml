@@ -3,6 +3,7 @@ collabora-online.view:
   defaults:
     _controller: '\Drupal\collabora_online\Controller\ViewerController::editor'
     _title: 'Collabora Online'
+    # The controller method has a boolean parameter '$edit'.
     edit: false
   options:
     parameters:
@@ -11,13 +12,15 @@ collabora-online.view:
       edit:
         type: boolean
   requirements:
-    _permission: 'access content'
+    media: \d+
+    _entity_access: 'media.preview in collabora'
 
 collabora-online.edit:
   path: '/cool/edit/{media}'
   defaults:
     _controller: '\Drupal\collabora_online\Controller\ViewerController::editor'
     _title: 'Collabora Online'
+    # The controller method has a boolean parameter '$edit'.
     edit: true
   options:
     parameters:
@@ -26,7 +29,8 @@ collabora-online.edit:
       edit:
         type: boolean
   requirements:
-    _permission: 'access content'
+    media: \d+
+    _entity_access: 'media.edit in collabora'
 
 collabora-online.settings:
   path: '/admin/config/cool/settings'
