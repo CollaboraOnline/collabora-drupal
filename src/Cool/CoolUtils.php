@@ -203,6 +203,7 @@ class CoolUtils {
     public static function getViewerRender(Media $media, bool $can_write, $options = null) {
         $default_config = \Drupal::config('collabora_online.settings');
         $wopi_base = $default_config->get('cool')['wopi_base'];
+        $allowfullscreen = $default_config->get('cool')['allowfullscreen'];
 
         $req = new CoolRequest();
         $wopi_client = $req->getWopiClientURL();
@@ -225,6 +226,7 @@ class CoolUtils {
             '#wopiSrc' => urlencode($wopi_base . '/cool/wopi/files/' . $id),
             '#accessToken' => $access_token,
             '#accessTokenTtl' => $ttl * 1000, // It's in usec. The JWT is in sec.
+            '#allowfullscreen' => $allowfullscreen ? 'allowfullscreen' : '',
         ];
         if ($options) {
             if (isset($options['closebutton']) && $options['closebutton'] == 'true') {
