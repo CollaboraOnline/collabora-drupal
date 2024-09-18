@@ -1,0 +1,23 @@
+collabora_online.settings:
+  type: config_object
+  label: 'Settings'
+  mapping:
+    cool:
+      type: config_object
+      label: 'Cool'
+      mapping:
+        server:
+          type: uri
+          label: 'The address of the COOL server.'
+        wopi_base:
+          type: uri
+          label: 'The WOPI base'
+        key_id:
+          type: string
+          label: 'The JWT key id'
+        access_token_ttl:
+          type: integer
+          label: 'Access Token TTL'
+        disable_cert_check:
+          type: boolean
+          label: 'Disable cert checks.'

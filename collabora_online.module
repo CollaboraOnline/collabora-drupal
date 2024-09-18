@@ -9,10 +9,12 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
-use Drupal\Core\Entity\EntityInterface;
 use Drupal\collabora_online\Cool\CoolUtils;
-use Drupal\file\Entity\File;
-use Drupal\media\Entity\Media;
+use Drupal\Core\Access\AccessResult;
+use Drupal\Core\Access\AccessResultInterface;
+use Drupal\Core\Entity\EntityInterface;
+use Drupal\Core\Session\AccountInterface;
+use Drupal\media\MediaInterface;
 
 /**
  * Implements hook_theme().
@@ -82,10 +84,10 @@ function collabora_online_entity_operation(EntityInterface $entity) {
         return [];
     }
 
+    /** @var \Drupal\media\MediaInterface $media */
     $media = $entity;
 
-    $account = \Drupal::currentUser()->getAccount();
-    if (!$entity->access("view", $account)) {
+    if (!$media->access('preview in collabora')) {
         return [];
     }
 
@@ -104,7 +106,7 @@ function collabora_online_entity_operation(EntityInterface $entity) {
         ]
     ];
 
-    if (CoolUtils::canEdit($file) && $media->access("update", $account)) {
+    if (CoolUtils::canEdit($file) && $media->access('edit in collabora')) {
         $entries['collabora_online_edit'] = [
             'title' => t("Edit in Collabora Online"),
             'weight' => 50,
@@ -113,4 +115,34 @@ function collabora_online_entity_operation(EntityInterface $entity) {
     }
 
     return $entries;
+}
+
+/**
+ * Implements hook_ENTITY_TYPE_access() for 'media'.
+ *
+ * Checks access for the new media operations provided by this module.
+ */
+function collabora_online_media_access(MediaInterface $media, string $operation, AccountInterface $account): AccessResultInterface {
+    $type = $media->bundle();
+    switch ($operation) {
+        case 'preview in collabora':
+            return AccessResult::allowedIfHasPermission($account, "preview $type in collabora");
+
+        case 'edit in collabora':
+            if ($account->hasPermission("edit any $type in collabora")) {
+                return AccessResult::allowed()->cachePerPermissions();
+            }
+            if ($account->hasPermission("edit own $type in collabora")) {
+                // Use '==' because Drupal sometimes loads integers as strings.
+                $is_owner = ($account->id() && $account->id() == $media->getOwnerId());
+                return AccessResult::allowedIf($is_owner)
+                    ->cachePerPermissions()
+                    ->cachePerUser()
+                    ->addCacheableDependency($media);
+            }
+            return AccessResult::neutral()->cachePerPermissions();
+
+        default:
+            return AccessResult::neutral();
+    }
 }

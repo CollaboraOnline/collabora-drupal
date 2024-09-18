@@ -14,36 +14,10 @@ namespace Drupal\collabora_online\Cool;
 use Drupal\Core\Url;
 use Drupal\file\Entity\File;
 use Drupal\media\Entity\Media;
-use Drupal\user\Entity\User;
 use Firebase\JWT\JWT;
 use Firebase\JWT\Key;
-use Drupal\collabora_online\Cool\CoolRequest;
 
 class CoolUtils {
-    /** Get the permissions for the user
-     * @paranm $user {User|AccountProxy} The user to check the roles from.
-     */
-    public static function getUserPermissions($user) {
-        $default_config = \Drupal::config('collabora_online.settings');
-        $viewer_role = $default_config->get('cool')['viewer_role'];
-        $collaborator_role = $default_config->get('cool')['collaborator_role'];
-        $administrator_role = $default_config->get('cool')['administrator_role'];
-
-        $roles = $user->getRoles();
-
-        $is_admin = in_array($administrator_role, $roles);
-        $is_collaborator = in_array($collaborator_role, $roles) || $is_admin;
-        $is_viewer = in_array($viewer_role, $roles) || $is_collaborator;
-
-        $permissions = [
-            'is_anonymous' => in_array('anonymous', $roles),
-            'is_admin' => $is_admin,
-            'is_collaborator' => $is_collaborator,
-            'is_viewer' => $is_viewer,
-        ];
-
-        return $permissions;
-    }
 
     /** Get the file from the Media entity */
     public static function getFile(Media $media) {
@@ -62,21 +36,6 @@ class CoolUtils {
     public static function setMediaSource(Media $media, File $source) {
         $name = $media->getSource()->getSourceFieldDefinition($media->bundle->entity)->getName();
         $media->set($name, $source);
-    }
-
-    /** Get the media source entity for the file.
-     *  It will get the first in the list if there are more than one.
-     */
-    public static function getMediaSourceForFile(File $file) {
-        $media_entities = \Drupal::entityTypeManager()->getStorage('media')->loadByProperties([
-            'field_media_document' => $file->id(),
-        ]);
-        if (!is_array($media_entities)) {
-            \Drupal::logger('cool')->error('Media for file ' . $file->id() . ' not found.');
-            return NULL;
-        }
-
-        return array_pop($media_entities);
     }
 
     /** Obtain the signing key from the key storage */

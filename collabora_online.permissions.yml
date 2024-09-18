@@ -1,0 +1,6 @@
+administer collabora instance:
+  title: 'Administer the Collabora instance'
+  restrict access: true
+
+permission_callbacks:
+  - \Drupal\collabora_online\CollaboraMediaPermissions::mediaTypePermissions

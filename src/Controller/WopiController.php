@@ -11,22 +11,27 @@
 
 namespace Drupal\collabora_online\Controller;
 
+use Drupal\collabora_online\Cool\CoolUtils;
 use Drupal\Core\Controller\ControllerBase;
 use Drupal\Core\File\FileSystemInterface;
-use Drupal\collabora_online\Cool\CoolUtils;
 use Drupal\file\Entity\File;
-use Drupal\media\Entity\Media;
 use Drupal\user\Entity\User;
 use Symfony\Component\HttpFoundation\BinaryFileResponse;
-use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpFoundation\Request;
+use Symfony\Component\HttpFoundation\Response;
 
 /**
  * Provides WOPI route responses for the Collabora module.
  */
 class WopiController extends ControllerBase {
 
-    static function permissionDenied() {
+    /**
+     * Creates a failure response that is understood by Collabora.
+     *
+     * @return \Symfony\Component\HttpFoundation\Response
+     *   Response object.
+     */
+    static function permissionDenied(): Response {
         return new Response(
             'Authentication failed.',
             Response::HTTP_FORBIDDEN,
@@ -42,13 +47,20 @@ class WopiController extends ControllerBase {
             return static::permissionDenied();
         }
 
+        /** @var \Drupal\media\MediaInterface|null $media */
+        $media = \Drupal::entityTypeManager()->getStorage('media')->load($id);
+        if (!$media) {
+            return static::permissionDenied();
+        }
+
         $file = CoolUtils::getFileById($id);
         $mtime = date_create_immutable_from_format('U', $file->getChangedTime());
+        // @todo What if the uid in the payload is not set?
+        // @todo What if $user is NULL?
         $user = User::load($jwt_payload->uid);
-        $permissions = CoolUtils::getUserPermissions($user);
         $can_write = $jwt_payload->wri;
 
-        if ($can_write && $can_write != $permissions['is_collaborator']) {
+        if ($can_write && !$media->access('edit in collabora', $user)) {
             \Drupal::logger('cool')->error('Token and user permissions do not match.');
             return static::permissionDenied();
         }
@@ -69,8 +81,8 @@ class WopiController extends ControllerBase {
                 'mail' => $user->getEmail(),
             ],
             'UserCanWrite' => $can_write,
-            'IsAdminUser' => $permissions['is_admin'],
-            'IsAnonymousUser' => $permissions['is_anonymous']
+            'IsAdminUser' => $user->hasPermission('administer collabora instance'),
+            'IsAnonymousUser' => $user->isAnonymous(),
         ];
 
         $jsonPayload = json_encode($payload);

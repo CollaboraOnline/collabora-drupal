@@ -11,9 +11,11 @@
 
 namespace Drupal\collabora_online\Plugin\Field\FieldFormatter;
 
-use Drupal\Core\Field\Plugin\Field\FieldFormatter\EntityReferenceFormatterBase;
-use Drupal\Core\Field\FieldItemListInterface;
 use Drupal\collabora_online\Cool\CoolUtils;
+use Drupal\Core\Cache\CacheableMetadata;
+use Drupal\Core\Field\FieldItemListInterface;
+use Drupal\Core\Field\Plugin\Field\FieldFormatter\EntityReferenceFormatterBase;
+use Drupal\media\MediaInterface;
 
 /**
  * Plugin implementation of the 'collabora_preview' formatter.
@@ -27,6 +29,7 @@ use Drupal\collabora_online\Cool\CoolUtils;
  * )
  */
 class CoolPreview extends EntityReferenceFormatterBase {
+
     /**
      * {@inheritdoc}
      */
@@ -40,14 +43,23 @@ class CoolPreview extends EntityReferenceFormatterBase {
      * {@inheritdoc}
      */
     public function viewElements(FieldItemListInterface $items, $langcode) {
-        $element = [];
+        $elements = [];
+        $media = $items->getEntity();
+        if (!$media instanceof MediaInterface) {
+            // Entity types other than 'media' are not supported.
+            return [];
+        }
+
+        $access_result = $media->access('preview in collabora', NULL, TRUE);
+        (new CacheableMetadata())
+            ->addCacheableDependency($access_result)
+            ->applyTo($elements);
+
+        if (!$access_result->isAllowed()) {
+            return $elements;
+        }
 
         foreach ($this->getEntitiesToView($items, $langcode) as $delta => $file) {
-            $media = CoolUtils::getMediaSourceForFile($file);
-            if (!$media) {
-                continue;
-            }
-
             $url = CoolUtils::getEditorUrl($media, false);
 
             $render_array = [
@@ -57,8 +69,8 @@ class CoolPreview extends EntityReferenceFormatterBase {
             $render_array['#theme'] = 'collabora_online_preview';
             $render_array['#attached']['library'][] = 'collabora_online/cool.previewer';
             // Render each element as markup.
-            $element[$delta] = $render_array;
+            $elements[$delta] = $render_array;
         }
-        return $element;
+        return $elements;
     }
 }
