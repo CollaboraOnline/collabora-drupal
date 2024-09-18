@@ -25,7 +25,13 @@ use Symfony\Component\HttpFoundation\Response;
  */
 class WopiController extends ControllerBase {
 
-    static function permissionDenied() {
+    /**
+     * Creates a failure response that is understood by Collabora.
+     *
+     * @return \Symfony\Component\HttpFoundation\Response
+     *   Response object.
+     */
+    static function permissionDenied(): Response {
         return new Response(
             'Authentication failed.',
             Response::HTTP_FORBIDDEN,
@@ -44,7 +50,6 @@ class WopiController extends ControllerBase {
         /** @var \Drupal\media\MediaInterface|null $media */
         $media = \Drupal::entityTypeManager()->getStorage('media')->load($id);
         if (!$media) {
-            // @todo Use default mechanism for access denied response.
             return static::permissionDenied();
         }
 
