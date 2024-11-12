@@ -74,7 +74,7 @@ class CoolRequest {
    *
    * @var int
    */
-  private $error_code;
+  private $error_code = 0;
 
   const ERROR_MSG = [
     0 => 'Success',
@@ -86,13 +86,6 @@ class CoolRequest {
     103 => 'The requested mime type is not handled.',
     204 => 'Warning! You have to specify the scheme protocol too (http|https) for the server address.',
   ];
-
-  /**
-   * Constructor.
-   */
-  public function __construct() {
-    $this->error_code = 0;
-  }
 
   /**
    * Gets an error string from the last attempt to fetch the WOPI url.
