@@ -72,7 +72,7 @@ class CoolRequest {
    * @throws \Drupal\collabora_online\Exception\CollaboraNotAvailableException
    *   The client url cannot be retrieved.
    */
-  public function getWopiClientURL() {
+  public function getWopiClientURL(): string {
     $_HOST_SCHEME = isset($_SERVER['HTTPS']) ? 'https' : 'http';
     $default_config = \Drupal::config('collabora_online.settings');
     $wopi_client_server = $default_config->get('cool')['server'];
