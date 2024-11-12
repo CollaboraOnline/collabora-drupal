@@ -43,8 +43,7 @@ class CollaboraDiscovery {
    *   The client url cannot be retrieved.
    */
   public function getWopiClientURL(string $mimetype = 'text/plain'): string {
-    $wopi_client_server = $this->discoveryFetcher->getWopiClientServerBaseUrl();
-    $xml = $this->discoveryFetcher->getDiscoveryXml($wopi_client_server);
+    $xml = $this->discoveryFetcher->getDiscoveryXml();
 
     $discovery_parsed = simplexml_load_string($xml);
     if (!$discovery_parsed) {

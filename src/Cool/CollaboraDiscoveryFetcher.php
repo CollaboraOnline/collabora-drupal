@@ -47,17 +47,14 @@ class CollaboraDiscoveryFetcher {
   /**
    * Gets the contents of discovery.xml from the Collabora server.
    *
-   * @param string $server
-   *   Url of the Collabora Online server.
-   *
    * @return string
    *   The full contents of discovery.xml.
    *
    * @throws \Drupal\collabora_online\Exception\CollaboraNotAvailableException
    *   The client url cannot be retrieved.
    */
-  public function getDiscoveryXml(string $server): string {
-    $discovery_url = $server . '/hosting/discovery';
+  public function getDiscoveryXml(): string {
+    $discovery_url = $this->getWopiClientServerBaseUrl() . '/hosting/discovery';
 
     $cool_settings = $this->loadSettings();
     $disable_checks = (bool) $cool_settings['disable_cert_check'];
@@ -88,10 +85,8 @@ class CollaboraDiscoveryFetcher {
    * @throws \Drupal\collabora_online\Exception\CollaboraNotAvailableException
    *   The WOPI server url is misconfigured, or the protocol does not match
    *   that of the current Drupal request.
-   *
-   * @todo Make this protected, only call from within.
    */
-  public function getWopiClientServerBaseUrl(): string {
+  protected function getWopiClientServerBaseUrl(): string {
     $cool_settings = $this->loadSettings();
     $wopi_client_server = $cool_settings['server'];
     if (!$wopi_client_server) {
