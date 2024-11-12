@@ -15,7 +15,7 @@ namespace Drupal\collabora_online\Cool;
 use Drupal\collabora_online\Exception\CollaboraNotAvailableException;
 
 /**
- * Helper class to fetch a WOPI client url.
+ * Service to get a WOPI client url for a given MIME type.
  */
 class CollaboraDiscovery {
 
@@ -58,7 +58,8 @@ class CollaboraDiscovery {
       );
     }
 
-    $fetcher = new CollaboraDiscoveryFetcher();
+    /** @var \Drupal\collabora_online\Cool\CollaboraDiscoveryFetcher $fetcher */
+    $fetcher = \Drupal::service(CollaboraDiscoveryFetcher::class);
     $xml = $fetcher->getDiscoveryXml($wopi_client_server);
 
     $discovery_parsed = simplexml_load_string($xml);

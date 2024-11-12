@@ -27,7 +27,8 @@ class FetchClientUrlTest extends ExistingSiteBase {
    * Tests fetching the client url.
    */
   public function testFetchClientUrl(): void {
-    $discovery = new CollaboraDiscovery();
+    /** @var \Drupal\collabora_online\Cool\CollaboraDiscovery $discovery */
+    $discovery = \Drupal::service(CollaboraDiscovery::class);
     $client_url = $discovery->getWopiClientURL();
     // The protocol, domain and port are known when this test runs in the
     // docker-compose setup.
@@ -45,7 +46,8 @@ class FetchClientUrlTest extends ExistingSiteBase {
           'server' => 'httx://example.com',
         ],
       ]);
-    $discovery = new CollaboraDiscovery();
+    /** @var \Drupal\collabora_online\Cool\CollaboraDiscovery $discovery */
+    $discovery = \Drupal::service(CollaboraDiscovery::class);
 
     $this->expectException(CollaboraNotAvailableException::class);
     $this->expectExceptionMessage('Warning! You have to specify the scheme protocol too (http|https) for the server address.');

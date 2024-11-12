@@ -1,0 +1,5 @@
+services:
+  _defaults:
+    autowire: true
+  Drupal\collabora_online\Cool\CollaboraDiscoveryFetcher: { }
+  Drupal\collabora_online\Cool\CollaboraDiscovery: { }

@@ -248,7 +248,8 @@ class CoolUtils {
     $wopi_base = $default_config->get('cool')['wopi_base'];
     $allowfullscreen = $default_config->get('cool')['allowfullscreen'] ?? FALSE;
 
-    $discovery = new CollaboraDiscovery();
+    /** @var \Drupal\collabora_online\Cool\CollaboraDiscovery $discovery */
+    $discovery = \Drupal::service(CollaboraDiscovery::class);
     try {
       $wopi_client = $discovery->getWopiClientURL();
     }
