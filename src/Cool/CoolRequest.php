@@ -20,8 +20,11 @@ use Drupal\collabora_online\Exception\CollaboraNotAvailableException;
  * @param string $server
  *   Url of the Collabora Online server.
  *
- * @return string|false
- *   The full contents of discovery.xml, or FALSE on failure.
+ * @return string
+ *   The full contents of discovery.xml.
+ *
+ * @throws \Drupal\collabora_online\Exception\CollaboraNotAvailableException
+ *   The client url cannot be retrieved.
  */
 function getDiscovery($server) {
   $discovery_url = $server . '/hosting/discovery';
@@ -47,6 +50,10 @@ function getDiscovery($server) {
 
   if ($res === FALSE) {
     \Drupal::logger('cool')->error('Cannot fetch from @url.', ['@url' => $discovery_url]);
+    throw new CollaboraNotAvailableException(
+      'Not able to retrieve the discovery.xml file from the Collabora Online server.',
+      203,
+    );
   }
   return $res;
 }
@@ -92,12 +99,6 @@ class CoolRequest {
     }
 
     $discovery = getDiscovery($wopi_client_server);
-    if ($discovery === FALSE) {
-      throw new CollaboraNotAvailableException(
-        'Not able to retrieve the discovery.xml file from the Collabora Online server.',
-        203,
-      );
-    }
 
     $discovery_parsed = simplexml_load_string($discovery);
     if (!$discovery_parsed) {
