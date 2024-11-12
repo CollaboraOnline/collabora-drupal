@@ -43,31 +43,7 @@ class CollaboraDiscovery {
    *   The client url cannot be retrieved.
    */
   public function getWopiClientURL(string $mimetype = 'text/plain'): string {
-    $cool_settings = $this->discoveryFetcher->loadSettings();
-    $wopi_client_server = $cool_settings['server'];
-    if (!$wopi_client_server) {
-      throw new CollaboraNotAvailableException(
-        'Collabora Online server address is not valid.',
-        201,
-      );
-    }
-    $wopi_client_server = trim($wopi_client_server);
-
-    if (!str_starts_with($wopi_client_server, 'http')) {
-      throw new CollaboraNotAvailableException(
-        'Warning! You have to specify the scheme protocol too (http|https) for the server address.',
-        204,
-      );
-    }
-
-    $host_scheme = isset($_SERVER['HTTPS']) ? 'https' : 'http';
-    if (!str_starts_with($wopi_client_server, $host_scheme . '://')) {
-      throw new CollaboraNotAvailableException(
-        'Collabora Online server address scheme does not match the current page url scheme.',
-        202,
-      );
-    }
-
+    $wopi_client_server = $this->discoveryFetcher->getWopiClientServerBaseUrl();
     $xml = $this->discoveryFetcher->getDiscoveryXml($wopi_client_server);
 
     $discovery_parsed = simplexml_load_string($xml);

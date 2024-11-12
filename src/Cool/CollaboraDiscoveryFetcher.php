@@ -80,6 +80,47 @@ class CollaboraDiscoveryFetcher {
   }
 
   /**
+   * Loads the WOPI server url from configuration.
+   *
+   * @return string
+   *   Base URL to access the WOPI server from Drupal.
+   *
+   * @throws \Drupal\collabora_online\Exception\CollaboraNotAvailableException
+   *   The WOPI server url is misconfigured, or the protocol does not match
+   *   that of the current Drupal request.
+   *
+   * @todo Make this protected, only call from within.
+   */
+  public function getWopiClientServerBaseUrl(): string {
+    $cool_settings = $this->loadSettings();
+    $wopi_client_server = $cool_settings['server'];
+    if (!$wopi_client_server) {
+      throw new CollaboraNotAvailableException(
+        'Collabora Online server address is not valid.',
+        201,
+      );
+    }
+    $wopi_client_server = trim($wopi_client_server);
+
+    if (!str_starts_with($wopi_client_server, 'http')) {
+      throw new CollaboraNotAvailableException(
+        'Warning! You have to specify the scheme protocol too (http|https) for the server address.',
+        204,
+      );
+    }
+
+    $host_scheme = isset($_SERVER['HTTPS']) ? 'https' : 'http';
+    if (!str_starts_with($wopi_client_server, $host_scheme . '://')) {
+      throw new CollaboraNotAvailableException(
+        'Collabora Online server address scheme does not match the current page url scheme.',
+        202,
+      );
+    }
+
+    return $wopi_client_server;
+  }
+
+  /**
    * Loads the relevant configuration.
    *
    * @return array
@@ -87,10 +128,8 @@ class CollaboraDiscoveryFetcher {
    *
    * @throws \Drupal\collabora_online\Exception\CollaboraNotAvailableException
    *   The module is not configured.
-   *
-   * @todo Make this protected, only call from within.
    */
-  public function loadSettings(): array {
+  protected function loadSettings(): array {
     $cool_settings = $this->configFactory->get('collabora_online.settings')->get('cool');
     if (!$cool_settings) {
       throw new CollaboraNotAvailableException('The Collabora Online connection is not configured.');
