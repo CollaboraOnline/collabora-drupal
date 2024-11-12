@@ -251,7 +251,9 @@ class CoolUtils {
     $wopi_client = $req->getWopiClientURL();
     if ($wopi_client === NULL) {
       return [
-        'error' => t('The Collabora Online server is not available: ') . $req->errorString(),
+        'error' => t('The Collabora Online server is not available: @message', [
+          '@message' => $req->errorString(),
+        ]),
       ];
     }
 
