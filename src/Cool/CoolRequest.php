@@ -65,24 +65,6 @@ function getWopiSrcUrl($discovery_parsed, $mimetype) {
 }
 
 /**
- * Checks if a string starts with another string.
- *
- * @param string $s
- *   Haystack.
- * @param string $ss
- *   Needle.
- *
- * @return bool
- *   TRUE if $ss is a prefix of $s.
- *
- * @see str_starts_with()
- */
-function strStartsWith($s, $ss) {
-  $res = strrpos($s, $ss);
-  return !is_bool($res) && $res == 0;
-}
-
-/**
  * Helper class to fetch a WOPI client url.
  */
 class CoolRequest {
@@ -146,12 +128,12 @@ class CoolRequest {
     }
     $wopi_client_server = trim($wopi_client_server);
 
-    if (!strStartsWith($wopi_client_server, 'http')) {
+    if (!str_starts_with($wopi_client_server, 'http')) {
       $this->error_code = 204;
       return NULL;
     }
 
-    if (!strStartsWith($wopi_client_server, $_HOST_SCHEME . '://')) {
+    if (!str_starts_with($wopi_client_server, $_HOST_SCHEME . '://')) {
       $this->error_code = 202;
       return NULL;
     }
