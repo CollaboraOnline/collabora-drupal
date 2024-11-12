@@ -12,6 +12,7 @@
 
 namespace Drupal\collabora_online\Cool;
 
+use Drupal\collabora_online\Exception\CollaboraNotAvailableException;
 use Drupal\Core\Url;
 use Drupal\file\Entity\File;
 use Drupal\media\Entity\Media;
@@ -248,11 +249,13 @@ class CoolUtils {
     $allowfullscreen = $default_config->get('cool')['allowfullscreen'] ?? FALSE;
 
     $req = new CoolRequest();
-    $wopi_client = $req->getWopiClientURL();
-    if ($wopi_client === NULL) {
+    try {
+      $wopi_client = $req->getWopiClientURL();
+    }
+    catch (CollaboraNotAvailableException $e) {
       return [
         'error' => t('The Collabora Online server is not available: @message', [
-          '@message' => $req->errorString(),
+          '@message' => $e->getCode() . ': ' . $e->getMessage(),
         ]),
       ];
     }
