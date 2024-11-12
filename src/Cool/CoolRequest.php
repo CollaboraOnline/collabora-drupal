@@ -52,30 +52,6 @@ function getDiscovery($server) {
 }
 
 /**
- * Extracts a WOPI url from the parsed discovery.xml.
- *
- * @param \SimpleXMLElement|null|false $discovery_parsed
- *   Parsed contents from discovery.xml from the Collabora server.
- *   Currently, NULL or FALSE are supported too, but lead to NULL return value.
- * @param string $mimetype
- *   MIME type for which to fetch the WOPI url. E.g. 'text/plain'.
- *
- * @return mixed|null
- *   WOPI url as configured for this MIME type in discovery.xml, or NULL if none
- *   was found for the given MIME type.
- */
-function getWopiSrcUrl($discovery_parsed, $mimetype) {
-  if ($discovery_parsed === NULL || $discovery_parsed == FALSE) {
-    return NULL;
-  }
-  $result = $discovery_parsed->xpath(sprintf('/wopi-discovery/net-zone/app[@name=\'%s\']/action', $mimetype));
-  if ($result && count($result) > 0) {
-    return $result[0]['urlsrc'];
-  }
-  return NULL;
-}
-
-/**
  * Helper class to fetch a WOPI client url.
  */
 class CoolRequest {
@@ -131,15 +107,15 @@ class CoolRequest {
       );
     }
 
-    $wopi_src = strval(getWopiSrcUrl($discovery_parsed, 'text/plain')[0]);
-    if (!$wopi_src) {
+    $result = $discovery_parsed->xpath(sprintf('/wopi-discovery/net-zone/app[@name=\'%s\']/action', 'text/plain'));
+    if (empty($result[0]['urlsrc'][0])) {
       throw new CollaboraNotAvailableException(
         'The requested mime type is not handled.',
         103,
       );
     }
 
-    return $wopi_src;
+    return (string) $result[0]['urlsrc'][0];
   }
 
 }
