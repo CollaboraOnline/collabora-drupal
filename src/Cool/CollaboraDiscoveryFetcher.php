@@ -66,7 +66,12 @@ class CollaboraDiscoveryFetcher {
       $xml = $response->getBody()->getContents();
     }
     catch (ClientExceptionInterface $e) {
-      $this->logger->error('Cannot fetch from @url.', ['@url' => $discovery_url]);
+      // The backtrace of a client exception is typically not very
+      // interesting. Just log the message.
+      $this->logger->error("Failed to fetch from '@url': @message.", [
+        '@url' => $discovery_url,
+        '@message' => $e->getMessage(),
+      ]);
       throw new CollaboraNotAvailableException(
         'Not able to retrieve the discovery.xml file from the Collabora Online server.',
         203,
