@@ -15,8 +15,8 @@ declare(strict_types=1);
 namespace Drupal\collabora_online\Controller;
 
 use Drupal\collabora_online\Cool\CollaboraDiscoveryInterface;
-use Drupal\collabora_online\Cool\CoolUtils;
 use Drupal\collabora_online\Exception\CollaboraNotAvailableException;
+use Drupal\collabora_online\WopiTokenManager;
 use Drupal\Core\Controller\ControllerBase;
 use Drupal\Core\Render\RendererInterface;
 use Drupal\Core\Utility\Error;
@@ -30,15 +30,18 @@ use Symfony\Component\HttpFoundation\Response;
 class ViewerController extends ControllerBase {
 
   /**
-   * The controller constructor.
+   * Constructor.
    *
    * @param \Drupal\collabora_online\Cool\CollaboraDiscoveryInterface $discovery
    *   Service to fetch a WOPI client URL.
+   * @param \Drupal\collabora_online\WopiTokenManager $tokenManager
+   *   Service to manage the JWT token.
    * @param \Drupal\Core\Render\RendererInterface $renderer
    *   The renderer service.
    */
   public function __construct(
     protected readonly CollaboraDiscoveryInterface $discovery,
+    protected readonly WopiTokenManager $tokenManager,
     protected readonly RendererInterface $renderer,
   ) {}
 
@@ -127,11 +130,11 @@ class ViewerController extends ControllerBase {
 
     $id = $media->id();
 
-    $ttl = CoolUtils::getAccessTokenTtl();
+    $ttl = $this->tokenManager->getAccessTokenTtl();
     if ($ttl == 0) {
       $ttl = 86400;
     }
-    $access_token = CoolUtils::tokenForFileId($id, $ttl, $can_write);
+    $access_token = $this->tokenManager->tokenForFileId($id, $ttl, $can_write);
 
     $render_array = [
       '#wopiClient' => $wopi_client,
