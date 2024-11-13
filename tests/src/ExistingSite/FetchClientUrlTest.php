@@ -50,7 +50,7 @@ class FetchClientUrlTest extends ExistingSiteBase {
     $discovery = \Drupal::service(CollaboraDiscovery::class);
 
     $this->expectException(CollaboraNotAvailableException::class);
-    $this->expectExceptionMessage('Warning! You have to specify the scheme protocol too (http|https) for the server address.');
+    $this->expectExceptionMessage("The configured Collabora Online server address must begin with 'http://' or 'https://'. Found 'httx://example.com'.");
     $this->expectExceptionCode(204);
 
     $discovery->getWopiClientURL();

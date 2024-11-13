@@ -91,7 +91,7 @@ class CollaboraDiscoveryFetcher {
     $wopi_client_server = $cool_settings['server'] ?? NULL;
     if (!$wopi_client_server) {
       throw new CollaboraNotAvailableException(
-        'Collabora Online server address is not valid.',
+        'The configured Collabora Online server address is empty.',
         201,
       );
     }
@@ -99,7 +99,10 @@ class CollaboraDiscoveryFetcher {
 
     if (!str_starts_with($wopi_client_server, 'http://') && !str_starts_with($wopi_client_server, 'https://')) {
       throw new CollaboraNotAvailableException(
-        'Warning! You have to specify the scheme protocol too (http|https) for the server address.',
+        sprintf(
+          "The configured Collabora Online server address must begin with 'http://' or 'https://'. Found '%s'.",
+          $wopi_client_server,
+        ),
         204,
       );
     }
@@ -107,7 +110,11 @@ class CollaboraDiscoveryFetcher {
     $host_scheme = isset($_SERVER['HTTPS']) ? 'https' : 'http';
     if (!str_starts_with($wopi_client_server, $host_scheme . '://')) {
       throw new CollaboraNotAvailableException(
-        'Collabora Online server address scheme does not match the current page url scheme.',
+        sprintf(
+          "The url scheme '%s' of the current request does not match the url scheme of the configured Collabora Online server address '%s'.",
+          $host_scheme,
+          $wopi_client_server,
+        ),
         202,
       );
     }
