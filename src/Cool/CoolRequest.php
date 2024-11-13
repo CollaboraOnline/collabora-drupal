@@ -27,9 +27,6 @@ function getDiscovery($server) {
   $discovery_url = $server . '/hosting/discovery';
 
   $default_config = \Drupal::config('collabora_online.settings');
-  if ($default_config === NULL) {
-    return FALSE;
-  }
   $disable_checks = (bool) $default_config->get('cool')['disable_cert_check'];
 
   $stream_context = stream_context_create([
