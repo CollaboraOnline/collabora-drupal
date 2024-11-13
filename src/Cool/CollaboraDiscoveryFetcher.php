@@ -57,7 +57,7 @@ class CollaboraDiscoveryFetcher {
     $discovery_url = $this->getWopiClientServerBaseUrl() . '/hosting/discovery';
 
     $cool_settings = $this->loadSettings();
-    $disable_checks = (bool) $cool_settings['disable_cert_check'];
+    $disable_checks = !empty($cool_settings['disable_cert_check']);
 
     try {
       $response = $this->httpClient->get($discovery_url, [
@@ -88,7 +88,7 @@ class CollaboraDiscoveryFetcher {
    */
   protected function getWopiClientServerBaseUrl(): string {
     $cool_settings = $this->loadSettings();
-    $wopi_client_server = $cool_settings['server'];
+    $wopi_client_server = $cool_settings['server'] ?? NULL;
     if (!$wopi_client_server) {
       throw new CollaboraNotAvailableException(
         'Collabora Online server address is not valid.',
