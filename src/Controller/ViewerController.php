@@ -18,6 +18,7 @@ use Drupal\collabora_online\Exception\CollaboraNotAvailableException;
 use Drupal\Core\Controller\ControllerBase;
 use Drupal\Core\Render\RendererInterface;
 use Drupal\media\Entity\Media;
+use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 
 /**
@@ -43,6 +44,8 @@ class ViewerController extends ControllerBase {
    *
    * @param \Drupal\media\Entity\Media $media
    *   Media entity.
+   * @param \Symfony\Component\HttpFoundation\Request $request
+   *   The incoming request.
    * @param bool $edit
    *   TRUE to open Collabora Online in edit mode.
    *   FALSE to open Collabora Online in readonly mode.
@@ -50,7 +53,7 @@ class ViewerController extends ControllerBase {
    * @return \Symfony\Component\HttpFoundation\Response
    *   Response suitable for iframe, without the usual page decorations.
    */
-  public function editor(Media $media, $edit = FALSE) {
+  public function editor(Media $media, Request $request, $edit = FALSE) {
     $options = [
       'closebutton' => 'true',
     ];
@@ -68,6 +71,22 @@ class ViewerController extends ControllerBase {
       $this->getLogger('cool')->error($error_msg);
       return new Response(
         $error_msg,
+        Response::HTTP_BAD_REQUEST,
+        ['content-type' => 'text/plain'],
+      );
+    }
+
+    $current_request_scheme = $request->getScheme();
+    if (!str_starts_with($wopi_client_url, $current_request_scheme . '://')) {
+      $this->getLogger('cool')->error($this->t(
+        "The current request uses '@current_request_scheme' url scheme, but the Collabora client url is '@wopi_client_url'.",
+        [
+          '@current_request_scheme' => $current_request_scheme,
+          '@wopi_client_url' => $wopi_client_url,
+        ],
+      ));
+      return new Response(
+        (string) $this->t('Viewer error: Protocol mismatch.'),
         Response::HTTP_BAD_REQUEST,
         ['content-type' => 'text/plain'],
       );

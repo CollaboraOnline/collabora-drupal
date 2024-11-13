@@ -112,18 +112,6 @@ class CollaboraDiscoveryFetcher {
       );
     }
 
-    $host_scheme = isset($_SERVER['HTTPS']) ? 'https' : 'http';
-    if (!str_starts_with($wopi_client_server, $host_scheme . '://')) {
-      throw new CollaboraNotAvailableException(
-        sprintf(
-          "The url scheme '%s' of the current request does not match the url scheme of the configured Collabora Online server address '%s'.",
-          $host_scheme,
-          $wopi_client_server,
-        ),
-        202,
-      );
-    }
-
     return $wopi_client_server;
   }
 
