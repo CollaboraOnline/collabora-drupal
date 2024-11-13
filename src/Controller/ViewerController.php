@@ -92,7 +92,7 @@ class ViewerController extends ControllerBase {
       );
     }
 
-    $render_array = CoolUtils::getViewerRender($media, $wopi_client_url, $edit, $options);
+    $render_array = $this->getViewerRender($media, $wopi_client_url, $edit, $options);
 
     $render_array['#theme'] = 'collabora_online_full';
     $render_array['#attached']['library'][] = 'collabora_online/cool.frame';
@@ -101,6 +101,53 @@ class ViewerController extends ControllerBase {
     $response->setContent((string) $this->renderer->renderRoot($render_array));
 
     return $response;
+  }
+
+  /**
+   * Gets a render array for a cool viewer.
+   *
+   * @param \Drupal\media\Entity\Media $media
+   *   The media entity to view / edit.
+   * @param string $wopi_client
+   *   The WOPI client url.
+   * @param bool $can_write
+   *   Whether this is a viewer (false) or an edit (true). Permissions will
+   *   also be checked.
+   * @param array{closebutton: bool} $options
+   *   Options for the renderer. Current values:
+   *     - "closebutton" if "true" will add a close box. (see COOL SDK)
+   *
+   * @return array
+   *   A stub render element.
+   */
+  protected function getViewerRender(Media $media, string $wopi_client, bool $can_write, $options = NULL) {
+    $default_config = \Drupal::config('collabora_online.settings');
+    $wopi_base = $default_config->get('cool')['wopi_base'];
+    $allowfullscreen = $default_config->get('cool')['allowfullscreen'] ?? FALSE;
+
+    $id = $media->id();
+
+    $ttl = CoolUtils::getAccessTokenTtl();
+    if ($ttl == 0) {
+      $ttl = 86400;
+    }
+    $access_token = CoolUtils::tokenForFileId($id, $ttl, $can_write);
+
+    $render_array = [
+      '#wopiClient' => $wopi_client,
+      '#wopiSrc' => urlencode($wopi_base . '/cool/wopi/files/' . $id),
+      '#accessToken' => $access_token,
+      // It's in usec. The JWT is in sec.
+      '#accessTokenTtl' => $ttl * 1000,
+      '#allowfullscreen' => $allowfullscreen ? 'allowfullscreen' : '',
+    ];
+    if ($options) {
+      if (isset($options['closebutton']) && $options['closebutton'] == 'true') {
+        $render_array['#closebutton'] = 'true';
+      }
+    }
+
+    return $render_array;
   }
 
 }
