@@ -26,7 +26,7 @@ use Drupal\collabora_online\Exception\CollaboraNotAvailableException;
  * @throws \Drupal\collabora_online\Exception\CollaboraNotAvailableException
  *   The client url cannot be retrieved.
  */
-function getDiscovery(string $server): string {
+function getDiscoveryXml(string $server): string {
   $discovery_url = $server . '/hosting/discovery';
 
   $cool_settings = \Drupal::config('collabora_online.settings')->get('cool');
@@ -46,16 +46,16 @@ function getDiscovery(string $server): string {
     // @todo Check if an equivalent to 'verify_peer_name' exists for curl.
     CURLOPT_SSL_VERIFYPEER => !$disable_checks,
   ]);
-  $res = curl_exec($curl);
+  $xml = curl_exec($curl);
 
-  if ($res === FALSE) {
+  if ($xml === FALSE) {
     \Drupal::logger('cool')->error('Cannot fetch from @url.', ['@url' => $discovery_url]);
     throw new CollaboraNotAvailableException(
       'Not able to retrieve the discovery.xml file from the Collabora Online server.',
       203,
     );
   }
-  return $res;
+  return $xml;
 }
 
 /**
@@ -102,9 +102,9 @@ class CoolRequest {
       );
     }
 
-    $discovery = getDiscovery($wopi_client_server);
+    $xml = getDiscoveryXml($wopi_client_server);
 
-    $discovery_parsed = simplexml_load_string($discovery);
+    $discovery_parsed = simplexml_load_string($xml);
     if (!$discovery_parsed) {
       throw new CollaboraNotAvailableException(
         'The retrieved discovery.xml file is not a valid XML file.',
