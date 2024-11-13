@@ -29,8 +29,8 @@ use Drupal\collabora_online\Exception\CollaboraNotAvailableException;
 function getDiscovery(string $server): string {
   $discovery_url = $server . '/hosting/discovery';
 
-  $default_config = \Drupal::config('collabora_online.settings');
-  $disable_checks = (bool) $default_config->get('cool')['disable_cert_check'];
+  $cool_settings = \Drupal::config('collabora_online.settings')->get('cool');
+  $disable_checks = (bool) $cool_settings['disable_cert_check'];
 
   // Previously, file_get_contents() was used to fetch the discovery xml data.
   // Depending on the environment, it can happen that file_get_contents() will
@@ -77,8 +77,8 @@ class CoolRequest {
    *   The client url cannot be retrieved.
    */
   public function getWopiClientURL(string $mimetype = 'text/plain'): string {
-    $default_config = \Drupal::config('collabora_online.settings');
-    $wopi_client_server = $default_config->get('cool')['server'];
+    $cool_settings = \Drupal::config('collabora_online.settings')->get('cool');
+    $wopi_client_server = $cool_settings['server'];
     if (!$wopi_client_server) {
       throw new CollaboraNotAvailableException(
         'Collabora Online server address is not valid.',
