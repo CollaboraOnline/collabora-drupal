@@ -12,7 +12,6 @@
 
 namespace Drupal\collabora_online\Cool;
 
-use Drupal\collabora_online\Exception\CollaboraNotAvailableException;
 use Drupal\Core\Url;
 use Drupal\file\Entity\File;
 use Drupal\media\Entity\Media;
@@ -233,6 +232,8 @@ class CoolUtils {
    *
    * @param \Drupal\media\Entity\Media $media
    *   The media entity to view / edit.
+   * @param string $wopi_client
+   *   The WOPI client url.
    * @param bool $can_write
    *   Whether this is a viewer (false) or an edit (true). Permissions will
    *   also be checked.
@@ -243,23 +244,10 @@ class CoolUtils {
    * @return array|array{error: string}
    *   A stub render element array, or an array with an error on failure.
    */
-  public static function getViewerRender(Media $media, bool $can_write, $options = NULL) {
+  public static function getViewerRender(Media $media, string $wopi_client, bool $can_write, $options = NULL) {
     $default_config = \Drupal::config('collabora_online.settings');
     $wopi_base = $default_config->get('cool')['wopi_base'];
     $allowfullscreen = $default_config->get('cool')['allowfullscreen'] ?? FALSE;
-
-    /** @var \Drupal\collabora_online\Cool\CollaboraDiscovery $discovery */
-    $discovery = \Drupal::service(CollaboraDiscovery::class);
-    try {
-      $wopi_client = $discovery->getWopiClientURL();
-    }
-    catch (CollaboraNotAvailableException $e) {
-      return [
-        'error' => t('The Collabora Online server is not available: @message', [
-          '@message' => $e->getCode() . ': ' . $e->getMessage(),
-        ]),
-      ];
-    }
 
     $id = $media->id();
 
