@@ -120,18 +120,18 @@ class ViewerController extends ControllerBase {
 
     $id = $media->id();
 
-    $ttl = $this->jwtTranscoder->getAccessTokenTtl();
-    if ($ttl == 0) {
-      $ttl = 86400;
+    $expire_timestamp = $this->jwtTranscoder->getExpireTimestamp();
+    if ($expire_timestamp == 0) {
+      $expire_timestamp = 86400;
     }
-    $access_token = $this->jwtTranscoder->tokenForFileId($id, $ttl, $can_write);
+    $access_token = $this->jwtTranscoder->tokenForFileId($id, $expire_timestamp, $can_write);
 
     $render_array = [
       '#wopiClient' => $wopi_client,
       '#wopiSrc' => urlencode($wopi_base . '/cool/wopi/files/' . $id),
       '#accessToken' => $access_token,
-      // It's in usec. The JWT is in sec.
-      '#accessTokenTtl' => $ttl * 1000,
+      // Convert to milliseconds.
+      '#accessTokenTtl' => $expire_timestamp * 1000,
       '#allowfullscreen' => $allowfullscreen ? 'allowfullscreen' : '',
     ];
     if ($options) {
