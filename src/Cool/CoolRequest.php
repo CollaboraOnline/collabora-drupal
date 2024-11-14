@@ -66,13 +66,17 @@ class CoolRequest {
   /**
    * Gets the URL for the WOPI client.
    *
+   * @param string $mimetype
+   *   Mime type for which to get the WOPI client url.
+   *   This refers to config entries in the discovery.xml file.
+   *
    * @return string
    *   The WOPI client url.
    *
    * @throws \Drupal\collabora_online\Exception\CollaboraNotAvailableException
    *   The client url cannot be retrieved.
    */
-  public function getWopiClientURL(): string {
+  public function getWopiClientURL(string $mimetype = 'text/plain'): string {
     $default_config = \Drupal::config('collabora_online.settings');
     $wopi_client_server = $default_config->get('cool')['server'];
     if (!$wopi_client_server) {
@@ -108,7 +112,7 @@ class CoolRequest {
       );
     }
 
-    $result = $discovery_parsed->xpath(sprintf('/wopi-discovery/net-zone/app[@name=\'%s\']/action', 'text/plain'));
+    $result = $discovery_parsed->xpath(sprintf('/wopi-discovery/net-zone/app[@name=\'%s\']/action', $mimetype));
     if (empty($result[0]['urlsrc'][0])) {
       throw new CollaboraNotAvailableException(
         'The requested mime type is not handled.',
