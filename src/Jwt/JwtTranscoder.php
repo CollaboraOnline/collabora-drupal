@@ -87,19 +87,19 @@ class JwtTranscoder {
    *
    * @param int|string $id
    *   Media id, which could be in string form like '123'.
-   * @param int $ttl
-   *   Access token TTL in seconds.
+   * @param int|float $expire_timestamp
+   *   Expiration timestamp, in seconds.
    * @param bool $can_write
    *   TRUE if the token is for an editor in write/edit mode.
    *
    * @return string
    *   The access token.
    */
-  public function tokenForFileId($id, $ttl, $can_write = FALSE) {
+  public function tokenForFileId($id, $expire_timestamp, $can_write = FALSE) {
     $payload = [
       "fid" => $id,
       "uid" => $this->currentUser->id(),
-      "exp" => $ttl,
+      "exp" => $expire_timestamp,
       "wri" => $can_write,
     ];
     $key = $this->getKey();
@@ -109,16 +109,16 @@ class JwtTranscoder {
   }
 
   /**
-   * Gets the TTL of the token in seconds, from the EPOCH.
+   * Gets a token expiration timestamp based on the configured TTL.
    *
-   * @return int
-   *   Token TTL in seconds.
+   * @return float
+   *   Expiration timestamp in seconds, with millisecond accuracy.
    */
   public function getAccessTokenTtl() {
     $default_config = $this->configFactory->get('collabora_online.settings');
-    $ttl = $default_config->get('cool')['access_token_ttl'];
+    $ttl_seconds = $default_config->get('cool')['access_token_ttl'];
 
-    return gettimeofday(TRUE) + $ttl;
+    return gettimeofday(TRUE) + $ttl_seconds;
   }
 
   /**
