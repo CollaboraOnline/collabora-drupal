@@ -121,7 +121,7 @@ class ViewerController extends ControllerBase {
    *   A stub render element.
    */
   protected function getViewerRender(MediaInterface $media, string $wopi_client, bool $can_write, $options = NULL) {
-    $default_config = \Drupal::config('collabora_online.settings');
+    $default_config = $this->config('collabora_online.settings');
     $wopi_base = $default_config->get('cool')['wopi_base'];
     $allowfullscreen = $default_config->get('cool')['allowfullscreen'] ?? FALSE;
 
