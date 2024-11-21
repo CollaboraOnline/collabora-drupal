@@ -17,6 +17,7 @@ use Drupal\collabora_online\Cool\CoolUtils;
 use Drupal\collabora_online\Exception\CollaboraNotAvailableException;
 use Drupal\Core\Controller\ControllerBase;
 use Drupal\Core\Render\RendererInterface;
+use Drupal\Core\Utility\Error;
 use Drupal\media\Entity\Media;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
@@ -62,15 +63,12 @@ class ViewerController extends ControllerBase {
       $wopi_client_url = $this->discovery->getWopiClientURL();
     }
     catch (CollaboraNotAvailableException $e) {
-      $error_msg = $this->t('The Collabora Online server is not available: @message', [
-        '@message' => $e->getCode() . ': ' . $e->getMessage(),
-      ]);
-      $error_msg = (string) $this->t('Viewer error: @message', [
-        '@message' => $error_msg,
-      ]);
-      $this->getLogger('cool')->error($error_msg);
+      $this->getLogger('cool')->warning(
+        "Collabora Online is not available.<br>\n" . Error::DEFAULT_ERROR_MESSAGE,
+        Error::decodeException($e) + [],
+      );
       return new Response(
-        $error_msg,
+        (string) $this->t('The Collabora Online editor/viewer is not available.'),
         Response::HTTP_BAD_REQUEST,
         ['content-type' => 'text/plain'],
       );
