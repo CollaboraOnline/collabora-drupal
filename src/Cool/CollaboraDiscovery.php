@@ -35,12 +35,7 @@ class CollaboraDiscovery implements CollaboraDiscoveryInterface {
    * {@inheritdoc}
    */
   public function getWopiClientURL(string $mimetype = 'text/plain'): string {
-    $xml = $this->discoveryFetcher->getDiscoveryXml();
-
-    $discovery_parsed = simplexml_load_string($xml);
-    if (!$discovery_parsed) {
-      throw new CollaboraNotAvailableException('The retrieved discovery.xml file is not a valid XML file.');
-    }
+    $discovery_parsed = $this->getParsedXml();
 
     $result = $discovery_parsed->xpath(sprintf('/wopi-discovery/net-zone/app[@name=\'%s\']/action', $mimetype));
     if (empty($result[0]['urlsrc'][0])) {
@@ -48,6 +43,26 @@ class CollaboraDiscovery implements CollaboraDiscoveryInterface {
     }
 
     return (string) $result[0]['urlsrc'][0];
+  }
+
+  /**
+   * Fetches the discovery.xml, and gets the parsed contents.
+   *
+   * @return \SimpleXMLElement
+   *   Parsed xml from the discovery.xml.
+   *
+   * @throws \Drupal\collabora_online\Exception\CollaboraNotAvailableException
+   *   Fetching the discovery.xml failed, or the result is not valid xml.
+   */
+  protected function getParsedXml(): \SimpleXMLElement {
+    $xml = $this->discoveryFetcher->getDiscoveryXml();
+
+    $discovery_parsed = simplexml_load_string($xml);
+    if (!$discovery_parsed) {
+      throw new CollaboraNotAvailableException('The retrieved discovery.xml file is not a valid XML file.');
+    }
+
+    return $discovery_parsed;
   }
 
 }
