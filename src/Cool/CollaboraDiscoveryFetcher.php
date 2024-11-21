@@ -74,8 +74,7 @@ class CollaboraDiscoveryFetcher {
       ]);
       throw new CollaboraNotAvailableException(
         'Not able to retrieve the discovery.xml file from the Collabora Online server.',
-        203,
-        $e,
+        previous: $e,
       );
     }
     return $xml;
@@ -95,21 +94,15 @@ class CollaboraDiscoveryFetcher {
     $cool_settings = $this->loadSettings();
     $wopi_client_server = $cool_settings['server'] ?? NULL;
     if (!$wopi_client_server) {
-      throw new CollaboraNotAvailableException(
-        'The configured Collabora Online server address is empty.',
-        201,
-      );
+      throw new CollaboraNotAvailableException('The configured Collabora Online server address is empty.');
     }
     $wopi_client_server = trim($wopi_client_server);
 
     if (!str_starts_with($wopi_client_server, 'http://') && !str_starts_with($wopi_client_server, 'https://')) {
-      throw new CollaboraNotAvailableException(
-        sprintf(
-          "The configured Collabora Online server address must begin with 'http://' or 'https://'. Found '%s'.",
-          $wopi_client_server,
-        ),
-        204,
-      );
+      throw new CollaboraNotAvailableException(sprintf(
+        "The configured Collabora Online server address must begin with 'http://' or 'https://'. Found '%s'.",
+        $wopi_client_server,
+      ));
     }
 
     return $wopi_client_server;

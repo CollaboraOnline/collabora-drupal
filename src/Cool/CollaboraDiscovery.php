@@ -47,18 +47,12 @@ class CollaboraDiscovery {
 
     $discovery_parsed = simplexml_load_string($xml);
     if (!$discovery_parsed) {
-      throw new CollaboraNotAvailableException(
-        'The retrieved discovery.xml file is not a valid XML file.',
-        102,
-      );
+      throw new CollaboraNotAvailableException('The retrieved discovery.xml file is not a valid XML file.');
     }
 
     $result = $discovery_parsed->xpath(sprintf('/wopi-discovery/net-zone/app[@name=\'%s\']/action', $mimetype));
     if (empty($result[0]['urlsrc'][0])) {
-      throw new CollaboraNotAvailableException(
-        'The requested mime type is not handled.',
-        103,
-      );
+      throw new CollaboraNotAvailableException('The requested mime type is not handled.');
     }
 
     return (string) $result[0]['urlsrc'][0];
