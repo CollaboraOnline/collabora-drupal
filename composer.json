@@ -11,11 +11,11 @@
     ],
     "require": {
         "php": ">=8.1",
+        "cweagans/composer-patches": "^1",
         "drupal/jwt": "^2.0"
     },
     "require-dev": {
         "composer/installers": "^2",
-        "cweagans/composer-patches": "~1.0",
         "drupal/core-composer-scaffold": "^10.3.6",
         "drupal/core-dev": "^10.3.6",
         "drupal/core-recommended": "^10.3.6",
