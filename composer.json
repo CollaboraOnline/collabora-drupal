@@ -48,7 +48,7 @@
         },
         "patches": {
             "drupal/jwt": {
-                "JwtTranscoder::$algorithmType must not be accessed before initialization (https://www.drupal.org/project/jwt/issues/3409096)": "patches/jwt-3409096.diff"
+                "JwtTranscoder::$algorithmType must not be accessed before initialization (https://www.drupal.org/project/jwt/issues/3409096)": "https://www.drupal.org/files/issues/2024-11-26/jwt-3409096-9-property-accessed-before-initialization.patch"
             }
         }
     },
