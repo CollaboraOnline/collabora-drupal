@@ -9,13 +9,6 @@
   <file>.</file>
 
   <rule ref="vendor/drupal/coder/coder_sniffer/Drupal/ruleset.xml">
-    <!-- Accept 4 spaces of indentation for now. -->
-    <exclude name="Drupal.WhiteSpace.ScopeIndent"/>
-    <exclude name="Drupal.Arrays.Array.ArrayIndentation"/>
-    <exclude name="Drupal.Functions.MultiLineFunctionDeclaration.Indent"/>
-    <exclude name="Drupal.WhiteSpace.ScopeClosingBrace.BreakIndent"/>
-    <exclude name="Drupal.WhiteSpace.ScopeClosingBrace.Indent"/>
-    <exclude name="Drupal.WhiteSpace.ObjectOperatorIndent.Indent"/>
     <!-- Accept file doc comment with copyright. -->
     <exclude name="Drupal.Commenting.FileComment.NamespaceNoFileDoc"/>
     <exclude name="Drupal.Commenting.FileComment.WrongStyle"/>
