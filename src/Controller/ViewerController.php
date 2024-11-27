@@ -18,7 +18,7 @@ use Drupal\collabora_online\Exception\CollaboraNotAvailableException;
 use Drupal\Core\Controller\ControllerBase;
 use Drupal\Core\Render\RendererInterface;
 use Drupal\Core\Utility\Error;
-use Drupal\media\Entity\Media;
+use Drupal\media\MediaInterface;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 
@@ -43,7 +43,7 @@ class ViewerController extends ControllerBase {
   /**
    * Returns a raw page for the iframe embed.
    *
-   * @param \Drupal\media\Entity\Media $media
+   * @param \Drupal\media\MediaInterface $media
    *   Media entity.
    * @param \Symfony\Component\HttpFoundation\Request $request
    *   The incoming request.
@@ -54,7 +54,7 @@ class ViewerController extends ControllerBase {
    * @return \Symfony\Component\HttpFoundation\Response
    *   Response suitable for iframe, without the usual page decorations.
    */
-  public function editor(Media $media, Request $request, $edit = FALSE) {
+  public function editor(MediaInterface $media, Request $request, $edit = FALSE) {
     $options = [
       'closebutton' => 'true',
     ];
