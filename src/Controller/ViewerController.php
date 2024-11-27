@@ -10,6 +10,8 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
+declare(strict_types=1);
+
 namespace Drupal\collabora_online\Controller;
 
 use Drupal\collabora_online\Cool\CollaboraDiscovery;
@@ -96,7 +98,7 @@ class ViewerController extends ControllerBase {
     $render_array['#attached']['library'][] = 'collabora_online/cool.frame';
 
     $response = new Response();
-    $response->setContent($this->renderer->renderRoot($render_array));
+    $response->setContent((string) $this->renderer->renderRoot($render_array));
 
     return $response;
   }

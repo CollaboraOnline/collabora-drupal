@@ -10,6 +10,8 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
+declare(strict_types=1);
+
 namespace Drupal\collabora_online\Cool;
 
 use Drupal\collabora_online\Exception\CollaboraNotAvailableException;
