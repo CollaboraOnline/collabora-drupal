@@ -31,49 +31,49 @@ use Drupal\media\MediaInterface;
  */
 class CoolPreview extends EntityReferenceFormatterBase {
 
-    /**
-     * {@inheritdoc}
-     */
-    public function settingsSummary() {
-        $summary = [];
-        $summary[] = $this->t('Preview Collabora Online documents.');
-        return $summary;
+  /**
+   * {@inheritdoc}
+   */
+  public function settingsSummary() {
+    $summary = [];
+    $summary[] = $this->t('Preview Collabora Online documents.');
+    return $summary;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function viewElements(FieldItemListInterface $items, $langcode) {
+    /** @var \Drupal\Core\Field\EntityReferenceFieldItemListInterface $items */
+    $elements = [];
+    $media = $items->getEntity();
+    if (!$media instanceof MediaInterface) {
+      // Entity types other than 'media' are not supported.
+      return [];
     }
 
-    /**
-     * {@inheritdoc}
-     */
-    public function viewElements(FieldItemListInterface $items, $langcode) {
-        /** @var \Drupal\Core\Field\EntityReferenceFieldItemListInterface $items */
-        $elements = [];
-        $media = $items->getEntity();
-        if (!$media instanceof MediaInterface) {
-            // Entity types other than 'media' are not supported.
-            return [];
-        }
+    $access_result = $media->access('preview in collabora', NULL, TRUE);
+    (new CacheableMetadata())
+      ->addCacheableDependency($access_result)
+      ->applyTo($elements);
 
-        $access_result = $media->access('preview in collabora', NULL, TRUE);
-        (new CacheableMetadata())
-            ->addCacheableDependency($access_result)
-            ->applyTo($elements);
-
-        if (!$access_result->isAllowed()) {
-            return $elements;
-        }
-
-        foreach ($this->getEntitiesToView($items, $langcode) as $delta => $file) {
-            $url = CoolUtils::getEditorUrl($media, FALSE);
-
-            $render_array = [
-                '#editorUrl' => $url,
-                '#fileName' => $media->getName(),
-            ];
-            $render_array['#theme'] = 'collabora_online_preview';
-            $render_array['#attached']['library'][] = 'collabora_online/cool.previewer';
-            // Render each element as markup.
-            $elements[$delta] = $render_array;
-        }
-        return $elements;
+    if (!$access_result->isAllowed()) {
+      return $elements;
     }
+
+    foreach ($this->getEntitiesToView($items, $langcode) as $delta => $file) {
+      $url = CoolUtils::getEditorUrl($media, FALSE);
+
+      $render_array = [
+        '#editorUrl' => $url,
+        '#fileName' => $media->getName(),
+      ];
+      $render_array['#theme'] = 'collabora_online_preview';
+      $render_array['#attached']['library'][] = 'collabora_online/cool.previewer';
+      // Render each element as markup.
+      $elements[$delta] = $render_array;
+    }
+    return $elements;
+  }
 
 }

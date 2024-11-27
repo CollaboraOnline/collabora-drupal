@@ -33,42 +33,42 @@ use Drupal\media\MediaInterface;
 function collabora_online_theme($existing, $type, $theme, $path) {
 
   return [
-      'collabora_online' => [
-          'render element' => 'children',
-          'template' => 'collabora-online',
-          'variables' => [
-              'accessToken' => 'test',
-              'accessTokenTtl' => '86400',
-              'iFrameStyle' => 'width:95%;',
-              'closebutton' => '',
-              'allowfullscreen' => '',
-              'wopiSrc' => 'http://localhost:9980/',
-              'wopiClient' => 'https://localhost:9980/',
-          ],
+    'collabora_online' => [
+      'render element' => 'children',
+      'template' => 'collabora-online',
+      'variables' => [
+        'accessToken' => 'test',
+        'accessTokenTtl' => '86400',
+        'iFrameStyle' => 'width:95%;',
+        'closebutton' => '',
+        'allowfullscreen' => '',
+        'wopiSrc' => 'http://localhost:9980/',
+        'wopiClient' => 'https://localhost:9980/',
       ],
-      // This is the template for the field preview.
-      'collabora_online_preview' => [
-          'render element' => 'children',
-          'template' => 'collabora-online-preview',
-          'variables' => [
-              'editorUrl' => 'about:blank',
-              'fileName' => '',
-          ],
+    ],
+    // This is the template for the field preview.
+    'collabora_online_preview' => [
+      'render element' => 'children',
+      'template' => 'collabora-online-preview',
+      'variables' => [
+        'editorUrl' => 'about:blank',
+        'fileName' => '',
       ],
-      // This is the template for the complete page with embedding.
-      'collabora_online_full' => [
-          'template' => 'collabora-online-full',
-          'variables' => [
-              'accessToken' => 'test',
-              'accessTokenTtl' => '86400',
-              'iFrameStyle' => '',
-              'closebutton' => '',
-              'allowfullscreen' => '',
-              'wopiSrc' => '/wopi/files/123',
-              'wopiClient' => 'https://localhost:9980/',
-          ],
-          'file' => 'collabora_online.theme.inc',
+    ],
+    // This is the template for the complete page with embedding.
+    'collabora_online_full' => [
+      'template' => 'collabora-online-full',
+      'variables' => [
+        'accessToken' => 'test',
+        'accessTokenTtl' => '86400',
+        'iFrameStyle' => '',
+        'closebutton' => '',
+        'allowfullscreen' => '',
+        'wopiSrc' => '/wopi/files/123',
+        'wopiClient' => 'https://localhost:9980/',
       ],
+      'file' => 'collabora_online.theme.inc',
+    ],
   ];
 }
 
@@ -79,42 +79,42 @@ function collabora_online_theme($existing, $type, $theme, $path) {
  * open the viewer/editor directly.
  */
 function collabora_online_entity_operation(EntityInterface $entity) {
-    if (($entity->getEntityTypeId() != "media") ||
-        ($entity->getSource()->getPluginId() != "file")) {
-        return [];
-    }
+  if (($entity->getEntityTypeId() != "media") ||
+    ($entity->getSource()->getPluginId() != "file")) {
+    return [];
+  }
 
-    /** @var \Drupal\media\MediaInterface $media */
-    $media = $entity;
+  /** @var \Drupal\media\MediaInterface $media */
+  $media = $entity;
 
-    if (!$media->access('preview in collabora')) {
-        return [];
-    }
+  if (!$media->access('preview in collabora')) {
+    return [];
+  }
 
-    $file = CoolUtils::getFile($media);
-    $type = CoolUtils::getDocumentType($file);
+  $file = CoolUtils::getFile($media);
+  $type = CoolUtils::getDocumentType($file);
 
-    if ($type == NULL) {
-        return [];
-    }
+  if ($type == NULL) {
+    return [];
+  }
 
-    $entries = [
-        'collabora_online_view' => [
-            'title' => t("View in Collabora Online"),
-            'weight' => 50,
-            'url' => CoolUtils::getEditorUrl($media, FALSE),
-        ],
+  $entries = [
+    'collabora_online_view' => [
+      'title' => t("View in Collabora Online"),
+      'weight' => 50,
+      'url' => CoolUtils::getEditorUrl($media, FALSE),
+    ],
+  ];
+
+  if (CoolUtils::canEdit($file) && $media->access('edit in collabora')) {
+    $entries['collabora_online_edit'] = [
+      'title' => t("Edit in Collabora Online"),
+      'weight' => 50,
+      'url' => CoolUtils::getEditorUrl($media, TRUE),
     ];
+  }
 
-    if (CoolUtils::canEdit($file) && $media->access('edit in collabora')) {
-        $entries['collabora_online_edit'] = [
-            'title' => t("Edit in Collabora Online"),
-            'weight' => 50,
-            'url' => CoolUtils::getEditorUrl($media, TRUE),
-        ];
-    }
-
-    return $entries;
+  return $entries;
 }
 
 /**
@@ -123,56 +123,56 @@ function collabora_online_entity_operation(EntityInterface $entity) {
  * Checks access for the new media operations provided by this module.
  */
 function collabora_online_media_access(MediaInterface $media, string $operation, AccountInterface $account): AccessResultInterface {
-    $type = $media->bundle();
-    switch ($operation) {
-        case 'preview in collabora':
-            if ($media->isPublished()) {
-                return AccessResult::allowedIfHasPermission($account, "preview $type in collabora")
-                    ->addCacheableDependency($media);
-            }
-            $preview_own_permission = "preview own unpublished $type in collabora";
-            $access_result = AccessResult::allowedIfHasPermission($account, $preview_own_permission)
-                ->addCacheableDependency($media);
-            if (!$access_result->isAllowed()) {
-                return $access_result;
-            }
-            // Use '==' because Drupal sometimes loads integers as strings.
-            $is_owner = ($account->id() && $account->id() == $media->getOwnerId());
-            if ($is_owner) {
-                $access_result = AccessResult::allowed();
-            }
-            else {
-                $access_result = AccessResult::neutral()
-                    ->setReason("The user has the '$preview_own_permission' permission, but is not the owner of the media item.");
-            }
-            return $access_result
-                ->cachePerUser()
-                ->addCacheableDependency($media);
+  $type = $media->bundle();
+  switch ($operation) {
+    case 'preview in collabora':
+      if ($media->isPublished()) {
+        return AccessResult::allowedIfHasPermission($account, "preview $type in collabora")
+          ->addCacheableDependency($media);
+      }
+      $preview_own_permission = "preview own unpublished $type in collabora";
+      $access_result = AccessResult::allowedIfHasPermission($account, $preview_own_permission)
+        ->addCacheableDependency($media);
+      if (!$access_result->isAllowed()) {
+        return $access_result;
+      }
+      // Use '==' because Drupal sometimes loads integers as strings.
+      $is_owner = ($account->id() && $account->id() == $media->getOwnerId());
+      if ($is_owner) {
+        $access_result = AccessResult::allowed();
+      }
+      else {
+        $access_result = AccessResult::neutral()
+          ->setReason("The user has the '$preview_own_permission' permission, but is not the owner of the media item.");
+      }
+      return $access_result
+        ->cachePerUser()
+        ->addCacheableDependency($media);
 
-        case 'edit in collabora':
-            if ($account->hasPermission("edit any $type in collabora")) {
-                return AccessResult::allowed()
-                    ->cachePerPermissions();
-            }
-            $edit_own_permission = "edit own $type in collabora";
-            $access_result = AccessResult::allowedIfHasPermission($account, $edit_own_permission);
-            if (!$access_result->isAllowed()) {
-                return $access_result;
-            }
-            // Use '==' because Drupal sometimes loads integers as strings.
-            $is_owner = ($account->id() && $account->id() == $media->getOwnerId());
-            if (!$is_owner) {
-                $access_result = AccessResult::neutral()
-                    ->setReason("The user has the '$edit_own_permission' permission, but is not the owner of the media item.");
-            }
-            else {
-                $access_result = AccessResult::allowed();
-            }
-            return $access_result
-                ->cachePerUser()
-                ->addCacheableDependency($media);
+    case 'edit in collabora':
+      if ($account->hasPermission("edit any $type in collabora")) {
+        return AccessResult::allowed()
+          ->cachePerPermissions();
+      }
+      $edit_own_permission = "edit own $type in collabora";
+      $access_result = AccessResult::allowedIfHasPermission($account, $edit_own_permission);
+      if (!$access_result->isAllowed()) {
+        return $access_result;
+      }
+      // Use '==' because Drupal sometimes loads integers as strings.
+      $is_owner = ($account->id() && $account->id() == $media->getOwnerId());
+      if (!$is_owner) {
+        $access_result = AccessResult::neutral()
+          ->setReason("The user has the '$edit_own_permission' permission, but is not the owner of the media item.");
+      }
+      else {
+        $access_result = AccessResult::allowed();
+      }
+      return $access_result
+        ->cachePerUser()
+        ->addCacheableDependency($media);
 
-        default:
-            return AccessResult::neutral();
-    }
+    default:
+      return AccessResult::neutral();
+  }
 }

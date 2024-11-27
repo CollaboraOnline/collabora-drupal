@@ -24,68 +24,68 @@ use Symfony\Component\HttpFoundation\Response;
  */
 class ViewerController extends ControllerBase {
 
-    /**
-     * The renderer service.
-     *
-     * @var \Drupal\Core\Render\RendererInterface
-     */
-    private $renderer;
+  /**
+   * The renderer service.
+   *
+   * @var \Drupal\Core\Render\RendererInterface
+   */
+  private $renderer;
 
-    /**
-     * The controller constructor.
-     *
-     * @param \Drupal\Core\Render\RendererInterface $renderer
-     *   The renderer service.
-     */
-    public function __construct(RendererInterface $renderer) {
-        $this->renderer = $renderer;
+  /**
+   * The controller constructor.
+   *
+   * @param \Drupal\Core\Render\RendererInterface $renderer
+   *   The renderer service.
+   */
+  public function __construct(RendererInterface $renderer) {
+    $this->renderer = $renderer;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public static function create(ContainerInterface $container): self {
+    return new self(
+      $container->get('renderer'),
+    );
+  }
+
+  /**
+   * Returns a raw page for the iframe embed.
+   *
+   * @param \Drupal\media\Entity\Media $media
+   *   Media entity.
+   * @param bool $edit
+   *   TRUE to open Collabora Online in edit mode.
+   *   FALSE to open Collabora Online in readonly mode.
+   *
+   * @return \Symfony\Component\HttpFoundation\Response
+   *   Response suitable for iframe, without the usual page decorations.
+   */
+  public function editor(Media $media, $edit = FALSE) {
+    $options = [
+      'closebutton' => 'true',
+    ];
+
+    $render_array = CoolUtils::getViewerRender($media, $edit, $options);
+
+    if (!$render_array || array_key_exists('error', $render_array)) {
+      $error_msg = 'Viewer error: ' . ($render_array ? $render_array['error'] : 'NULL');
+      \Drupal::logger('cool')->error($error_msg);
+      return new Response(
+        $error_msg,
+        Response::HTTP_BAD_REQUEST,
+        ['content-type' => 'text/plain']
+      );
     }
 
-    /**
-     * {@inheritdoc}
-     */
-    public static function create(ContainerInterface $container): self {
-        return new self(
-            $container->get('renderer'),
-        );
-    }
+    $render_array['#theme'] = 'collabora_online_full';
+    $render_array['#attached']['library'][] = 'collabora_online/cool.frame';
 
-    /**
-     * Returns a raw page for the iframe embed.
-     *
-     * @param \Drupal\media\Entity\Media $media
-     *   Media entity.
-     * @param bool $edit
-     *   TRUE to open Collabora Online in edit mode.
-     *   FALSE to open Collabora Online in readonly mode.
-     *
-     * @return \Symfony\Component\HttpFoundation\Response
-     *   Response suitable for iframe, without the usual page decorations.
-     */
-    public function editor(Media $media, $edit = FALSE) {
-        $options = [
-            'closebutton' => 'true',
-        ];
+    $response = new Response();
+    $response->setContent($this->renderer->renderRoot($render_array));
 
-        $render_array = CoolUtils::getViewerRender($media, $edit, $options);
-
-        if (!$render_array || array_key_exists('error', $render_array)) {
-            $error_msg = 'Viewer error: ' . ($render_array ? $render_array['error'] : 'NULL');
-            \Drupal::logger('cool')->error($error_msg);
-            return new Response(
-                $error_msg,
-                Response::HTTP_BAD_REQUEST,
-                ['content-type' => 'text/plain']
-            );
-        }
-
-        $render_array['#theme'] = 'collabora_online_full';
-        $render_array['#attached']['library'][] = 'collabora_online/cool.frame';
-
-        $response = new Response();
-        $response->setContent($this->renderer->renderRoot($render_array));
-
-        return $response;
-    }
+    return $response;
+  }
 
 }

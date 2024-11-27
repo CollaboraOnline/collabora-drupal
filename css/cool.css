@@ -14,30 +14,30 @@
 }
 
 .cool-frame__preview {
-    width: 100%;
-    height: 100%;
-    border: 0;
+  width: 100%;
+  height: 100%;
+  border: 0;
 }
 
 .cool-frame__iframe {
-    border: 1px solid;
-    width: 100%;
-    height: 100%;
-    position: absolute;
-    box-sizing: border-box;
+  border: 1px solid;
+  width: 100%;
+  height: 100%;
+  position: absolute;
+  box-sizing: border-box;
 }
 
 .cool-editor__dialog {
-    resize: both;
-    position: fixed;
-    top: 250px;
-    width: 100%;
-    height: calc(100% - 250px);
-    /* seems to be a reasonable value to be above of it all */
-    z-index: 501;
-    box-sizing: border-box;
+  resize: both;
+  position: fixed;
+  top: 250px;
+  width: 100%;
+  height: calc(100% - 250px);
+  /* seems to be a reasonable value to be above of it all */
+  z-index: 501;
+  box-sizing: border-box;
 }
 
 .cool-editor__body {
-    margin: 0;
+  margin: 0;
 }

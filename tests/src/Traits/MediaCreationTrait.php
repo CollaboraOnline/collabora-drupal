@@ -27,12 +27,12 @@ trait MediaCreationTrait {
   protected function createMediaEntity(string $type, array $values = []): MediaInterface {
     file_put_contents('public://test.txt', 'Hello test');
     $file = File::create([
-        'uri' => 'public://test.txt',
+      'uri' => 'public://test.txt',
     ]);
     $file->save();
     $values += [
-        'bundle' => $type,
-        'field_media_file' => $file->id(),
+      'bundle' => $type,
+      'field_media_file' => $file->id(),
     ];
     $media = Media::create($values);
     $media->save();

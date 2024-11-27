@@ -19,25 +19,25 @@ use Drupal\views\ResultRow;
 #[ViewsField('media_collabora_preview')]
 class CollaboraPreview extends LinkBase {
 
-    /**
-     * {@inheritdoc}
-     */
-    protected function getUrlInfo(ResultRow $row): Url|null {
-        /** @var \Drupal\media\MediaInterface $entity */
-        $entity = $this->getEntity($row);
+  /**
+   * {@inheritdoc}
+   */
+  protected function getUrlInfo(ResultRow $row): Url|null {
+    /** @var \Drupal\media\MediaInterface $entity */
+    $entity = $this->getEntity($row);
 
-        if ($entity === NULL) {
-            return NULL;
-        }
-
-        return CoolUtils::getEditorUrl($entity, FALSE);
+    if ($entity === NULL) {
+      return NULL;
     }
 
-    /**
-     * {@inheritdoc}
-     */
-    protected function getDefaultLabel(): TranslatableMarkup {
-        return $this->t('View in Collabora Online');
-    }
+    return CoolUtils::getEditorUrl($entity, FALSE);
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  protected function getDefaultLabel(): TranslatableMarkup {
+    return $this->t('View in Collabora Online');
+  }
 
 }

@@ -19,25 +19,25 @@ use Drupal\views\ResultRow;
 #[ViewsField('media_collabora_edit')]
 class CollaboraEdit extends LinkBase {
 
-    /**
-     * {@inheritdoc}
-     */
-    protected function getUrlInfo(ResultRow $row): Url|null {
-        /** @var \Drupal\media\MediaInterface $entity */
-        $entity = $this->getEntity($row);
+  /**
+   * {@inheritdoc}
+   */
+  protected function getUrlInfo(ResultRow $row): Url|null {
+    /** @var \Drupal\media\MediaInterface $entity */
+    $entity = $this->getEntity($row);
 
-        if ($entity === NULL) {
-            return NULL;
-        }
-
-        return CoolUtils::getEditorUrl($entity, TRUE);
+    if ($entity === NULL) {
+      return NULL;
     }
 
-    /**
-     * {@inheritdoc}
-     */
-    protected function getDefaultLabel(): TranslatableMarkup {
-        return $this->t('Edit in Collabora Online');
-    }
+    return CoolUtils::getEditorUrl($entity, TRUE);
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  protected function getDefaultLabel(): TranslatableMarkup {
+    return $this->t('Edit in Collabora Online');
+  }
 
 }
