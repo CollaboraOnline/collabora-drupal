@@ -106,7 +106,7 @@ class ViewerController extends ControllerBase {
   /**
    * Gets a render array for a cool viewer.
    *
-   * @param \Drupal\media\Entity\Media $media
+   * @param \Drupal\media\MediaInterface $media
    *   The media entity to view / edit.
    * @param string $wopi_client
    *   The WOPI client url.
@@ -120,7 +120,7 @@ class ViewerController extends ControllerBase {
    * @return array
    *   A stub render element.
    */
-  protected function getViewerRender(Media $media, string $wopi_client, bool $can_write, $options = NULL) {
+  protected function getViewerRender(MediaInterface $media, string $wopi_client, bool $can_write, $options = NULL) {
     $default_config = \Drupal::config('collabora_online.settings');
     $wopi_base = $default_config->get('cool')['wopi_base'];
     $allowfullscreen = $default_config->get('cool')['allowfullscreen'] ?? FALSE;
