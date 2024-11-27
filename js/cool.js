@@ -10,60 +10,60 @@
  */
 
 function loadDocument(wopiClient, wopiSrc, options = null) {
-    let hasCloseButton = false;
-    let wopiUrl = `${wopiClient}WOPISrc=${wopiSrc}`;
-    if (options && options.closebutton == true) {
-        wopiUrl += '&closebutton=true';
-        hasCloseButton = true;
-    }
+  let hasCloseButton = false;
+  let wopiUrl = `${wopiClient}WOPISrc=${wopiSrc}`;
+  if (options && options.closebutton == true) {
+    wopiUrl += '&closebutton=true';
+    hasCloseButton = true;
+  }
 
-    window.addEventListener("message", receiveMessage.bind(null, hasCloseButton), false);
+  window.addEventListener("message", receiveMessage.bind(null, hasCloseButton), false);
 
-    let formElem = document.getElementById("collabora-submit-form");
+  let formElem = document.getElementById("collabora-submit-form");
 
-    if (!formElem) {
-        console.log("error: submit form not found");
-        return;
-    }
-    formElem.action = wopiUrl;
-    formElem.submit();
+  if (!formElem) {
+    console.log("error: submit form not found");
+    return;
+  }
+  formElem.action = wopiUrl;
+  formElem.submit();
 }
 
 function postMessage(msg) {
-    document.getElementById("collabora-online-viewer").contentWindow.postMessage(JSON.stringify(msg), '*');
+  document.getElementById("collabora-online-viewer").contentWindow.postMessage(JSON.stringify(msg), '*');
 }
 
 function postReady() {
-    postMessage({ MessageId: "Host_PostmessageReady" });
+  postMessage({ MessageId: "Host_PostmessageReady" });
 }
 
 function receiveMessage(hasCloseButton, event) {
-    let msg = JSON.parse(event.data);
-    if (!msg) {
-        return;
-    }
+  let msg = JSON.parse(event.data);
+  if (!msg) {
+    return;
+  }
 
-    switch (msg.MessageId) {
+  switch (msg.MessageId) {
 
     case "App_LoadingStatus":
-        if (msg.Values && msg.Values.Status == "Document_Loaded") {
-            postReady();
-        }
-        break;
+      if (msg.Values && msg.Values.Status == "Document_Loaded") {
+        postReady();
+      }
+      break;
 
     case "UI_Close":
-        if (hasCloseButton) {
-            if (msg.Values && msg.Values.EverModified) {
-                let reply = { MessageId: "Action_Close" };
-                postMessage(reply);
-            }
-            if (window.parent.location == window.location) {
-                history.back();
-            } else {
-                /* we send back the UI_Close message to the parent frame. */
-                window.parent.postMessage(event.data);
-            }
+      if (hasCloseButton) {
+        if (msg.Values && msg.Values.EverModified) {
+          let reply = { MessageId: "Action_Close" };
+          postMessage(reply);
         }
-        break;
-    }
+        if (window.parent.location == window.location) {
+          history.back();
+        } else {
+          /* we send back the UI_Close message to the parent frame. */
+          window.parent.postMessage(event.data);
+        }
+      }
+      break;
+  }
 }
