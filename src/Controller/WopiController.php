@@ -26,256 +26,256 @@ use Symfony\Component\HttpFoundation\Response;
  */
 class WopiController extends ControllerBase {
 
-    /**
-     * Creates a failure response that is understood by Collabora.
-     *
-     * @return \Symfony\Component\HttpFoundation\Response
-     *   Response object.
-     */
-    public static function permissionDenied(): Response {
+  /**
+   * Creates a failure response that is understood by Collabora.
+   *
+   * @return \Symfony\Component\HttpFoundation\Response
+   *   Response object.
+   */
+  public static function permissionDenied(): Response {
+    return new Response(
+      'Authentication failed.',
+      Response::HTTP_FORBIDDEN,
+      ['content-type' => 'text/plain'],
+    );
+  }
+
+  /**
+   * Handles the WOPI 'info' request for a media entity.
+   *
+   * @param string $id
+   *   Media id from url.
+   * @param \Symfony\Component\HttpFoundation\Request $request
+   *   Request object with query parameters.
+   *
+   * @return \Symfony\Component\HttpFoundation\Response
+   *   The response with file contents.
+   */
+  public function wopiCheckFileInfo(string $id, Request $request) {
+    $token = $request->query->get('access_token');
+
+    $jwt_payload = CoolUtils::verifyTokenForId($token, $id);
+    if ($jwt_payload == NULL) {
+      return static::permissionDenied();
+    }
+
+    /** @var \Drupal\media\MediaInterface|null $media */
+    $media = \Drupal::entityTypeManager()->getStorage('media')->load($id);
+    if (!$media) {
+      return static::permissionDenied();
+    }
+
+    $file = CoolUtils::getFileById($id);
+    $mtime = date_create_immutable_from_format('U', $file->getChangedTime());
+    // @todo What if the uid in the payload is not set?
+    // @todo What if $user is NULL?
+    $user = User::load($jwt_payload->uid);
+    $can_write = $jwt_payload->wri;
+
+    if ($can_write && !$media->access('edit in collabora', $user)) {
+      \Drupal::logger('cool')->error('Token and user permissions do not match.');
+      return static::permissionDenied();
+    }
+
+    $payload = [
+      'BaseFileName' => $file->getFilename(),
+      'Size' => $file->getSize(),
+      'LastModifiedTime' => $mtime->format('c'),
+      'UserId' => $jwt_payload->uid,
+      'UserFriendlyName' => $user->getDisplayName(),
+      'UserExtraInfo' => [
+        'mail' => $user->getEmail(),
+      ],
+      'UserCanWrite' => $can_write,
+      'IsAdminUser' => $user->hasPermission('administer collabora instance'),
+      'IsAnonymousUser' => $user->isAnonymous(),
+    ];
+
+    $user_picture = $user->user_picture?->entity;
+    if ($user_picture) {
+      /** @var \Drupal\Core\File\FileUrlGeneratorInterface $file_url_generator */
+      $file_url_generator = \Drupal::service('file_url_generator');
+      $payload['UserExtraInfo']['avatar'] = $file_url_generator->generateAbsoluteString($user_picture->getFileUri());
+    }
+
+    $jsonPayload = json_encode($payload);
+
+    $response = new Response(
+      $jsonPayload,
+      Response::HTTP_OK,
+      ['content-type' => 'application/json']
+    );
+    return $response;
+  }
+
+  /**
+   * Handles the wopi "content" request for a media entity.
+   *
+   * @param string $id
+   *   Media id from url.
+   * @param \Symfony\Component\HttpFoundation\Request $request
+   *   Request object with query parameters.
+   *
+   * @return \Symfony\Component\HttpFoundation\Response
+   *   The response with file contents.
+   */
+  public function wopiGetFile(string $id, Request $request) {
+    $token = $request->query->get('access_token');
+
+    $jwt_payload = CoolUtils::verifyTokenForId($token, $id);
+    if ($jwt_payload == NULL) {
+      return static::permissionDenied();
+    }
+
+    $user = User::load($jwt_payload->uid);
+    $accountSwitcher = \Drupal::service('account_switcher');
+    $accountSwitcher->switchTo($user);
+
+    $file = CoolUtils::getFileById($id);
+    $mimetype = $file->getMimeType();
+
+    $response = new BinaryFileResponse(
+      $file->getFileUri(),
+      Response::HTTP_OK,
+      ['content-type' => $mimetype]
+    );
+    $accountSwitcher->switchBack();
+    return $response;
+  }
+
+  /**
+   * Handles the wopi "save" request for a media entity.
+   *
+   * @param string $id
+   *   Media id from url.
+   * @param \Symfony\Component\HttpFoundation\Request $request
+   *   Request object with headers, query parameters and payload.
+   *
+   * @return \Symfony\Component\HttpFoundation\Response
+   *   The response.
+   */
+  public function wopiPutFile(string $id, Request $request) {
+    $token = $request->query->get('access_token');
+    $timestamp = $request->headers->get('x-cool-wopi-timestamp');
+    $modified_by_user = $request->headers->get('x-cool-wopi-ismodifiedbyuser') == 'true';
+    $autosave = $request->headers->get('x-cool-wopi-isautosave') == 'true';
+    $exitsave = $request->headers->get('x-cool-wopi-isexitsave') == 'true';
+
+    $jwt_payload = CoolUtils::verifyTokenForId($token, $id);
+    if ($jwt_payload == NULL || !$jwt_payload->wri) {
+      return static::permissionDenied();
+    }
+
+    $fs = \Drupal::service('file_system');
+
+    $media = \Drupal::entityTypeManager()->getStorage('media')->load($id);
+    $user = User::load($jwt_payload->uid);
+
+    $accountSwitcher = \Drupal::service('account_switcher');
+    $accountSwitcher->switchTo($user);
+
+    $file = CoolUtils::getFile($media);
+
+    if ($timestamp) {
+      $wopi_stamp = date_create_immutable_from_format(\DateTimeInterface::ISO8601, $timestamp);
+      $file_stamp = date_create_immutable_from_format('U', $file->getChangedTime());
+
+      if ($wopi_stamp != $file_stamp) {
+        \Drupal::logger('cool')->error('Conflict saving file ' . $id . ' wopi: ' . $wopi_stamp->format('c') . ' differs from file: ' . $file_stamp->format('c'));
+
         return new Response(
-            'Authentication failed.',
-            Response::HTTP_FORBIDDEN,
-            ['content-type' => 'text/plain'],
+          json_encode(['COOLStatusCode' => 1010]),
+          Response::HTTP_CONFLICT,
+          ['content-type' => 'application/json'],
         );
+      }
     }
 
-    /**
-     * Handles the WOPI 'info' request for a media entity.
-     *
-     * @param string $id
-     *   Media id from url.
-     * @param \Symfony\Component\HttpFoundation\Request $request
-     *   Request object with query parameters.
-     *
-     * @return \Symfony\Component\HttpFoundation\Response
-     *   The response with file contents.
-     */
-    public function wopiCheckFileInfo(string $id, Request $request) {
-        $token = $request->query->get('access_token');
+    $dir = $fs->dirname($file->getFileUri());
+    $dest = $dir . '/' . $file->getFilename();
 
-        $jwt_payload = CoolUtils::verifyTokenForId($token, $id);
-        if ($jwt_payload == NULL) {
-            return static::permissionDenied();
-        }
+    $content = $request->getContent();
+    $owner_id = $file->getOwnerId();
+    $uri = $fs->saveData($content, $dest, FileSystemInterface::EXISTS_RENAME);
 
-        /** @var \Drupal\media\MediaInterface|null $media */
-        $media = \Drupal::entityTypeManager()->getStorage('media')->load($id);
-        if (!$media) {
-            return static::permissionDenied();
-        }
+    $file = File::create(['uri' => $uri]);
+    $file->setOwnerId($owner_id);
+    if (is_file($dest)) {
+      $file->setFilename($fs->basename($dest));
+    }
+    $file->setPermanent();
+    $file->setSize(strlen($content));
+    $file->save();
+    $mtime = date_create_immutable_from_format('U', $file->getChangedTime());
 
-        $file = CoolUtils::getFileById($id);
-        $mtime = date_create_immutable_from_format('U', $file->getChangedTime());
-        // @todo What if the uid in the payload is not set?
-        // @todo What if $user is NULL?
-        $user = User::load($jwt_payload->uid);
-        $can_write = $jwt_payload->wri;
+    CoolUtils::setMediaSource($media, $file);
+    $media->setRevisionUser($user);
+    $media->setRevisionCreationTime(\Drupal::service('datetime.time')->getRequestTime());
 
-        if ($can_write && !$media->access('edit in collabora', $user)) {
-            \Drupal::logger('cool')->error('Token and user permissions do not match.');
-            return static::permissionDenied();
-        }
+    $save_reason = 'Saved by Collabora Online';
+    $reasons = [];
+    if ($modified_by_user) {
+      $reasons[] = 'Modified by user';
+    }
+    if ($autosave) {
+      $reasons[] = 'Autosaved';
+    }
+    if ($exitsave) {
+      $reasons[] = 'Save on Exit';
+    }
+    if (count($reasons) > 0) {
+      $save_reason .= ' (' . implode(', ', $reasons) . ')';
+    }
+    \Drupal::logger('cool')->error('Save reason: ' . $save_reason);
+    $media->setRevisionLogMessage($save_reason);
+    $media->save();
 
-        $payload = [
-            'BaseFileName' => $file->getFilename(),
-            'Size' => $file->getSize(),
-            'LastModifiedTime' => $mtime->format('c'),
-            'UserId' => $jwt_payload->uid,
-            'UserFriendlyName' => $user->getDisplayName(),
-            'UserExtraInfo' => [
-                'mail' => $user->getEmail(),
-            ],
-            'UserCanWrite' => $can_write,
-            'IsAdminUser' => $user->hasPermission('administer collabora instance'),
-            'IsAnonymousUser' => $user->isAnonymous(),
-        ];
+    $payload = json_encode([
+      'LastModifiedTime' => $mtime->format('c'),
+    ]);
 
-        $user_picture = $user->user_picture?->entity;
-        if ($user_picture) {
-            /** @var \Drupal\Core\File\FileUrlGeneratorInterface $file_url_generator */
-            $file_url_generator = \Drupal::service('file_url_generator');
-            $payload['UserExtraInfo']['avatar'] = $file_url_generator->generateAbsoluteString($user_picture->getFileUri());
-        }
+    $response = new Response(
+      $payload,
+      Response::HTTP_OK,
+      ['content-type' => 'application/json']
+    );
 
-        $jsonPayload = json_encode($payload);
+    $accountSwitcher->switchBack();
+    return $response;
+  }
 
-        $response = new Response(
-            $jsonPayload,
-            Response::HTTP_OK,
-            ['content-type' => 'application/json']
-        );
-        return $response;
+  /**
+   * The WOPI entry point.
+   *
+   * @param string $action
+   *   One of 'info', 'content' or 'save', depending with path is visited.
+   * @param string $id
+   *   Media id from url.
+   * @param \Symfony\Component\HttpFoundation\Request $request
+   *   Request object for headers and query parameters.
+   *
+   * @return \Symfony\Component\HttpFoundation\Response
+   *   Response to be consumed by Collabora Online.
+   */
+  public function wopi(string $action, string $id, Request $request) {
+    $returnCode = Response::HTTP_BAD_REQUEST;
+    switch ($action) {
+      case 'info':
+        return $this->wopiCheckFileInfo($id, $request);
+
+      case 'content':
+        return $this->wopiGetFile($id, $request);
+
+      case 'save':
+        return $this->wopiPutFile($id, $request);
     }
 
-    /**
-     * Handles the wopi "content" request for a media entity.
-     *
-     * @param string $id
-     *   Media id from url.
-     * @param \Symfony\Component\HttpFoundation\Request $request
-     *   Request object with query parameters.
-     *
-     * @return \Symfony\Component\HttpFoundation\Response
-     *   The response with file contents.
-     */
-    public function wopiGetFile(string $id, Request $request) {
-        $token = $request->query->get('access_token');
-
-        $jwt_payload = CoolUtils::verifyTokenForId($token, $id);
-        if ($jwt_payload == NULL) {
-            return static::permissionDenied();
-        }
-
-        $user = User::load($jwt_payload->uid);
-        $accountSwitcher = \Drupal::service('account_switcher');
-        $accountSwitcher->switchTo($user);
-
-        $file = CoolUtils::getFileById($id);
-        $mimetype = $file->getMimeType();
-
-        $response = new BinaryFileResponse(
-            $file->getFileUri(),
-            Response::HTTP_OK,
-            ['content-type' => $mimetype]
-        );
-        $accountSwitcher->switchBack();
-        return $response;
-    }
-
-    /**
-     * Handles the wopi "save" request for a media entity.
-     *
-     * @param string $id
-     *   Media id from url.
-     * @param \Symfony\Component\HttpFoundation\Request $request
-     *   Request object with headers, query parameters and payload.
-     *
-     * @return \Symfony\Component\HttpFoundation\Response
-     *   The response.
-     */
-    public function wopiPutFile(string $id, Request $request) {
-        $token = $request->query->get('access_token');
-        $timestamp = $request->headers->get('x-cool-wopi-timestamp');
-        $modified_by_user = $request->headers->get('x-cool-wopi-ismodifiedbyuser') == 'true';
-        $autosave = $request->headers->get('x-cool-wopi-isautosave') == 'true';
-        $exitsave = $request->headers->get('x-cool-wopi-isexitsave') == 'true';
-
-        $jwt_payload = CoolUtils::verifyTokenForId($token, $id);
-        if ($jwt_payload == NULL || !$jwt_payload->wri) {
-            return static::permissionDenied();
-        }
-
-        $fs = \Drupal::service('file_system');
-
-        $media = \Drupal::entityTypeManager()->getStorage('media')->load($id);
-        $user = User::load($jwt_payload->uid);
-
-        $accountSwitcher = \Drupal::service('account_switcher');
-        $accountSwitcher->switchTo($user);
-
-        $file = CoolUtils::getFile($media);
-
-        if ($timestamp) {
-            $wopi_stamp = date_create_immutable_from_format(\DateTimeInterface::ISO8601, $timestamp);
-            $file_stamp = date_create_immutable_from_format('U', $file->getChangedTime());
-
-            if ($wopi_stamp != $file_stamp) {
-                \Drupal::logger('cool')->error('Conflict saving file ' . $id . ' wopi: ' . $wopi_stamp->format('c') . ' differs from file: ' . $file_stamp->format('c'));
-
-                return new Response(
-                    json_encode(['COOLStatusCode' => 1010]),
-                    Response::HTTP_CONFLICT,
-                    ['content-type' => 'application/json'],
-                );
-            }
-        }
-
-        $dir = $fs->dirname($file->getFileUri());
-        $dest = $dir . '/' . $file->getFilename();
-
-        $content = $request->getContent();
-        $owner_id = $file->getOwnerId();
-        $uri = $fs->saveData($content, $dest, FileSystemInterface::EXISTS_RENAME);
-
-        $file = File::create(['uri' => $uri]);
-        $file->setOwnerId($owner_id);
-        if (is_file($dest)) {
-            $file->setFilename($fs->basename($dest));
-        }
-        $file->setPermanent();
-        $file->setSize(strlen($content));
-        $file->save();
-        $mtime = date_create_immutable_from_format('U', $file->getChangedTime());
-
-        CoolUtils::setMediaSource($media, $file);
-        $media->setRevisionUser($user);
-        $media->setRevisionCreationTime(\Drupal::service('datetime.time')->getRequestTime());
-
-        $save_reason = 'Saved by Collabora Online';
-        $reasons = [];
-        if ($modified_by_user) {
-            $reasons[] = 'Modified by user';
-        }
-        if ($autosave) {
-            $reasons[] = 'Autosaved';
-        }
-        if ($exitsave) {
-            $reasons[] = 'Save on Exit';
-        }
-        if (count($reasons) > 0) {
-            $save_reason .= ' (' . implode(', ', $reasons) . ')';
-        }
-        \Drupal::logger('cool')->error('Save reason: ' . $save_reason);
-        $media->setRevisionLogMessage($save_reason);
-        $media->save();
-
-        $payload = json_encode([
-            'LastModifiedTime' => $mtime->format('c'),
-        ]);
-
-        $response = new Response(
-            $payload,
-            Response::HTTP_OK,
-            ['content-type' => 'application/json']
-        );
-
-        $accountSwitcher->switchBack();
-        return $response;
-    }
-
-    /**
-     * The WOPI entry point.
-     *
-     * @param string $action
-     *   One of 'info', 'content' or 'save', depending with path is visited.
-     * @param string $id
-     *   Media id from url.
-     * @param \Symfony\Component\HttpFoundation\Request $request
-     *   Request object for headers and query parameters.
-     *
-     * @return \Symfony\Component\HttpFoundation\Response
-     *   Response to be consumed by Collabora Online.
-     */
-    public function wopi(string $action, string $id, Request $request) {
-        $returnCode = Response::HTTP_BAD_REQUEST;
-        switch ($action) {
-            case 'info':
-                return $this->wopiCheckFileInfo($id, $request);
-
-            case 'content':
-                return $this->wopiGetFile($id, $request);
-
-            case 'save':
-                return $this->wopiPutFile($id, $request);
-        }
-
-        $response = new Response(
-            'Invalid WOPI action ' . $action,
-            $returnCode,
-            ['content-type' => 'text/plain']
-        );
-        return $response;
-    }
+    $response = new Response(
+      'Invalid WOPI action ' . $action,
+      $returnCode,
+      ['content-type' => 'text/plain']
+    );
+    return $response;
+  }
 
 }
