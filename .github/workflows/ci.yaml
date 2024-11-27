@@ -53,7 +53,8 @@ jobs:
 
       - name: Composer install
         run: |
-          docker-compose exec -T web composer install --no-interaction
+          docker-compose exec -T web composer config --merge --json "extra.patches" '{"drupal/group": {"Using a translatable string as a category for field type is deprecated - https://www.drupal.org/project/group/issues/3458530": "https://www.drupal.org/files/issues/2024-07-02/group-translate-string-as-category-is-deprecated_0.patch"}}'
+          docker-compose exec -T web composer require --dev cweagans/composer-patches
 
       - name: PhpCS
         run: |
@@ -66,3 +67,8 @@ jobs:
       - name: PhpUnit
         run: |
           docker-compose exec -T web ./vendor/bin/phpunit -vvv --debug
+
+      - name: PhpUnit - groupmedia 3
+        run: |
+          docker-compose exec -T web composer require --dev drupal/groupmedia:^3 -W
+          docker-compose exec -T web ./vendor/bin/phpunit -vvv --debug --testsuite "Collabora Online Group"

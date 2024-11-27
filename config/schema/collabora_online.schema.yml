@@ -24,3 +24,15 @@ collabora_online.settings:
         allowfullscreen:
           type: boolean
           label: 'Allow full-screen.'
+
+views.field.media_collabora_preview:
+  type: views_field
+  label: 'Collabora view link'
+  mapping:
+    text:
+      type: label
+      label: 'Text to display'
+
+views.field.media_collabora_edit:
+  type: views.field.media_collabora_preview
+  label: 'Collabora edit link'

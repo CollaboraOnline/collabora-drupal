@@ -1,6 +1,6 @@
 name: Collabora Online
 description: Integrate Collabora Online for document viewing and editing.
-package: Custom
+package: Collabora Online
 configure: collabora-online.settings
 dependencies:
   - drupal:media

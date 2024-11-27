@@ -19,8 +19,11 @@
     <env name="DTT_MINK_DRIVER_ARGS" value='["${selenium.browser}", {"browserName":"chrome","goog:chromeOptions":{"w3c": false, "args":["--no-sandbox", "--start-maximized", "--disable-gpu", "--window-size=1440,900", "--disable-dev-shm-usage", "--disable-setuid-sandbox", "--disable-web-security", "--DNS-prefetch-disable", "--disable-translate", "--ignore-certificate-errors", "--test-type", "--disable-extensions", "--incognito", "--disable-infobars"]}}, "${selenium.host}:${selenium.port}/wd/hub"]'/>
   </php>
   <testsuites>
-    <testsuite name="Collabora Drupal">
+    <testsuite name="Collabora Online">
       <directory>./tests/src/</directory>
+    </testsuite>
+    <testsuite name="Collabora Online Group">
+      <directory>./modules/collabora_online_group/tests/src/</directory>
     </testsuite>
   </testsuites>
 </phpunit>

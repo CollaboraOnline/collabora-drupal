@@ -1,0 +1,9 @@
+services:
+  group.relation_handler.permission_provider.collabora_group_media:
+    class: 'Drupal\collabora_online_group\Plugin\Group\RelationHandler\CollaboraPermissionProvider'
+    decorates: group.relation_handler.permission_provider.group_media
+    arguments: ["@group.relation_handler.permission_provider.collabora_group_media.inner"]
+
+  group.relation_handler.access_control.group_media:
+    class: 'Drupal\collabora_online_group\Plugin\Group\RelationHandler\CollaboraAccessControl'
+    arguments: ["@group.relation_handler.access_control"]

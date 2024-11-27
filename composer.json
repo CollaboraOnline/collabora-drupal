@@ -19,6 +19,7 @@
         "drupal/core-composer-scaffold": "^10.3.6",
         "drupal/core-dev": "^10.3.6",
         "drupal/core-recommended": "^10.3.6",
+        "drupal/groupmedia": "^3 || ^4",
         "drush/drush": "^12.4",
         "openeuropa/task-runner": "^2@dev",
         "openeuropa/task-runner-drupal-project-symlink": "^1.0.0-beta6",

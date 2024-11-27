@@ -8,10 +8,8 @@ use Drupal\Component\Serialization\Yaml;
 use Drupal\Core\Session\AccountInterface;
 use Drupal\Core\Session\AnonymousUserSession;
 use Drupal\Core\Url;
-use Drupal\file\Entity\File;
 use Drupal\KernelTests\KernelTestBase;
-use Drupal\media\Entity\Media;
-use Drupal\media\MediaInterface;
+use Drupal\Tests\collabora_online\Traits\MediaCreationTrait;
 use Drupal\Tests\media\Traits\MediaTypeCreationTrait;
 use Drupal\Tests\user\Traits\UserCreationTrait;
 use Drupal\user\RoleInterface;
@@ -23,6 +21,7 @@ class CollaboraMediaAccessTest extends KernelTestBase {
 
     use MediaTypeCreationTrait;
     use UserCreationTrait;
+    use MediaCreationTrait;
 
     /**
      * {@inheritdoc}
@@ -270,32 +269,6 @@ class CollaboraMediaAccessTest extends KernelTestBase {
             $actual_path_access,
             'Path access: ' . $message,
         );
-    }
-
-    /**
-     * Creates a media entity with attached file.
-     *
-     * @param string $type
-     *   Media type.
-     * @param array $values
-     *   Values for the media entity.
-     *
-     * @return \Drupal\media\MediaInterface
-     *   New media entity.
-     */
-    protected function createMediaEntity(string $type, array $values = []): MediaInterface {
-        file_put_contents('public://test.txt', 'Hello test');
-        $file = File::create([
-            'uri' => 'public://test.txt',
-        ]);
-        $file->save();
-        $values += [
-            'bundle' => $type,
-            'field_media_file' => $file->id(),
-        ];
-        $media = Media::create($values);
-        $media->save();
-        return $media;
     }
 
     /**
