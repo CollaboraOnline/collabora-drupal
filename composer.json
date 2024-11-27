@@ -1,5 +1,5 @@
 {
-    "name": "collabora/online",
+    "name": "drupal/collabora_online",
     "type": "drupal-module",
     "description": "Collabora Online connector for Drupal",
     "license": "MPL-2.0",
