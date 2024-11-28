@@ -97,7 +97,7 @@ class CollaboraDiscoveryFetcher {
     }
     $wopi_client_server = trim($wopi_client_server);
 
-    if (!str_starts_with($wopi_client_server, 'http')) {
+    if (!str_starts_with($wopi_client_server, 'http://') && !str_starts_with($wopi_client_server, 'https://')) {
       throw new CollaboraNotAvailableException(
         'Warning! You have to specify the scheme protocol too (http|https) for the server address.',
         204,
