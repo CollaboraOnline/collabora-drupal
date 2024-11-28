@@ -248,9 +248,9 @@ class CoolUtils {
     $wopi_base = $default_config->get('cool')['wopi_base'];
     $allowfullscreen = $default_config->get('cool')['allowfullscreen'] ?? FALSE;
 
-    $req = new CoolRequest();
+    $discovery = new CollaboraDiscovery();
     try {
-      $wopi_client = $req->getWopiClientURL();
+      $wopi_client = $discovery->getWopiClientURL();
     }
     catch (CollaboraNotAvailableException $e) {
       return [

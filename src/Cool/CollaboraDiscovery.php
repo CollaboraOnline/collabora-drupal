@@ -17,7 +17,7 @@ use Drupal\collabora_online\Exception\CollaboraNotAvailableException;
 /**
  * Helper class to fetch a WOPI client url.
  */
-class CoolRequest {
+class CollaboraDiscovery {
 
   /**
    * Gets the URL for the WOPI client.
