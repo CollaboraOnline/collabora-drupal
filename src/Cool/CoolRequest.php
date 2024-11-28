@@ -73,7 +73,6 @@ class CoolRequest {
    *   The client url cannot be retrieved.
    */
   public function getWopiClientURL(): string {
-    $_HOST_SCHEME = isset($_SERVER['HTTPS']) ? 'https' : 'http';
     $default_config = \Drupal::config('collabora_online.settings');
     $wopi_client_server = $default_config->get('cool')['server'];
     if (!$wopi_client_server) {
@@ -91,7 +90,8 @@ class CoolRequest {
       );
     }
 
-    if (!str_starts_with($wopi_client_server, $_HOST_SCHEME . '://')) {
+    $host_scheme = isset($_SERVER['HTTPS']) ? 'https' : 'http';
+    if (!str_starts_with($wopi_client_server, $host_scheme . '://')) {
       throw new CollaboraNotAvailableException(
         'Collabora Online server address scheme does not match the current page url scheme.',
         202,
