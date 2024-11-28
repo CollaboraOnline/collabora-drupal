@@ -59,7 +59,7 @@ class CollaboraDiscoveryFetcher {
   public function getDiscoveryXml(string $server): string {
     $discovery_url = $server . '/hosting/discovery';
 
-    $cool_settings = $this->configFactory->get('collabora_online.settings')->get('cool');
+    $cool_settings = $this->loadSettings();
     $disable_checks = (bool) $cool_settings['disable_cert_check'];
 
     try {
@@ -77,6 +77,25 @@ class CollaboraDiscoveryFetcher {
       );
     }
     return $xml;
+  }
+
+  /**
+   * Loads the relevant configuration.
+   *
+   * @return array
+   *   Configuration.
+   *
+   * @throws \Drupal\collabora_online\Exception\CollaboraNotAvailableException
+   *   The module is not configured.
+   *
+   * @todo Make this protected, only call from within.
+   */
+  public function loadSettings(): array {
+    $cool_settings = $this->configFactory->get('collabora_online.settings')->get('cool');
+    if (!$cool_settings) {
+      throw new CollaboraNotAvailableException('The Collabora Online connection is not configured.');
+    }
+    return $cool_settings;
   }
 
 }
