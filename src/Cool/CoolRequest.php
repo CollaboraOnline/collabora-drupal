@@ -26,7 +26,7 @@ use Drupal\collabora_online\Exception\CollaboraNotAvailableException;
  * @throws \Drupal\collabora_online\Exception\CollaboraNotAvailableException
  *   The client url cannot be retrieved.
  */
-function getDiscovery($server) {
+function getDiscovery(string $server): string {
   $discovery_url = $server . '/hosting/discovery';
 
   $default_config = \Drupal::config('collabora_online.settings');
