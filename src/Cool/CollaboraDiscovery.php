@@ -13,11 +13,25 @@
 namespace Drupal\collabora_online\Cool;
 
 use Drupal\collabora_online\Exception\CollaboraNotAvailableException;
+use Drupal\Core\Config\ConfigFactoryInterface;
 
 /**
  * Service to get a WOPI client url for a given MIME type.
  */
 class CollaboraDiscovery {
+
+  /**
+   * Constructor.
+   *
+   * @param \Drupal\collabora_online\Cool\CollaboraDiscoveryFetcher $discoveryFetcher
+   *   Discovery fetcher.
+   * @param \Drupal\Core\Config\ConfigFactoryInterface $configFactory
+   *   Config factory.
+   */
+  public function __construct(
+    protected readonly CollaboraDiscoveryFetcher $discoveryFetcher,
+    protected readonly ConfigFactoryInterface $configFactory,
+  ) {}
 
   /**
    * Gets the URL for the WOPI client.
@@ -33,7 +47,7 @@ class CollaboraDiscovery {
    *   The client url cannot be retrieved.
    */
   public function getWopiClientURL(string $mimetype = 'text/plain'): string {
-    $cool_settings = \Drupal::config('collabora_online.settings')->get('cool');
+    $cool_settings = $this->configFactory->get('collabora_online.settings')->get('cool');
     $wopi_client_server = $cool_settings['server'];
     if (!$wopi_client_server) {
       throw new CollaboraNotAvailableException(
@@ -58,9 +72,7 @@ class CollaboraDiscovery {
       );
     }
 
-    /** @var \Drupal\collabora_online\Cool\CollaboraDiscoveryFetcher $fetcher */
-    $fetcher = \Drupal::service(CollaboraDiscoveryFetcher::class);
-    $xml = $fetcher->getDiscoveryXml($wopi_client_server);
+    $xml = $this->discoveryFetcher->getDiscoveryXml($wopi_client_server);
 
     $discovery_parsed = simplexml_load_string($xml);
     if (!$discovery_parsed) {
