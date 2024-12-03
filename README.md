@@ -14,9 +14,7 @@ For a local demo or test installation, [see below](#development--demo-installati
 ### Requirements
 
 - Collabora Online server installed and running.
-- Drupal 10 (tested on 10.1), maybe compatible with 9.
-- JWT and Media are set as dependencies for the module and are
-  necessary.
+- Composer packages and Drupal modules as specified in `composer.json` and `collabora_online.info.yml`.
 
 ### Installation steps
 

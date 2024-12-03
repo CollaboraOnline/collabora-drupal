@@ -48,8 +48,6 @@ drupal:
         --key-input=text_field \
         --key-type-settings='{"algorithm": "HS256" }'
 
-    - "./vendor/bin/drush -y config-set jwt.config key_id collabora"
-
     # Configure media module.
     - "./vendor/bin/drush -y config-set media.settings standalone_url 1"
 
