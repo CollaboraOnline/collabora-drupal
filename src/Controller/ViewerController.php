@@ -130,7 +130,6 @@ class ViewerController extends ControllerBase {
 
     $id = $media->id();
 
-    $expire_timestamp = $this->tokenManager->getExpireTimestamp();
     $access_token = $this->tokenManager->encode(
       [
         'fid' => $id,

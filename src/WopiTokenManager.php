@@ -89,14 +89,17 @@ class WopiTokenManager {
    *
    * @param array $payload
    *   Values to encode in the token.
-   * @param int|float $expire_timestamp
-   *   Expiration timestamp, in seconds.
+   * @param int|float|null $expire_timestamp_reference
+   *   Reference to be filled with the expiration timestamp, in seconds.
    *
    * @return string
    *   The access token.
+   *
+   * @param-out int|float $expire_timestamp_reference
    */
-  public function encode(array $payload, int|float $expire_timestamp): string {
-    $payload['exp'] = $expire_timestamp;
+  public function encode(array $payload, int|float|null &$expire_timestamp_reference = NULL): string {
+    $expire_timestamp_reference = $this->getExpireTimestamp();
+    $payload['exp'] = $expire_timestamp_reference;
     $key = $this->getKey();
     $jwt = JWT::encode($payload, $key, 'HS256');
 
@@ -109,7 +112,7 @@ class WopiTokenManager {
    * @return float
    *   Expiration timestamp in seconds, with millisecond accuracy.
    */
-  public function getExpireTimestamp(): float {
+  protected function getExpireTimestamp(): float {
     $cool_settings = $this->configFactory->get('collabora_online.settings')->get('cool');
     $ttl_seconds = $cool_settings['access_token_ttl'] ?? 0;
     // Set a fallback of 24 hours.
