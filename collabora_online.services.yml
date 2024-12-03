@@ -9,3 +9,4 @@ services:
   Drupal\collabora_online\Cool\CollaboraDiscoveryInterface:
     class: Drupal\collabora_online\Cool\CollaboraDiscovery
   Drupal\collabora_online\Jwt\JwtTranscoder: { }
+  Drupal\collabora_online\MediaHelper: { }

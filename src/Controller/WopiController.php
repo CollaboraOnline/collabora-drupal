@@ -12,7 +12,7 @@
 
 namespace Drupal\collabora_online\Controller;
 
-use Drupal\collabora_online\Cool\CoolUtils;
+use Drupal\collabora_online\MediaHelper;
 use Drupal\collabora_online\Jwt\JwtTranscoder;
 use Drupal\Component\Datetime\TimeInterface;
 use Drupal\Core\Controller\ControllerBase;
@@ -39,6 +39,7 @@ class WopiController extends ControllerBase {
     protected readonly FileSystemInterface $fileSystem,
     protected readonly TimeInterface $time,
     protected readonly FileUrlGeneratorInterface $fileUrlGenerator,
+    protected readonly MediaHelper $mediaHelper,
   ) {
     $this->entityTypeManager = $entityTypeManager;
   }
@@ -82,7 +83,7 @@ class WopiController extends ControllerBase {
       return static::permissionDenied();
     }
 
-    $file = CoolUtils::getFileById($id);
+    $file = $this->mediaHelper->getFileById($id);
     $mtime = date_create_immutable_from_format('U', $file->getChangedTime());
     // @todo What if the uid in the payload is not set?
     // @todo What if $user is NULL?
@@ -145,7 +146,7 @@ class WopiController extends ControllerBase {
     $user = User::load($jwt_payload['uid']);
     $this->accountSwitcher->switchTo($user);
 
-    $file = CoolUtils::getFileById($id);
+    $file = $this->mediaHelper->getFileById($id);
     $mimetype = $file->getMimeType();
 
     $response = new BinaryFileResponse(
@@ -188,7 +189,7 @@ class WopiController extends ControllerBase {
 
     $this->accountSwitcher->switchTo($user);
 
-    $file = CoolUtils::getFile($media);
+    $file = $this->mediaHelper->getFile($media);
 
     if ($timestamp) {
       $wopi_stamp = \DateTimeImmutable::createFromFormat(\DateTimeInterface::ISO8601, $timestamp);
@@ -222,7 +223,7 @@ class WopiController extends ControllerBase {
     $file->save();
     $mtime = date_create_immutable_from_format('U', $file->getChangedTime());
 
-    CoolUtils::setMediaSource($media, $file);
+    $this->mediaHelper->setMediaSource($media, $file);
     $media->setRevisionUser($user);
     $media->setRevisionCreationTime($this->time->getRequestTime());
 
