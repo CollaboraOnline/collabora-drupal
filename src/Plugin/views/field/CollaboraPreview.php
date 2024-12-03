@@ -14,7 +14,7 @@ declare(strict_types=1);
 
 namespace Drupal\collabora_online\Plugin\views\field;
 
-use Drupal\collabora_online\Cool\CoolUtils;
+use Drupal\collabora_online\CoolUrl;
 use Drupal\Core\StringTranslation\TranslatableMarkup;
 use Drupal\Core\Url;
 use Drupal\views\Attribute\ViewsField;
@@ -40,7 +40,7 @@ class CollaboraPreview extends LinkBase {
       return NULL;
     }
 
-    return CoolUtils::getEditorUrl($entity, FALSE);
+    return CoolUrl::getEditorUrl($entity, FALSE);
   }
 
   /**

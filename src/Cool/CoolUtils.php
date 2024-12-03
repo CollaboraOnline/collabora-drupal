@@ -12,9 +12,7 @@
 
 namespace Drupal\collabora_online\Cool;
 
-use Drupal\Core\Url;
 use Drupal\file\Entity\File;
-use Drupal\media\Entity\Media;
 
 /**
  * Class with various static methods.
@@ -45,26 +43,6 @@ class CoolUtils {
   public static function canEdit(File $file) {
     $mimetype = $file->getMimeType();
     return !array_key_exists($mimetype, static::READ_ONLY);
-  }
-
-  /**
-   * Gets the editor / viewer Drupal URL from the routes configured.
-   *
-   * @param \Drupal\media\Entity\Media $media
-   *   Media entity that holds the file to open in the editor.
-   * @param bool $can_write
-   *   TRUE for an edit url, FALSE for a read-only preview url.
-   *
-   * @return \Drupal\Core\Url
-   *   Editor url to visit as full-page, or to embed in an iframe.
-   */
-  public static function getEditorUrl(Media $media, $can_write = FALSE) {
-    if ($can_write) {
-      return Url::fromRoute('collabora-online.edit', ['media' => $media->id()]);
-    }
-    else {
-      return Url::fromRoute('collabora-online.view', ['media' => $media->id()]);
-    }
   }
 
 }
