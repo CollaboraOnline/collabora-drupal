@@ -61,7 +61,7 @@ class WopiTokenManager {
    *   Media id for which the token was created.
    *   This could be in string form like '123'.
    *
-   * @return \stdClass|null
+   * @return array|null
    *   Data decoded from the token, or NULL on failure or if the token has
    *   expired.
    */
@@ -69,22 +69,22 @@ class WopiTokenManager {
     #[\SensitiveParameter]
     string $token,
     int|string $id,
-  ): \stdClass|null {
+  ): array|null {
     $key = $this->getKey();
     try {
-      $payload = JWT::decode($token, new Key($key, 'HS256'));
+      $payload = (array) JWT::decode($token, new Key($key, 'HS256'));
     }
     catch (\Exception $e) {
       $this->logger->error($e->getMessage());
       return NULL;
     }
-    if (!isset($payload->fid, $payload->exp)) {
+    if (!isset($payload['fid'], $payload['exp'])) {
       return NULL;
     }
-    if ($payload->fid != $id) {
+    if ($payload['fid'] != $id) {
       return NULL;
     }
-    if ($payload->exp < gettimeofday(TRUE)) {
+    if ($payload['exp'] < gettimeofday(TRUE)) {
       // Token is expired.
       return NULL;
     }
