@@ -115,8 +115,8 @@ class JwtTranscoder {
    *   Expiration timestamp in seconds, with millisecond accuracy.
    */
   public function getExpireTimestamp(): float {
-    $default_config = $this->configFactory->get('collabora_online.settings');
-    $ttl_seconds = $default_config->get('cool')['access_token_ttl'] ?? 0;
+    $cool_settings = $this->configFactory->get('collabora_online.settings')->get('cool');
+    $ttl_seconds = $cool_settings['access_token_ttl'] ?? 0;
     // Set a fallback of 24 hours.
     $ttl_seconds = $ttl_seconds ?: 86400;
 
@@ -130,8 +130,8 @@ class JwtTranscoder {
    *   The key value.
    */
   protected function getKey(): string {
-    $default_config = $this->configFactory->get('collabora_online.settings');
-    $key_id = $default_config->get('cool')['key_id'];
+    $cool_settings = $this->configFactory->get('collabora_online.settings')->get('cool');
+    $key_id = $cool_settings['key_id'];
 
     $key = $this->keyRepository->getKey($key_id)->getKeyValue();
     return $key;

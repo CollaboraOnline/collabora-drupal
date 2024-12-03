@@ -114,9 +114,9 @@ class ViewerController extends ControllerBase {
    *   A stub render element.
    */
   protected function getViewerRender(MediaInterface $media, string $wopi_client, bool $can_write, $options = NULL) {
-    $default_config = $this->config('collabora_online.settings');
-    $wopi_base = $default_config->get('cool')['wopi_base'];
-    $allowfullscreen = $default_config->get('cool')['allowfullscreen'] ?? FALSE;
+    $cool_settings = $this->config('collabora_online.settings')->get('cool');
+    $wopi_base = $cool_settings['wopi_base'];
+    $allowfullscreen = $cool_settings['allowfullscreen'] ?? FALSE;
 
     $id = $media->id();
 
