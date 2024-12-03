@@ -92,21 +92,6 @@ class CoolUtils {
   }
 
   /**
-   * Gets the mime type for the document.
-   *
-   * Drupal will figure it out for us.
-   *
-   * @param \Drupal\file\Entity\File $file
-   *   File entity.
-   *
-   * @return string|null
-   *   The mime type, or NULL if it cannot be determined.
-   */
-  public static function getDocumentType(File $file) {
-    return $file->getMimeType();
-  }
-
-  /**
    * Gets the editor / viewer Drupal URL from the routes configured.
    *
    * @param \Drupal\media\Entity\Media $media

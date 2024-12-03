@@ -92,7 +92,7 @@ function collabora_online_entity_operation(EntityInterface $entity) {
   }
 
   $file = CoolUtils::getFile($media);
-  $type = CoolUtils::getDocumentType($file);
+  $type = $file->getMimeType();
 
   if ($type == NULL) {
     return [];
