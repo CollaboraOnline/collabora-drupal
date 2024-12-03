@@ -25,6 +25,11 @@ collabora_online.settings:
           type: boolean
           label: 'Allow full-screen.'
 
+key.type.collabora_jwt_hs:
+  # The key type has no actual configurable settings, but it still needs a
+  # configuration schema.
+  type: sequence
+
 views.field.media_collabora_preview:
   type: views_field
   label: 'Collabora view link'
