@@ -11,6 +11,7 @@
  */
 
 use Drupal\collabora_online\Cool\CoolUtils;
+use Drupal\collabora_online\CollaboraUrl;
 use Drupal\collabora_online\MediaHelper;
 use Drupal\Core\Access\AccessResult;
 use Drupal\Core\Access\AccessResultInterface;
@@ -105,7 +106,7 @@ function collabora_online_entity_operation(EntityInterface $entity) {
     'collabora_online_view' => [
       'title' => t("View in Collabora Online"),
       'weight' => 50,
-      'url' => CoolUtils::getEditorUrl($media, FALSE),
+      'url' => CollaboraUrl::getEditorUrl($media, FALSE),
     ],
   ];
 
@@ -113,7 +114,7 @@ function collabora_online_entity_operation(EntityInterface $entity) {
     $entries['collabora_online_edit'] = [
       'title' => t("Edit in Collabora Online"),
       'weight' => 50,
-      'url' => CoolUtils::getEditorUrl($media, TRUE),
+      'url' => CollaboraUrl::getEditorUrl($media, TRUE),
     ];
   }
 

@@ -12,7 +12,7 @@
 
 namespace Drupal\collabora_online\Plugin\Field\FieldFormatter;
 
-use Drupal\collabora_online\Cool\CoolUtils;
+use Drupal\collabora_online\CollaboraUrl;
 use Drupal\Core\Cache\CacheableMetadata;
 use Drupal\Core\Field\FieldItemListInterface;
 use Drupal\Core\Field\Plugin\Field\FieldFormatter\EntityReferenceFormatterBase;
@@ -62,7 +62,7 @@ class CoolPreview extends EntityReferenceFormatterBase {
     }
 
     foreach ($this->getEntitiesToView($items, $langcode) as $delta => $file) {
-      $url = CoolUtils::getEditorUrl($media, FALSE);
+      $url = CollaboraUrl::getEditorUrl($media, FALSE);
 
       $render_array = [
         '#editorUrl' => $url,
