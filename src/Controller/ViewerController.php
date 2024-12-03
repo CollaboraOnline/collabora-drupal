@@ -89,7 +89,20 @@ class ViewerController extends ControllerBase {
       );
     }
 
-    $render_array = $this->getViewerRender($media, $wopi_client_url, $edit, $options);
+    try {
+      $render_array = $this->getViewerRender($media, $wopi_client_url, $edit, $options);
+    }
+    catch (CollaboraNotAvailableException $e) {
+      $this->getLogger('cool')->warning(
+        "Cannot show the viewer/editor.<br>\n" . Error::DEFAULT_ERROR_MESSAGE,
+        Error::decodeException($e) + [],
+      );
+      return new Response(
+        (string) $this->t('The Collabora Online editor/viewer is not available.'),
+        Response::HTTP_BAD_REQUEST,
+        ['content-type' => 'text/plain'],
+      );
+    }
 
     $render_array['#theme'] = 'collabora_online_full';
     $render_array['#attached']['library'][] = 'collabora_online/cool.frame';
@@ -116,6 +129,9 @@ class ViewerController extends ControllerBase {
    *
    * @return array
    *   A stub render element.
+   *
+   * @throws \Drupal\collabora_online\Exception\CollaboraNotAvailableException
+   *   The key to use by Collabora is empty or not configured.
    */
   protected function getViewerRender(MediaInterface $media, string $wopi_client, bool $can_write, $options = NULL) {
     $cool_settings = $this->config('collabora_online.settings')->get('cool');

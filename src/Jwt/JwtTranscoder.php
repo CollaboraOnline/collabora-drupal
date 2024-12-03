@@ -14,6 +14,7 @@ declare(strict_types=1);
 
 namespace Drupal\collabora_online\Jwt;
 
+use Drupal\collabora_online\Exception\CollaboraNotAvailableException;
 use Drupal\Core\Config\ConfigFactoryInterface;
 use Drupal\key\KeyRepositoryInterface;
 use Firebase\JWT\JWT;
@@ -47,6 +48,9 @@ class JwtTranscoder {
    * @return array|null
    *   Data decoded from the token, or NULL on failure or if the token has
    *   expired.
+   *
+   * @throws \Drupal\collabora_online\Exception\CollaboraNotAvailableException
+   *   The key to use by Collabora is empty or not configured.
    */
   public function decode(
     #[\SensitiveParameter]
@@ -80,6 +84,9 @@ class JwtTranscoder {
    *
    * @return string
    *   The access token.
+   *
+   * @throws \Drupal\collabora_online\Exception\CollaboraNotAvailableException
+   *   The key to use by Collabora is empty or not configured.
    */
   public function encode(array $payload, int|float $expire_timestamp): string {
     $payload['exp'] = $expire_timestamp;
@@ -94,12 +101,20 @@ class JwtTranscoder {
    *
    * @return string
    *   The key value.
+   *
+   * @throws \Drupal\collabora_online\Exception\CollaboraNotAvailableException
+   *   The key to use by Collabora is empty or not configured.
    */
   protected function getKey(): string {
     $cool_settings = $this->configFactory->get('collabora_online.settings')->get('cool');
-    $key_id = $cool_settings['key_id'];
-
-    $key = $this->keyRepository->getKey($key_id)->getKeyValue();
+    $key_id = $cool_settings['key_id'] ?? '';
+    if (!$key_id) {
+      throw new CollaboraNotAvailableException('No key was chosen for use in Collabora.');
+    }
+    $key = $this->keyRepository->getKey($key_id)?->getKeyValue();
+    if (!$key) {
+      throw new CollaboraNotAvailableException(sprintf("The key with id '%s' is empty or does not exist.", $key_id));
+    }
     return $key;
   }
 
