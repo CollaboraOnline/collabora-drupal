@@ -59,7 +59,7 @@ class WopiController extends ControllerBase {
   public function wopiCheckFileInfo(string $id, Request $request) {
     $token = $request->query->get('access_token');
 
-    $jwt_payload = $this->tokenManager->verifyTokenForMediaId($token, $id);
+    $jwt_payload = $this->verifyTokenForMediaId($token, $id);
     if ($jwt_payload == NULL) {
       return static::permissionDenied();
     }
@@ -127,7 +127,7 @@ class WopiController extends ControllerBase {
   public function wopiGetFile(string $id, Request $request) {
     $token = $request->query->get('access_token');
 
-    $jwt_payload = $this->tokenManager->verifyTokenForMediaId($token, $id);
+    $jwt_payload = $this->verifyTokenForMediaId($token, $id);
     if ($jwt_payload === NULL) {
       return static::permissionDenied();
     }
@@ -166,8 +166,8 @@ class WopiController extends ControllerBase {
     $autosave = $request->headers->get('x-cool-wopi-isautosave') == 'true';
     $exitsave = $request->headers->get('x-cool-wopi-isexitsave') == 'true';
 
-    $jwt_payload = $this->tokenManager->verifyTokenForMediaId($token, $id);
-    if ($jwt_payload == NULL || !$jwt_payload['wri']) {
+    $jwt_payload = $this->verifyTokenForMediaId($token, $id);
+    if ($jwt_payload == NULL || empty($jwt_payload['wri'])) {
       return static::permissionDenied();
     }
 
@@ -281,6 +281,38 @@ class WopiController extends ControllerBase {
       ['content-type' => 'text/plain']
     );
     return $response;
+  }
+
+  /**
+   * Decodes and verifies a JWT token.
+   *
+   * Verification include:
+   *  - matching $id with fid in the payload
+   *  - verifying the expiration.
+   *
+   * @param string $token
+   *   The token to verify.
+   * @param int|string $expected_media_id
+   *   Media id expected to be in the token payload.
+   *   This could be a stringified integer like '123'.
+   *
+   * @return array|null
+   *   Data decoded from the token, or NULL on failure or if the token has
+   *   expired.
+   */
+  protected function verifyTokenForMediaId(
+    #[\SensitiveParameter]
+    string $token,
+    int|string $expected_media_id,
+  ): array|null {
+    $values = $this->tokenManager->decode($token);
+    if ($values === NULL) {
+      return NULL;
+    }
+    if ($values['fid'] !== $expected_media_id) {
+      return NULL;
+    }
+    return $values;
   }
 
 }
