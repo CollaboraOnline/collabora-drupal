@@ -68,7 +68,7 @@ class WopiController extends ControllerBase {
    * @return \Symfony\Component\HttpFoundation\Response
    *   The response with file contents.
    */
-  public function wopiCheckFileInfo(string $id, Request $request) {
+  public function wopiCheckFileInfo(string $id, Request $request): Response {
     $token = $request->query->get('access_token');
 
     $jwt_payload = $this->verifyTokenForMediaId($token, $id);
@@ -134,7 +134,7 @@ class WopiController extends ControllerBase {
    * @return \Symfony\Component\HttpFoundation\Response
    *   The response with file contents.
    */
-  public function wopiGetFile(string $id, Request $request) {
+  public function wopiGetFile(string $id, Request $request): Response {
     $token = $request->query->get('access_token');
 
     $jwt_payload = $this->verifyTokenForMediaId($token, $id);
@@ -168,7 +168,7 @@ class WopiController extends ControllerBase {
    * @return \Symfony\Component\HttpFoundation\Response
    *   The response.
    */
-  public function wopiPutFile(string $id, Request $request) {
+  public function wopiPutFile(string $id, Request $request): Response {
     $token = $request->query->get('access_token');
     $timestamp = $request->headers->get('x-cool-wopi-timestamp');
     $modified_by_user = $request->headers->get('x-cool-wopi-ismodifiedbyuser') == 'true';
@@ -271,7 +271,7 @@ class WopiController extends ControllerBase {
    * @return \Symfony\Component\HttpFoundation\Response
    *   Response to be consumed by Collabora Online.
    */
-  public function wopi(string $action, string $id, Request $request) {
+  public function wopi(string $action, string $id, Request $request): Response {
     $returnCode = Response::HTTP_BAD_REQUEST;
     switch ($action) {
       case 'info':
