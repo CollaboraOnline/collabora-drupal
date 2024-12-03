@@ -61,13 +61,13 @@ class JwtTranscoder {
     $key = $this->getKey();
     try {
       $payload = JWT::decode($token, new Key($key, 'HS256'));
-
-      if ($payload && ($payload->fid == $id) && ($payload->exp >= gettimeofday(TRUE))) {
-        return $payload;
-      }
     }
     catch (\Exception $e) {
       $this->logger->error($e->getMessage());
+      return NULL;
+    }
+    if ($payload && ($payload->fid == $id) && ($payload->exp >= gettimeofday(TRUE))) {
+      return $payload;
     }
     return NULL;
   }
