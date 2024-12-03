@@ -47,8 +47,6 @@ drupal:
         --key-provider=config \
         --key-input=text_field
 
-    - "./vendor/bin/drush -y config-set jwt.config key_id collabora"
-
     # Configure media module.
     - "./vendor/bin/drush -y config-set media.settings standalone_url 1"
 
