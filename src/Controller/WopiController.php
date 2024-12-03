@@ -14,8 +14,12 @@ namespace Drupal\collabora_online\Controller;
 
 use Drupal\collabora_online\Cool\CoolUtils;
 use Drupal\collabora_online\Jwt\JwtTranscoder;
+use Drupal\Component\Datetime\TimeInterface;
 use Drupal\Core\Controller\ControllerBase;
+use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\File\FileSystemInterface;
+use Drupal\Core\File\FileUrlGeneratorInterface;
+use Drupal\Core\Session\AccountSwitcherInterface;
 use Drupal\file\Entity\File;
 use Drupal\user\Entity\User;
 use Symfony\Component\HttpFoundation\BinaryFileResponse;
@@ -28,8 +32,15 @@ use Symfony\Component\HttpFoundation\Response;
 class WopiController extends ControllerBase {
 
   public function __construct(
+    EntityTypeManagerInterface $entityTypeManager,
     protected readonly JwtTranscoder $tokenManager,
-  ) {}
+    protected readonly AccountSwitcherInterface $accountSwitcher,
+    protected readonly FileSystemInterface $fileSystem,
+    protected readonly TimeInterface $time,
+    protected readonly FileUrlGeneratorInterface $fileUrlGenerator,
+  ) {
+    $this->entityTypeManager = $entityTypeManager;
+  }
 
   /**
    * Creates a failure response that is understood by Collabora.
@@ -65,7 +76,7 @@ class WopiController extends ControllerBase {
     }
 
     /** @var \Drupal\media\MediaInterface|null $media */
-    $media = \Drupal::entityTypeManager()->getStorage('media')->load($id);
+    $media = $this->entityTypeManager->getStorage('media')->load($id);
     if (!$media) {
       return static::permissionDenied();
     }
@@ -78,7 +89,7 @@ class WopiController extends ControllerBase {
     $can_write = $jwt_payload['wri'];
 
     if ($can_write && !$media->access('edit in collabora', $user)) {
-      \Drupal::logger('cool')->error('Token and user permissions do not match.');
+      $this->getLogger('cool')->error('Token and user permissions do not match.');
       return static::permissionDenied();
     }
 
@@ -98,9 +109,7 @@ class WopiController extends ControllerBase {
 
     $user_picture = $user->user_picture?->entity;
     if ($user_picture) {
-      /** @var \Drupal\Core\File\FileUrlGeneratorInterface $file_url_generator */
-      $file_url_generator = \Drupal::service('file_url_generator');
-      $payload['UserExtraInfo']['avatar'] = $file_url_generator->generateAbsoluteString($user_picture->getFileUri());
+      $payload['UserExtraInfo']['avatar'] = $this->fileUrlGenerator->generateAbsoluteString($user_picture->getFileUri());
     }
 
     $jsonPayload = json_encode($payload);
@@ -133,8 +142,7 @@ class WopiController extends ControllerBase {
     }
 
     $user = User::load($jwt_payload['uid']);
-    $accountSwitcher = \Drupal::service('account_switcher');
-    $accountSwitcher->switchTo($user);
+    $this->accountSwitcher->switchTo($user);
 
     $file = CoolUtils::getFileById($id);
     $mimetype = $file->getMimeType();
@@ -144,7 +152,7 @@ class WopiController extends ControllerBase {
       Response::HTTP_OK,
       ['content-type' => $mimetype]
     );
-    $accountSwitcher->switchBack();
+    $this->accountSwitcher->switchBack();
     return $response;
   }
 
@@ -171,13 +179,10 @@ class WopiController extends ControllerBase {
       return static::permissionDenied();
     }
 
-    $fs = \Drupal::service('file_system');
-
-    $media = \Drupal::entityTypeManager()->getStorage('media')->load($id);
+    $media = $this->entityTypeManager->getStorage('media')->load($id);
     $user = User::load($jwt_payload['uid']);
 
-    $accountSwitcher = \Drupal::service('account_switcher');
-    $accountSwitcher->switchTo($user);
+    $this->accountSwitcher->switchTo($user);
 
     $file = CoolUtils::getFile($media);
 
@@ -186,7 +191,7 @@ class WopiController extends ControllerBase {
       $file_stamp = date_create_immutable_from_format('U', $file->getChangedTime());
 
       if ($wopi_stamp != $file_stamp) {
-        \Drupal::logger('cool')->error('Conflict saving file ' . $id . ' wopi: ' . $wopi_stamp->format('c') . ' differs from file: ' . $file_stamp->format('c'));
+        $this->getLogger('cool')->error('Conflict saving file ' . $id . ' wopi: ' . $wopi_stamp->format('c') . ' differs from file: ' . $file_stamp->format('c'));
 
         return new Response(
           json_encode(['COOLStatusCode' => 1010]),
@@ -196,17 +201,17 @@ class WopiController extends ControllerBase {
       }
     }
 
-    $dir = $fs->dirname($file->getFileUri());
+    $dir = $this->fileSystem->dirname($file->getFileUri());
     $dest = $dir . '/' . $file->getFilename();
 
     $content = $request->getContent();
     $owner_id = $file->getOwnerId();
-    $uri = $fs->saveData($content, $dest, FileSystemInterface::EXISTS_RENAME);
+    $uri = $this->fileSystem->saveData($content, $dest, FileSystemInterface::EXISTS_RENAME);
 
     $file = File::create(['uri' => $uri]);
     $file->setOwnerId($owner_id);
     if (is_file($dest)) {
-      $file->setFilename($fs->basename($dest));
+      $file->setFilename($this->fileSystem->basename($dest));
     }
     $file->setPermanent();
     $file->setSize(strlen($content));
@@ -215,7 +220,7 @@ class WopiController extends ControllerBase {
 
     CoolUtils::setMediaSource($media, $file);
     $media->setRevisionUser($user);
-    $media->setRevisionCreationTime(\Drupal::service('datetime.time')->getRequestTime());
+    $media->setRevisionCreationTime($this->time->getRequestTime());
 
     $save_reason = 'Saved by Collabora Online';
     $reasons = [];
@@ -231,7 +236,7 @@ class WopiController extends ControllerBase {
     if (count($reasons) > 0) {
       $save_reason .= ' (' . implode(', ', $reasons) . ')';
     }
-    \Drupal::logger('cool')->error('Save reason: ' . $save_reason);
+    $this->getLogger('cool')->error('Save reason: ' . $save_reason);
     $media->setRevisionLogMessage($save_reason);
     $media->save();
 
@@ -245,7 +250,7 @@ class WopiController extends ControllerBase {
       ['content-type' => 'application/json']
     );
 
-    $accountSwitcher->switchBack();
+    $this->accountSwitcher->switchBack();
     return $response;
   }
 
