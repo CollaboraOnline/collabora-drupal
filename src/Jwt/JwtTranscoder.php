@@ -97,10 +97,10 @@ class JwtTranscoder {
    */
   public function tokenForFileId(int|string $id, int|float $expire_timestamp, bool $can_write = FALSE): string {
     $payload = [
-      "fid" => $id,
-      "uid" => $this->currentUser->id(),
-      "exp" => $expire_timestamp,
-      "wri" => $can_write,
+      'fid' => $id,
+      'uid' => $this->currentUser->id(),
+      'exp' => $expire_timestamp,
+      'wri' => $can_write,
     ];
     $key = $this->getKey();
     $jwt = JWT::encode($payload, $key, 'HS256');
