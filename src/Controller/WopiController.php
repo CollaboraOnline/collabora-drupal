@@ -59,7 +59,7 @@ class WopiController extends ControllerBase {
   public function wopiCheckFileInfo(string $id, Request $request) {
     $token = $request->query->get('access_token');
 
-    $jwt_payload = $this->jwtTranscoder->verifyTokenForId($token, $id);
+    $jwt_payload = $this->jwtTranscoder->verifyTokenForMediaId($token, $id);
     if ($jwt_payload == NULL) {
       return static::permissionDenied();
     }
@@ -127,7 +127,7 @@ class WopiController extends ControllerBase {
   public function wopiGetFile(string $id, Request $request) {
     $token = $request->query->get('access_token');
 
-    $jwt_payload = $this->jwtTranscoder->verifyTokenForId($token, $id);
+    $jwt_payload = $this->jwtTranscoder->verifyTokenForMediaId($token, $id);
     if ($jwt_payload == NULL) {
       return static::permissionDenied();
     }
@@ -166,7 +166,7 @@ class WopiController extends ControllerBase {
     $autosave = $request->headers->get('x-cool-wopi-isautosave') == 'true';
     $exitsave = $request->headers->get('x-cool-wopi-isexitsave') == 'true';
 
-    $jwt_payload = $this->jwtTranscoder->verifyTokenForId($token, $id);
+    $jwt_payload = $this->jwtTranscoder->verifyTokenForMediaId($token, $id);
     if ($jwt_payload == NULL || !$jwt_payload->wri) {
       return static::permissionDenied();
     }
