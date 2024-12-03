@@ -94,7 +94,7 @@ function collabora_online_entity_operation(EntityInterface $entity) {
 
   /** @var \Drupal\collabora_online\MediaHelper $media_helper */
   $media_helper = \Drupal::service(MediaHelper::class);
-  $file = $media_helper->getFile($media);
+  $file = $media_helper->getFileForMedia($media);
   $type = $file->getMimeType();
 
   if ($type == NULL) {
