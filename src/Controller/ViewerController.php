@@ -121,7 +121,7 @@ class ViewerController extends ControllerBase {
     $id = $media->id();
 
     $expire_timestamp = $this->tokenManager->getExpireTimestamp();
-    $access_token = $this->tokenManager->tokenForFileId($id, $expire_timestamp, $can_write);
+    $access_token = $this->tokenManager->createTokenForMediaId($id, $expire_timestamp, $can_write);
 
     $render_array = [
       '#wopiClient' => $wopi_client,
