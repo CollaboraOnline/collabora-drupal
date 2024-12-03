@@ -66,10 +66,17 @@ class JwtTranscoder {
       $this->logger->error($e->getMessage());
       return NULL;
     }
-    if ($payload && ($payload->fid == $id) && ($payload->exp >= gettimeofday(TRUE))) {
-      return $payload;
+    if (!isset($payload->fid, $payload->exp)) {
+      return NULL;
     }
-    return NULL;
+    if ($payload->fid != $id) {
+      return NULL;
+    }
+    if ($payload->exp < gettimeofday(TRUE)) {
+      // Token is expired.
+      return NULL;
+    }
+    return $payload;
   }
 
   /**
