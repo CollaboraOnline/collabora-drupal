@@ -74,8 +74,8 @@ class WopiController extends ControllerBase {
     $mtime = date_create_immutable_from_format('U', $file->getChangedTime());
     // @todo What if the uid in the payload is not set?
     // @todo What if $user is NULL?
-    $user = User::load($jwt_payload->uid);
-    $can_write = $jwt_payload->wri;
+    $user = User::load($jwt_payload['uid']);
+    $can_write = $jwt_payload['wri'];
 
     if ($can_write && !$media->access('edit in collabora', $user)) {
       \Drupal::logger('cool')->error('Token and user permissions do not match.');
@@ -86,7 +86,7 @@ class WopiController extends ControllerBase {
       'BaseFileName' => $file->getFilename(),
       'Size' => $file->getSize(),
       'LastModifiedTime' => $mtime->format('c'),
-      'UserId' => $jwt_payload->uid,
+      'UserId' => $jwt_payload['uid'],
       'UserFriendlyName' => $user->getDisplayName(),
       'UserExtraInfo' => [
         'mail' => $user->getEmail(),
@@ -128,11 +128,11 @@ class WopiController extends ControllerBase {
     $token = $request->query->get('access_token');
 
     $jwt_payload = $this->tokenManager->verifyTokenForMediaId($token, $id);
-    if ($jwt_payload == NULL) {
+    if ($jwt_payload === NULL) {
       return static::permissionDenied();
     }
 
-    $user = User::load($jwt_payload->uid);
+    $user = User::load($jwt_payload['uid']);
     $accountSwitcher = \Drupal::service('account_switcher');
     $accountSwitcher->switchTo($user);
 
@@ -167,14 +167,14 @@ class WopiController extends ControllerBase {
     $exitsave = $request->headers->get('x-cool-wopi-isexitsave') == 'true';
 
     $jwt_payload = $this->tokenManager->verifyTokenForMediaId($token, $id);
-    if ($jwt_payload == NULL || !$jwt_payload->wri) {
+    if ($jwt_payload == NULL || !$jwt_payload['wri']) {
       return static::permissionDenied();
     }
 
     $fs = \Drupal::service('file_system');
 
     $media = \Drupal::entityTypeManager()->getStorage('media')->load($id);
-    $user = User::load($jwt_payload->uid);
+    $user = User::load($jwt_payload['uid']);
 
     $accountSwitcher = \Drupal::service('account_switcher');
     $accountSwitcher->switchTo($user);
