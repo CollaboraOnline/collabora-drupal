@@ -17,6 +17,7 @@ use Drupal\collabora_online\Jwt\JwtTranscoder;
 use Drupal\Component\Datetime\TimeInterface;
 use Drupal\Core\Controller\ControllerBase;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
+use Drupal\Core\File\FileExists;
 use Drupal\Core\File\FileSystemInterface;
 use Drupal\Core\File\FileUrlGeneratorInterface;
 use Drupal\Core\Session\AccountSwitcherInterface;
@@ -206,7 +207,7 @@ class WopiController extends ControllerBase {
 
     $content = $request->getContent();
     $owner_id = $file->getOwnerId();
-    $uri = $this->fileSystem->saveData($content, $dest, FileSystemInterface::EXISTS_RENAME);
+    $uri = $this->fileSystem->saveData($content, $dest, FileExists::Rename);
 
     $file = File::create(['uri' => $uri]);
     $file->setOwnerId($owner_id);
