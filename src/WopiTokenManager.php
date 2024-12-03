@@ -57,18 +57,14 @@ class WopiTokenManager {
    *
    * @param string $token
    *   The token to verify.
-   * @param int|string $id
-   *   Media id for which the token was created.
-   *   This could be in string form like '123'.
    *
    * @return array|null
    *   Data decoded from the token, or NULL on failure or if the token has
    *   expired.
    */
-  public function verifyTokenForMediaId(
+  public function decodeAndVerify(
     #[\SensitiveParameter]
     string $token,
-    int|string $id,
   ): array|null {
     $key = $this->getKey();
     try {
@@ -78,10 +74,7 @@ class WopiTokenManager {
       $this->logger->error($e->getMessage());
       return NULL;
     }
-    if (!isset($payload['fid'], $payload['exp'])) {
-      return NULL;
-    }
-    if ($payload['fid'] != $id) {
+    if (!isset($payload['exp'])) {
       return NULL;
     }
     if ($payload['exp'] < gettimeofday(TRUE)) {
@@ -92,35 +85,18 @@ class WopiTokenManager {
   }
 
   /**
-   * Creates a JWT token for a media entity.
+   * Creates a JWT token.
    *
-   * The token will carry the following:
-   *
-   * - fid: the Media id in Drupal.
-   * - uid: the User id for the token. Permissions should be checked
-   *   whenever.
-   * - exp: the expiration time of the token.
-   * - wri: if true, then this token has write permissions.
-   *
-   * The signing key is stored in Drupal key management.
-   *
-   * @param int|string $id
-   *   Media id, which could be in string form like '123'.
+   * @param array $payload
+   *   Values to encode in the token.
    * @param int|float $expire_timestamp
    *   Expiration timestamp, in seconds.
-   * @param bool $can_write
-   *   TRUE if the token is for an editor in write/edit mode.
    *
    * @return string
    *   The access token.
    */
-  public function createTokenForMediaId(int|string $id, int|float $expire_timestamp, bool $can_write = FALSE): string {
-    $payload = [
-      'fid' => $id,
-      'uid' => $this->currentUser->id(),
-      'exp' => $expire_timestamp,
-      'wri' => $can_write,
-    ];
+  public function encode(array $payload, int|float $expire_timestamp): string {
+    $payload['exp'] = $expire_timestamp;
     $key = $this->getKey();
     $jwt = JWT::encode($payload, $key, 'HS256');
 
