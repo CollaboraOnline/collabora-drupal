@@ -198,6 +198,9 @@ class WopiController extends ControllerBase {
 
     $media = $this->entityTypeManager->getStorage('media')->load($id);
     $user = User::load($jwt_payload['uid']);
+    if ($media === NULL || $user === NULL) {
+      return static::permissionDenied();
+    }
 
     $this->accountSwitcher->switchTo($user);
 
