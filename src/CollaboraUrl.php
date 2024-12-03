@@ -23,23 +23,29 @@ use Drupal\media\MediaInterface;
 class CollaboraUrl {
 
   /**
-   * Gets the editor / viewer Drupal URL from the routes configured.
+   * Gets a url to open media in Collabora as read-only.
    *
    * @param \Drupal\media\MediaInterface $media
-   *   Media entity that holds the file to open in the editor.
-   * @param bool $can_write
-   *   TRUE for an edit url, FALSE for a read-only preview url.
+   *   Media entity that holds the file to open in the viewer.
    *
    * @return \Drupal\Core\Url
    *   Editor url to visit as full-page, or to embed in an iframe.
    */
-  public static function getEditorUrl(MediaInterface $media, $can_write = FALSE) {
-    if ($can_write) {
-      return Url::fromRoute('collabora-online.edit', ['media' => $media->id()]);
-    }
-    else {
-      return Url::fromRoute('collabora-online.view', ['media' => $media->id()]);
-    }
+  public static function previewMedia(MediaInterface $media): Url {
+    return Url::fromRoute('collabora-online.view', ['media' => $media->id()]);
+  }
+
+  /**
+   * Gets a url to open media in Collabora in edit mode.
+   *
+   * @param \Drupal\media\MediaInterface $media
+   *   Media entity that holds the file to open in the editor.
+   *
+   * @return \Drupal\Core\Url
+   *   Editor url to visit as full-page, or to embed in an iframe.
+   */
+  public static function editMedia(MediaInterface $media): Url {
+    return Url::fromRoute('collabora-online.edit', ['media' => $media->id()]);
   }
 
 }

@@ -40,7 +40,7 @@ class CollaboraEdit extends LinkBase {
       return NULL;
     }
 
-    return CollaboraUrl::getEditorUrl($entity, TRUE);
+    return CollaboraUrl::editMedia($entity);
   }
 
   /**
