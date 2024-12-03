@@ -17,7 +17,7 @@ namespace Drupal\collabora_online\Cool;
 use Drupal\collabora_online\Exception\CollaboraNotAvailableException;
 
 /**
- * Service to get a WOPI client url for a given MIME type.
+ * Service to get a WOPI client URL for a given MIME type.
  */
 class CollaboraDiscovery implements CollaboraDiscoveryInterface {
 
