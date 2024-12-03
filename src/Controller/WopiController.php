@@ -83,7 +83,7 @@ class WopiController extends ControllerBase {
       return static::permissionDenied();
     }
 
-    $file = $this->mediaHelper->getFileById($id);
+    $file = $this->mediaHelper->getFileForMediaId($id);
     $mtime = date_create_immutable_from_format('U', $file->getChangedTime());
     // @todo What if the uid in the payload is not set?
     // @todo What if $user is NULL?
@@ -146,7 +146,7 @@ class WopiController extends ControllerBase {
     $user = User::load($jwt_payload['uid']);
     $this->accountSwitcher->switchTo($user);
 
-    $file = $this->mediaHelper->getFileById($id);
+    $file = $this->mediaHelper->getFileForMediaId($id);
     $mimetype = $file->getMimeType();
 
     $response = new BinaryFileResponse(
@@ -189,7 +189,7 @@ class WopiController extends ControllerBase {
 
     $this->accountSwitcher->switchTo($user);
 
-    $file = $this->mediaHelper->getFile($media);
+    $file = $this->mediaHelper->getFileForMedia($media);
 
     if ($timestamp) {
       $wopi_stamp = \DateTimeImmutable::createFromFormat(\DateTimeInterface::ISO8601, $timestamp);
