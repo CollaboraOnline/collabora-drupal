@@ -38,6 +38,7 @@ class ViewsLinkFieldsTest extends KernelTestBase {
   protected static $modules = [
     'collabora_online',
     'collabora_online_test',
+    'key',
     'field',
     'file',
     'image',
