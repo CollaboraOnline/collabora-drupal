@@ -22,50 +22,6 @@ use Drupal\media\Entity\Media;
 class CoolUtils {
 
   /**
-   * Gets the file referenced by a media entity.
-   *
-   * @param \Drupal\media\Entity\Media $media
-   *   The media entity.
-   *
-   * @return \Drupal\file\FileInterface|null
-   *   The file entity, or NULL if not found.
-   */
-  public static function getFile(Media $media) {
-    $fid = $media->getSource()->getSourceFieldValue($media);
-    $file = File::load($fid);
-
-    return $file;
-  }
-
-  /**
-   * Gets a file based on the media id.
-   *
-   * @param int|string $id
-   *   Media id which might be in strong form like '123'.
-   *
-   * @return \Drupal\file\FileInterface|null
-   *   File referenced by the media entity, or NULL if not found.
-   */
-  public static function getFileById($id) {
-    /** @var \Drupal\media\MediaInterface|null $media */
-    $media = \Drupal::entityTypeManager()->getStorage('media')->load($id);
-    return CoolUtils::getFile($media);
-  }
-
-  /**
-   * Sets the file entity reference for a media entity.
-   *
-   * @param \Drupal\media\Entity\Media $media
-   *   Media entity to be modified.
-   * @param \Drupal\file\Entity\File $source
-   *   File entity to reference.
-   */
-  public static function setMediaSource(Media $media, File $source) {
-    $name = $media->getSource()->getSourceFieldDefinition($media->bundle->entity)->getName();
-    $media->set($name, $source);
-  }
-
-  /**
    * List of read only formats. Currently limited to the one Drupal accept.
    */
   const READ_ONLY = [

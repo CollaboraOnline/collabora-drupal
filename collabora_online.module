@@ -11,6 +11,7 @@
  */
 
 use Drupal\collabora_online\Cool\CoolUtils;
+use Drupal\collabora_online\MediaHelper;
 use Drupal\Core\Access\AccessResult;
 use Drupal\Core\Access\AccessResultInterface;
 use Drupal\Core\Entity\EntityInterface;
@@ -91,7 +92,9 @@ function collabora_online_entity_operation(EntityInterface $entity) {
     return [];
   }
 
-  $file = CoolUtils::getFile($media);
+  /** @var \Drupal\collabora_online\MediaHelper $media_helper */
+  $media_helper = \Drupal::service(MediaHelper::class);
+  $file = $media_helper->getFile($media);
   $type = $file->getMimeType();
 
   if ($type == NULL) {
