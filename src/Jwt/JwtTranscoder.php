@@ -56,8 +56,8 @@ class JwtTranscoder {
   public function verifyTokenForId(
     #[\SensitiveParameter]
     string $token,
-    $id,
-  ) {
+    int|string $id,
+  ): \stdClass|null {
     $key = $this->getKey();
     try {
       $payload = JWT::decode($token, new Key($key, 'HS256'));
@@ -95,7 +95,7 @@ class JwtTranscoder {
    * @return string
    *   The access token.
    */
-  public function tokenForFileId($id, $expire_timestamp, $can_write = FALSE) {
+  public function tokenForFileId(int|string $id, int|float $expire_timestamp, bool $can_write = FALSE): string {
     $payload = [
       "fid" => $id,
       "uid" => $this->currentUser->id(),
@@ -114,7 +114,7 @@ class JwtTranscoder {
    * @return float
    *   Expiration timestamp in seconds, with millisecond accuracy.
    */
-  public function getAccessTokenTtl() {
+  public function getExpireTimestamp(): float {
     $default_config = $this->configFactory->get('collabora_online.settings');
     $ttl_seconds = $default_config->get('cool')['access_token_ttl'];
 
@@ -127,7 +127,7 @@ class JwtTranscoder {
    * @return string
    *   The key value.
    */
-  protected function getKey() {
+  protected function getKey(): string {
     $default_config = $this->configFactory->get('collabora_online.settings');
     $key_id = $default_config->get('cool')['key_id'];
 
