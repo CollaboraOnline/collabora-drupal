@@ -121,9 +121,6 @@ class ViewerController extends ControllerBase {
     $id = $media->id();
 
     $expire_timestamp = $this->jwtTranscoder->getExpireTimestamp();
-    if ($expire_timestamp == 0) {
-      $expire_timestamp = 86400;
-    }
     $access_token = $this->jwtTranscoder->tokenForFileId($id, $expire_timestamp, $can_write);
 
     $render_array = [

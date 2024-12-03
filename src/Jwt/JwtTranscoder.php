@@ -116,7 +116,9 @@ class JwtTranscoder {
    */
   public function getExpireTimestamp(): float {
     $default_config = $this->configFactory->get('collabora_online.settings');
-    $ttl_seconds = $default_config->get('cool')['access_token_ttl'];
+    $ttl_seconds = $default_config->get('cool')['access_token_ttl'] ?? 0;
+    // Set a fallback of 24 hours.
+    $ttl_seconds = $ttl_seconds ?: 86400;
 
     return gettimeofday(TRUE) + $ttl_seconds;
   }
