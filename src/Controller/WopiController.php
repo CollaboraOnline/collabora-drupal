@@ -12,6 +12,7 @@
 
 namespace Drupal\collabora_online\Controller;
 
+use Drupal\collabora_online\Exception\CollaboraNotAvailableException;
 use Drupal\collabora_online\MediaHelper;
 use Drupal\collabora_online\Jwt\JwtTranscoder;
 use Drupal\Component\Datetime\TimeInterface;
@@ -315,7 +316,13 @@ class WopiController extends ControllerBase {
     string $token,
     int|string $expected_media_id,
   ): array|null {
-    $values = $this->jwtTranscoder->decode($token);
+    try {
+      $values = $this->jwtTranscoder->decode($token);
+    }
+    catch (CollaboraNotAvailableException $e) {
+      $this->getLogger('cool')->warning('A token cannot be decoded: @message', ['@mesage' => $e->getMessage()]);
+      return NULL;
+    }
     if ($values === NULL) {
       return NULL;
     }
