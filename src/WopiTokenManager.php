@@ -65,7 +65,7 @@ class WopiTokenManager {
    *   Data decoded from the token, or NULL on failure or if the token has
    *   expired.
    */
-  public function verifyTokenForId(
+  public function verifyTokenForMediaId(
     #[\SensitiveParameter]
     string $token,
     int|string $id,
@@ -114,7 +114,7 @@ class WopiTokenManager {
    * @return string
    *   The access token.
    */
-  public function tokenForFileId(int|string $id, int|float $expire_timestamp, bool $can_write = FALSE): string {
+  public function createTokenForMediaId(int|string $id, int|float $expire_timestamp, bool $can_write = FALSE): string {
     $payload = [
       'fid' => $id,
       'uid' => $this->currentUser->id(),
