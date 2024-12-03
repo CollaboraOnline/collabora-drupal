@@ -18,8 +18,5 @@
     <exclude name="Drupal.NamingConventions.ValidFunctionName.InvalidName"/>
     <exclude name="Drupal.NamingConventions.ValidVariableName.LowerCamelName"/>
     <exclude name="Drupal.NamingConventions.ValidFunctionName.ScopeNotCamelCaps"/>
-
-    <!-- Fix translatable strings later. -->
-    <exclude name="Drupal.Semantics.FunctionT.WhiteSpace"/>
   </rule>
 </ruleset>

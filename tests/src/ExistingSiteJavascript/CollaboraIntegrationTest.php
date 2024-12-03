@@ -14,6 +14,7 @@ declare(strict_types=1);
 
 namespace Drupal\Tests\collabora_online\ExistingSiteJavascript;
 
+use Behat\Mink\Element\NodeElement;
 use Drupal\file\Entity\File;
 use Drupal\media\Entity\Media;
 use Drupal\media\MediaInterface;
@@ -40,26 +41,97 @@ class CollaboraIntegrationTest extends ExistingSiteSelenium2DriverTestBase {
     ]);
     $this->drupalLogin($user);
     $media = $this->createDocumentMedia('Shopping list', 'shopping-list', 'Chocolate, pickles');
+
     $this->drupalGet('/cool/view/' . $media->id());
+
     $this->getSession()->switchToIFrame('collabora-online-viewer');
+    $this->assertCollaboraDocumentCanvas();
+    $this->assertCollaboraDocumentName('shopping-list.txt');
+    $this->assertCollaboraWordCountString('2 words, 18 characters');
 
-    $assert_session = $this->assertSession();
-    $canvas = $assert_session->waitForElement('css', 'canvas#document-canvas');
-    $this->assertNotNull($canvas, 'The canvas element was not found after 10 seconds.');
+    // Verify the read-only mode.
+    $readonly_indicator = $this->assertWaitForElement('.status-readonly-mode');
+    $this->assertSame('Read-only', $readonly_indicator->getText());
+  }
 
-    $document_field = $assert_session->waitForElement('css', 'input#document-name-input');
-    $this->assertNotNull($document_field, 'The document name input was not found after 10 seconds.');
-    $this->getCurrentPage()->waitFor(10, function () use ($document_field) {
-      return $document_field->getValue() === 'shopping-list.txt';
+  /**
+   * Tests the Collabora editor in edit mode.
+   */
+  public function testCollaboraEdit(): void {
+    $user = $this->createUser([
+      'edit any document in collabora',
+      'administer media',
+    ]);
+    $this->drupalLogin($user);
+    $media = $this->createDocumentMedia('Shopping list', 'shopping-list', 'Chocolate, pickles');
+
+    $this->drupalGet('/cool/edit/' . $media->id());
+
+    $this->getSession()->switchToIFrame('collabora-online-viewer');
+    $this->assertCollaboraDocumentCanvas();
+    $this->assertCollaboraDocumentName('shopping-list.txt');
+    $this->assertCollaboraWordCountString('2 words, 18 characters');
+
+    // Verify the edit mode.
+    // The button is always present when in edit mode, but it is only
+    // visible on a mobile / touch device.
+    $this->assertWaitForElement('#mobile-edit-button');
+  }
+
+  /**
+   * Asserts that the Collabora canvas is present.
+   *
+   * This is a general heuristic indicating that the editor has loaded.
+   */
+  protected function assertCollaboraDocumentCanvas(): void {
+    $this->assertWaitForElement('canvas#document-canvas');
+  }
+
+  /**
+   * Asserts the document name displayed at the top of the editor.
+   *
+   * @param string $expected_name
+   *   Expected document name.
+   */
+  protected function assertCollaboraDocumentName(string $expected_name): void {
+    $document_field = $this->assertWaitForElement('input#document-name-input');
+    $this->getCurrentPage()->waitFor(10, function () use ($document_field, $expected_name) {
+      return $document_field->getValue() === $expected_name;
     });
-    $this->assertEquals('shopping-list.txt', $document_field->getValue(), 'The document name input did not contain the correct value after 10 seconds.');
+    $this->assertEquals($expected_name, $document_field->getValue(), 'The document name input did not contain the correct value after 10 seconds.');
+  }
 
-    $word_count_element = $assert_session->waitForElement('css', 'div#StateWordCount');
-    $this->assertNotNull($word_count_element, 'The word count element was not found after 10 seconds.');
-    $this->getCurrentPage()->waitFor(10, function () use ($word_count_element) {
-      return $word_count_element->getText() === '2 words, 18 characters';
+  /**
+   * Asserts text in the word count element.
+   *
+   * This is a placeholder for testing the actual document text.
+   *
+   * @param string $expected_text
+   *   Expected text for the word count element.
+   */
+  protected function assertCollaboraWordCountString(string $expected_text): void {
+    $word_count_element = $this->assertWaitForElement('div#StateWordCount');
+    $this->getCurrentPage()->waitFor(10, function () use ($word_count_element, $expected_text) {
+      return $word_count_element->getText() === $expected_text;
     });
-    $this->assertEquals('2 words, 18 characters', $word_count_element->getText(), 'The word count element did not contain the correct text after 10 seconds.');
+    $this->assertEquals($expected_text, $word_count_element->getText(), 'The word count element did not contain the correct text after 10 seconds.');
+  }
+
+  /**
+   * Waits for an element, and fails if not found.
+   *
+   * @param string|array $locator
+   *   The locator / selector string.
+   * @param string $selector
+   *   The selector type.
+   *
+   * @return \Behat\Mink\Element\NodeElement
+   *   Node element that matches the selector.
+   */
+  protected function assertWaitForElement(string|array $locator, string $selector = 'css'): NodeElement {
+    $element = $this->assertSession()->waitForElement($selector, $locator);
+    $this->assertNotNull($element, "The '$selector' element was not found after 10 seconds.");
+    return $element;
   }
 
   /**
