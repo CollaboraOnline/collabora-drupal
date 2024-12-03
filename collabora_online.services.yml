@@ -4,5 +4,7 @@ services:
   logger.channel.collabora_online:
     parent: logger.channel_base
     arguments: ['cool']
-  Drupal\collabora_online\Cool\CollaboraDiscoveryFetcher: { }
-  Drupal\collabora_online\Cool\CollaboraDiscovery: { }
+  Drupal\collabora_online\Cool\CollaboraDiscoveryFetcherInterface:
+    class: Drupal\collabora_online\Cool\CollaboraDiscoveryFetcher
+  Drupal\collabora_online\Cool\CollaboraDiscoveryInterface:
+    class: Drupal\collabora_online\Cool\CollaboraDiscovery

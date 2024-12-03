@@ -14,7 +14,7 @@ declare(strict_types=1);
 
 namespace Drupal\collabora_online\Controller;
 
-use Drupal\collabora_online\Cool\CollaboraDiscovery;
+use Drupal\collabora_online\Cool\CollaboraDiscoveryInterface;
 use Drupal\collabora_online\Cool\CoolUtils;
 use Drupal\collabora_online\Exception\CollaboraNotAvailableException;
 use Drupal\Core\Controller\ControllerBase;
@@ -32,13 +32,13 @@ class ViewerController extends ControllerBase {
   /**
    * The controller constructor.
    *
-   * @param \Drupal\collabora_online\Cool\CollaboraDiscovery $discovery
+   * @param \Drupal\collabora_online\Cool\CollaboraDiscoveryInterface $discovery
    *   Service to fetch a WOPI client URL.
    * @param \Drupal\Core\Render\RendererInterface $renderer
    *   The renderer service.
    */
   public function __construct(
-    protected readonly CollaboraDiscovery $discovery,
+    protected readonly CollaboraDiscoveryInterface $discovery,
     protected readonly RendererInterface $renderer,
   ) {}
 

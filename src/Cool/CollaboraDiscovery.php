@@ -19,30 +19,20 @@ use Drupal\collabora_online\Exception\CollaboraNotAvailableException;
 /**
  * Service to get a WOPI client url for a given MIME type.
  */
-class CollaboraDiscovery {
+class CollaboraDiscovery implements CollaboraDiscoveryInterface {
 
   /**
    * Constructor.
    *
-   * @param \Drupal\collabora_online\Cool\CollaboraDiscoveryFetcher $discoveryFetcher
+   * @param \Drupal\collabora_online\Cool\CollaboraDiscoveryFetcherInterface $discoveryFetcher
    *   Service to load the discovery.xml from the Collabora server.
    */
   public function __construct(
-    protected readonly CollaboraDiscoveryFetcher $discoveryFetcher,
+    protected readonly CollaboraDiscoveryFetcherInterface $discoveryFetcher,
   ) {}
 
   /**
-   * Gets the URL for the WOPI client.
-   *
-   * @param string $mimetype
-   *   Mime type for which to get the WOPI client url.
-   *   This refers to config entries in the discovery.xml file.
-   *
-   * @return string
-   *   The WOPI client url.
-   *
-   * @throws \Drupal\collabora_online\Exception\CollaboraNotAvailableException
-   *   The client url cannot be retrieved.
+   * {@inheritdoc}
    */
   public function getWopiClientURL(string $mimetype = 'text/plain'): string {
     $xml = $this->discoveryFetcher->getDiscoveryXml();

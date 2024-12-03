@@ -25,7 +25,7 @@ use Symfony\Component\DependencyInjection\Attribute\Autowire;
 /**
  * Service to load the discovery.xml from the Collabora server.
  */
-class CollaboraDiscoveryFetcher {
+class CollaboraDiscoveryFetcher implements CollaboraDiscoveryFetcherInterface {
 
   /**
    * Constructor.
@@ -45,13 +45,7 @@ class CollaboraDiscoveryFetcher {
   ) {}
 
   /**
-   * Gets the contents of discovery.xml from the Collabora server.
-   *
-   * @return string
-   *   The full contents of discovery.xml.
-   *
-   * @throws \Drupal\collabora_online\Exception\CollaboraNotAvailableException
-   *   The client url cannot be retrieved.
+   * {@inheritdoc}
    */
   public function getDiscoveryXml(): string {
     $discovery_url = $this->getWopiClientServerBaseUrl() . '/hosting/discovery';
