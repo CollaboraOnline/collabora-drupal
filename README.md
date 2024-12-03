@@ -15,8 +15,11 @@ For a local demo or test installation, [see below](#development--demo-installati
 
 - Collabora Online server installed and running.
 - Drupal 10 (tested on 10.1), maybe compatible with 9.
-- JWT and Media are set as dependencies for the module and are
-  necessary.
+- The [Key](https://drupal.org/project/key) module.
+- The `firebase/php-jwt` composer package. See the `composer.json` for more details.
+- The Media module from Drupal core.
+- (optional) For the 'Collabora Online Group' sub-module, you also need the
+  [Group](https://drupa.org/project/group) and [Group Media](https://drupa.org/project/groupmedia) modules.
 
 ### Installation steps
 
