@@ -14,6 +14,7 @@ declare(strict_types=1);
 
 namespace Drupal\collabora_online;
 
+use Drupal\collabora_online\Exception\CollaboraNotAvailableException;
 use Drupal\Core\Config\ConfigFactoryInterface;
 use Drupal\Core\Session\AccountInterface;
 use Drupal\key\KeyRepositoryInterface;
@@ -61,6 +62,9 @@ class WopiTokenManager {
    * @return array|null
    *   Data decoded from the token, or NULL on failure or if the token has
    *   expired.
+   *
+   * @throws \Drupal\collabora_online\Exception\CollaboraNotAvailableException
+   *   The key to use by Collabora is empty or not configured.
    */
   public function decodeAndVerify(
     #[\SensitiveParameter]
@@ -96,6 +100,9 @@ class WopiTokenManager {
    *   The access token.
    *
    * @param-out int|float $expire_timestamp_reference
+   *
+   * @throws \Drupal\collabora_online\Exception\CollaboraNotAvailableException
+   *   The key to use by Collabora is empty or not configured.
    */
   public function encode(array $payload, int|float|null &$expire_timestamp_reference = NULL): string {
     $expire_timestamp_reference = $this->getExpireTimestamp();
@@ -126,12 +133,20 @@ class WopiTokenManager {
    *
    * @return string
    *   The key value.
+   *
+   * @throws \Drupal\collabora_online\Exception\CollaboraNotAvailableException
+   *   The key to use by Collabora is empty or not configured.
    */
   protected function getKey(): string {
     $default_config = $this->configFactory->get('collabora_online.settings');
-    $key_id = $default_config->get('cool')['key_id'];
-
-    $key = $this->keyRepository->getKey($key_id)->getKeyValue();
+    $key_id = $default_config->get('cool')['key_id'] ?? '';
+    if (!$key_id) {
+      throw new CollaboraNotAvailableException('No key was chosen for use in Collabora.');
+    }
+    $key = $this->keyRepository->getKey($key_id)?->getKeyValue();
+    if (!$key) {
+      throw new CollaboraNotAvailableException(sprintf("The key with id '%s' is empty or does not exist.", $key_id));
+    }
     return $key;
   }
 
