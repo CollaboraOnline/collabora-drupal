@@ -191,8 +191,8 @@ class WopiController extends ControllerBase {
     $file = CoolUtils::getFile($media);
 
     if ($timestamp) {
-      $wopi_stamp = date_create_immutable_from_format(\DateTimeInterface::ISO8601, $timestamp);
-      $file_stamp = date_create_immutable_from_format('U', $file->getChangedTime());
+      $wopi_stamp = \DateTimeImmutable::createFromFormat(\DateTimeInterface::ISO8601, $timestamp);
+      $file_stamp = \DateTimeImmutable::createFromFormat('U', $file->getChangedTime());
 
       if ($wopi_stamp != $file_stamp) {
         $this->getLogger('cool')->error('Conflict saving file ' . $id . ' wopi: ' . $wopi_stamp->format('c') . ' differs from file: ' . $file_stamp->format('c'));
