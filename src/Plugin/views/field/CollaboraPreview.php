@@ -40,7 +40,7 @@ class CollaboraPreview extends LinkBase {
       return NULL;
     }
 
-    return CoolUrl::getEditorUrl($entity, FALSE);
+    return CoolUrl::previewMedia($entity);
   }
 
   /**
