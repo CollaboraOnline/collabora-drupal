@@ -64,7 +64,7 @@ class ConfigForm extends ConfigFormBase {
       '#default_value' => $config->get('cool')['key_id'],
       '#required' => TRUE,
       '#key_filters' => [
-        'type' => ['jwt_hs'],
+        'type' => ['collabora_jwt_hs'],
       ],
     ];
 
