@@ -59,10 +59,13 @@ class ConfigForm extends ConfigFormBase {
     ];
 
     $form['key_id'] = [
-      '#type' => 'textfield',
-      '#title' => $this->t('JWT private key ID'),
+      '#type' => 'key_select',
+      '#title' => $this->t('JWT private key'),
       '#default_value' => $config->get('cool')['key_id'],
       '#required' => TRUE,
+      '#key_filters' => [
+        'type' => ['jwt_hs'],
+      ],
     ];
 
     $form['access_token_ttl'] = [
