@@ -83,9 +83,9 @@ jobs:
 
       - name: PhpUnit
         run: |
-          docker-compose exec -T web ./vendor/bin/phpunit -vvv --debug
+          docker-compose exec -T web ./vendor/bin/phpunit --debug
 
       - name: PhpUnit - groupmedia 3
         run: |
           docker-compose exec -T web composer require --dev drupal/groupmedia:^3 -W
-          docker-compose exec -T web ./vendor/bin/phpunit -vvv --debug --testsuite "Collabora Online Group"
+          docker-compose exec -T web ./vendor/bin/phpunit --debug --testsuite "Collabora Online Group"
