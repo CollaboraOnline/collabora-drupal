@@ -14,9 +14,7 @@ For a local demo or test installation, [see below](#development--demo-installati
 ### Requirements
 
 - Collabora Online server installed and running.
-- Drupal 10 (tested on 10.1), maybe compatible with 9.
-- JWT and Media are set as dependencies for the module and are
-  necessary.
+- Composer packages and Drupal modules as specified in `composer.json` and `collabora_online.info.yml`.
 
 ### Installation steps
 
@@ -124,10 +122,11 @@ Log into Drupal as an admin.
 
 Go to _Configuration_ > _System_ > _Keys_
 
-- Create a _JWT HMAC_ key, with the _HS256_ algorithm.
-- Set it to be provided by the configuration.
-
-You can create a secret using the following shell command:
+Click "Add key" to create a new key with:
+- Key name: Any name, e.g. "Collabora Online".
+- Key type: _JWT HMAC - Collabora Online_.
+- Key provider: Please refer to the documentation of the 'key' module for security implications.
+- Key value: You can generate a key with the shell command below.
 
 ```shell
 head -c 64 /dev/urandom | base64 -w 0
