@@ -64,8 +64,9 @@ jobs:
           # Require a specific Drupal core version.
           docker-compose exec -T web composer require --no-update --dev drupal/core:${{ matrix.drupal-constraint }}
 
-          # Patch the group module.
+          # Apply patches.
           docker-compose exec -T web composer config --json "extra.patches.drupal/group" '{"Using a translatable string as a category for field type is deprecated - https://www.drupal.org/project/group/issues/3458530": "https://www.drupal.org/files/issues/2024-07-02/group-translate-string-as-category-is-deprecated_0.patch"}'
+          docker-compose exec -T web composer config --json "extra.patches.drupal/groupmedia" '{"Remove the 'default_argument_skip_url' setting in views.view.group_media.yml - https://www.drupal.org/project/groupmedia/issues/3491778": "https://www.drupal.org/files/issues/2024-12-04/groupmedia-4.x-3491778-remove-default_argument_skip_url.patch"}'
           docker-compose exec -T web composer config allow-plugins.cweagans/composer-patches true
           docker-compose exec -T web composer require --dev --no-update cweagans/composer-patches
 
@@ -87,5 +88,7 @@ jobs:
 
       - name: PhpUnit - groupmedia 3
         run: |
+          # Replace the patch, then install the 3.x version of groupmedia.
+          docker-compose exec -T web composer config --json "extra.patches.drupal/groupmedia" '{"Remove the 'default_argument_skip_url' setting in views.view.group_media.yml - https://www.drupal.org/project/groupmedia/issues/3491778": "https://www.drupal.org/files/issues/2024-12-04/groupmedia-3.x-3491778-remove-default_argument_skip_url.patch"}'
           docker-compose exec -T web composer require --dev drupal/groupmedia:^3 -W
           docker-compose exec -T web ./vendor/bin/phpunit --testsuite "Collabora Online Group"
