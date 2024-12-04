@@ -64,11 +64,6 @@ jobs:
           # Require a specific Drupal core version.
           docker-compose exec -T web composer require --no-update --dev drupal/core:${{ matrix.drupal-constraint }}
 
-          # Patch the group module.
-          docker-compose exec -T web composer config --json "extra.patches" '{"drupal/group": {"Using a translatable string as a category for field type is deprecated - https://www.drupal.org/project/group/issues/3458530": "https://www.drupal.org/files/issues/2024-07-02/group-translate-string-as-category-is-deprecated_0.patch"}}'
-          docker-compose exec -T web composer config allow-plugins.cweagans/composer-patches true
-          docker-compose exec -T web composer require --dev --no-update cweagans/composer-patches
-
       - name: Composer install
         run: |
           docker-compose exec -T web composer install --no-interaction
