@@ -200,6 +200,7 @@ class WopiController extends ControllerBase {
       return static::permissionDenied();
     }
 
+    /** @var \Drupal\media\MediaInterface|null $media */
     $media = $this->entityTypeManager->getStorage('media')->load($id);
     $user = User::load($jwt_payload['uid']);
     if ($media === NULL || $user === NULL) {
