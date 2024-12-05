@@ -38,6 +38,7 @@ class CollaboraMediaAccessTest extends KernelTestBase {
    */
   protected static $modules = [
     'collabora_online',
+    'key',
     'user',
     'media',
     'field',

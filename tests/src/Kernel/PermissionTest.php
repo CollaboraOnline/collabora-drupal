@@ -32,6 +32,7 @@ class PermissionTest extends KernelTestBase {
    */
   protected static $modules = [
     'collabora_online',
+    'key',
     'media',
     'user',
     'field',

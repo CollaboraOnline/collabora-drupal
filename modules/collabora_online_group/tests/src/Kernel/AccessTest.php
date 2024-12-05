@@ -43,6 +43,7 @@ class AccessTest extends GroupKernelTestBase {
     'groupmedia',
     'collabora_online',
     'collabora_online_group',
+    'key',
     'user',
   ];
 
