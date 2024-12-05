@@ -241,8 +241,8 @@ class CoolUtils {
    *   Options for the renderer. Current values:
    *     - "closebutton" if "true" will add a close box. (see COOL SDK)
    *
-   * @return array|array{error: string}
-   *   A stub render element array, or an array with an error on failure.
+   * @return array
+   *   A stub render element.
    */
   public static function getViewerRender(Media $media, string $wopi_client, bool $can_write, $options = NULL) {
     $default_config = \Drupal::config('collabora_online.settings');
