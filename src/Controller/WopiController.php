@@ -72,13 +72,13 @@ class WopiController extends ControllerBase {
     $token = $request->query->get('access_token');
 
     $jwt_payload = $this->verifyTokenForMediaId($token, $id);
-    if ($jwt_payload == NULL) {
+    if ($jwt_payload === NULL) {
       return static::permissionDenied();
     }
 
     /** @var \Drupal\media\MediaInterface|null $media */
     $media = $this->entityTypeManager->getStorage('media')->load($id);
-    if (!$media) {
+    if ($media === NULL) {
       return static::permissionDenied();
     }
 
