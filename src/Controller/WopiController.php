@@ -22,8 +22,6 @@ use Drupal\Core\File\FileExists;
 use Drupal\Core\File\FileSystemInterface;
 use Drupal\Core\File\FileUrlGeneratorInterface;
 use Drupal\Core\Session\AccountSwitcherInterface;
-use Drupal\file\Entity\File;
-use Drupal\user\Entity\User;
 use Symfony\Component\HttpFoundation\BinaryFileResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
@@ -88,7 +86,8 @@ class WopiController extends ControllerBase {
     $mtime = date_create_immutable_from_format('U', $file->getChangedTime());
     // @todo What if the uid in the payload is not set?
     // @todo What if $user is NULL?
-    $user = User::load($jwt_payload['uid']);
+    /** @var \Drupal\user\UserInterface|null $user */
+    $user = $this->entityTypeManager->getStorage('user')->load($jwt_payload['uid']);
     $can_write = $jwt_payload['wri'];
 
     if ($can_write && !$media->access('edit in collabora', $user)) {
@@ -144,7 +143,8 @@ class WopiController extends ControllerBase {
       return static::permissionDenied();
     }
 
-    $user = User::load($jwt_payload['uid']);
+    /** @var \Drupal\user\UserInterface|null $user */
+    $user = $this->entityTypeManager->getStorage('user')->load($jwt_payload['uid']);
     $this->accountSwitcher->switchTo($user);
 
     $file = $this->mediaHelper->getFileForMediaId($id);
@@ -184,7 +184,8 @@ class WopiController extends ControllerBase {
 
     /** @var \Drupal\media\MediaInterface|null $media */
     $media = $this->entityTypeManager->getStorage('media')->load($id);
-    $user = User::load($jwt_payload['uid']);
+    /** @var \Drupal\user\UserInterface|null $user */
+    $user = $this->entityTypeManager->getStorage('user')->load($jwt_payload['uid']);
     if ($media === NULL || $user === NULL) {
       return static::permissionDenied();
     }
@@ -215,7 +216,8 @@ class WopiController extends ControllerBase {
     $owner_id = $file->getOwnerId();
     $uri = $this->fileSystem->saveData($content, $dest, FileExists::Rename);
 
-    $file = File::create(['uri' => $uri]);
+    /** @var \Drupal\file\FileInterface|null $file */
+    $file = $this->entityTypeManager->getStorage('file')->create(['uri' => $uri]);
     $file->setOwnerId($owner_id);
     if (is_file($dest)) {
       $file->setFilename($this->fileSystem->basename($dest));
