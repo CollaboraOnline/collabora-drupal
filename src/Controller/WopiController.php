@@ -85,9 +85,11 @@ class WopiController extends ControllerBase {
     $file = $this->mediaHelper->getFileForMediaId($id);
     $mtime = date_create_immutable_from_format('U', $file->getChangedTime());
     // @todo What if the uid in the payload is not set?
-    // @todo What if $user is NULL?
     /** @var \Drupal\user\UserInterface|null $user */
     $user = $this->entityTypeManager->getStorage('user')->load($jwt_payload['uid']);
+    if ($user === NULL) {
+      return static::permissionDenied();
+    }
     $can_write = $jwt_payload['wri'];
 
     if ($can_write && !$media->access('edit in collabora', $user)) {
