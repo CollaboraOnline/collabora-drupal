@@ -17,33 +17,40 @@ namespace Drupal\collabora_online\Controller;
 use Drupal\collabora_online\Cool\CollaboraDiscoveryInterface;
 use Drupal\collabora_online\Exception\CollaboraNotAvailableException;
 use Drupal\collabora_online\WopiTokenManager;
-use Drupal\Core\Controller\ControllerBase;
+use Drupal\Core\Config\ConfigFactoryInterface;
+use Drupal\Core\DependencyInjection\AutowireTrait;
+use Drupal\Core\DependencyInjection\ContainerInjectionInterface;
 use Drupal\Core\Render\RendererInterface;
+use Drupal\Core\Session\AccountInterface;
+use Drupal\Core\StringTranslation\StringTranslationTrait;
+use Drupal\Core\StringTranslation\TranslationInterface;
 use Drupal\Core\Utility\Error;
 use Drupal\media\MediaInterface;
+use Psr\Log\LoggerInterface;
+use Symfony\Component\DependencyInjection\Attribute\Autowire;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 
 /**
  * Provides route responses for the Collabora module.
  */
-class ViewerController extends ControllerBase {
+class ViewerController implements ContainerInjectionInterface {
 
-  /**
-   * Constructor.
-   *
-   * @param \Drupal\collabora_online\Cool\CollaboraDiscoveryInterface $discovery
-   *   The service to fetch a WOPI client URL.
-   * @param \Drupal\collabora_online\WopiTokenManager $tokenManager
-   *   The service to manage the JWT token.
-   * @param \Drupal\Core\Render\RendererInterface $renderer
-   *   The renderer service.
-   */
+  use AutowireTrait;
+  use StringTranslationTrait;
+
   public function __construct(
     protected readonly CollaboraDiscoveryInterface $discovery,
     protected readonly WopiTokenManager $tokenManager,
     protected readonly RendererInterface $renderer,
-  ) {}
+    #[Autowire('logger.channel.collabora_online')]
+    protected readonly LoggerInterface $logger,
+    protected readonly ConfigFactoryInterface $configFactory,
+    protected readonly AccountInterface $currentUser,
+    TranslationInterface $string_translation,
+  ) {
+    $this->setStringTranslation($string_translation);
+  }
 
   /**
    * Returns a raw page for the iframe embed.
@@ -64,7 +71,7 @@ class ViewerController extends ControllerBase {
       $wopi_client_url = $this->discovery->getWopiClientURL();
     }
     catch (CollaboraNotAvailableException $e) {
-      $this->getLogger('cool')->warning(
+      $this->logger->warning(
         "Collabora Online is not available.<br>\n" . Error::DEFAULT_ERROR_MESSAGE,
         Error::decodeException($e) + [],
       );
@@ -77,7 +84,7 @@ class ViewerController extends ControllerBase {
 
     $current_request_scheme = $request->getScheme();
     if (!str_starts_with($wopi_client_url, $current_request_scheme . '://')) {
-      $this->getLogger('cool')->error($this->t(
+      $this->logger->error($this->t(
         "The current request uses '@current_request_scheme' url scheme, but the Collabora client url is '@wopi_client_url'.",
         [
           '@current_request_scheme' => $current_request_scheme,
@@ -95,7 +102,7 @@ class ViewerController extends ControllerBase {
       $render_array = $this->getViewerRender($media, $wopi_client_url, $edit);
     }
     catch (CollaboraNotAvailableException $e) {
-      $this->getLogger('cool')->warning(
+      $this->logger->warning(
         "Cannot show the viewer/editor.<br>\n" . Error::DEFAULT_ERROR_MESSAGE,
         Error::decodeException($e) + [],
       );
@@ -133,7 +140,7 @@ class ViewerController extends ControllerBase {
    *   The key to use by Collabora is empty or not configured.
    */
   protected function getViewerRender(MediaInterface $media, string $wopi_client, bool $can_write) {
-    $cool_settings = $this->config('collabora_online.settings')->get('cool');
+    $cool_settings = $this->configFactory->get('collabora_online.settings')->get('cool');
     $wopi_base = $cool_settings['wopi_base'];
     $allowfullscreen = $cool_settings['allowfullscreen'] ?? FALSE;
 
@@ -142,7 +149,7 @@ class ViewerController extends ControllerBase {
     $access_token = $this->tokenManager->encode(
       [
         'fid' => $id,
-        'uid' => $this->currentUser()->id(),
+        'uid' => $this->currentUser->id(),
         'wri' => $can_write,
       ],
       $expire_timestamp,
