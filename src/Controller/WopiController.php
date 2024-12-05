@@ -37,19 +37,19 @@ class WopiController extends ControllerBase {
    * Constructor.
    *
    * @param \Drupal\Core\Entity\EntityTypeManagerInterface $entityTypeManager
-   *   Entity type manager.
+   *   The entity type manager.
    * @param \Drupal\collabora_online\WopiTokenManager $tokenManager
-   *   Service to manage the JWT token.
+   *   The service to manage the JWT token.
    * @param \Drupal\Core\Session\AccountSwitcherInterface $accountSwitcher
-   *   Account switcher.
+   *   The account switching service.
    * @param \Drupal\Core\File\FileSystemInterface $fileSystem
-   *   File system.
+   *   The file system.
    * @param \Drupal\Component\Datetime\TimeInterface $time
-   *   Time.
+   *   The time service.
    * @param \Drupal\Core\File\FileUrlGeneratorInterface $fileUrlGenerator
-   *   File url generator.
+   *   The file URL generator.
    * @param \Drupal\collabora_online\MediaHelper $mediaHelper
-   *   Media helper.
+   *   The media helper service.
    */
   public function __construct(
     EntityTypeManagerInterface $entityTypeManager,

@@ -33,9 +33,9 @@ class ViewerController extends ControllerBase {
    * Constructor.
    *
    * @param \Drupal\collabora_online\Cool\CollaboraDiscoveryInterface $discovery
-   *   Service to fetch a WOPI client URL.
+   *   The service to fetch a WOPI client URL.
    * @param \Drupal\collabora_online\WopiTokenManager $tokenManager
-   *   Service to manage the JWT token.
+   *   The service to manage the JWT token.
    * @param \Drupal\Core\Render\RendererInterface $renderer
    *   The renderer service.
    */
