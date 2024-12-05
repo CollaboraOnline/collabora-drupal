@@ -54,10 +54,6 @@ class ViewerController extends ControllerBase {
    *   Response suitable for iframe, without the usual page decorations.
    */
   public function editor(MediaInterface $media, Request $request, $edit = FALSE) {
-    $options = [
-      'closebutton' => 'true',
-    ];
-
     try {
       $wopi_client_url = $this->discovery->getWopiClientURL();
     }
@@ -90,7 +86,7 @@ class ViewerController extends ControllerBase {
     }
 
     try {
-      $render_array = $this->getViewerRender($media, $wopi_client_url, $edit, $options);
+      $render_array = $this->getViewerRender($media, $wopi_client_url, $edit);
     }
     catch (CollaboraNotAvailableException $e) {
       $this->getLogger('cool')->warning(
@@ -123,9 +119,6 @@ class ViewerController extends ControllerBase {
    * @param bool $can_write
    *   Whether this is a viewer (false) or an edit (true). Permissions will
    *   also be checked.
-   * @param array{closebutton: bool} $options
-   *   Options for the renderer. Current values:
-   *     - "closebutton" if "true" will add a close box. (see COOL SDK)
    *
    * @return array
    *   A stub render element.
@@ -133,7 +126,7 @@ class ViewerController extends ControllerBase {
    * @throws \Drupal\collabora_online\Exception\CollaboraNotAvailableException
    *   The key to use by Collabora is empty or not configured.
    */
-  protected function getViewerRender(MediaInterface $media, string $wopi_client, bool $can_write, $options = NULL) {
+  protected function getViewerRender(MediaInterface $media, string $wopi_client, bool $can_write) {
     $cool_settings = $this->config('collabora_online.settings')->get('cool');
     $wopi_base = $cool_settings['wopi_base'];
     $allowfullscreen = $cool_settings['allowfullscreen'] ?? FALSE;
@@ -157,12 +150,8 @@ class ViewerController extends ControllerBase {
       // Convert to milliseconds.
       '#accessTokenTtl' => $expire_timestamp * 1000,
       '#allowfullscreen' => $allowfullscreen ? 'allowfullscreen' : '',
+      '#closebutton' => 'true',
     ];
-    if ($options) {
-      if (isset($options['closebutton']) && $options['closebutton'] == 'true') {
-        $render_array['#closebutton'] = 'true';
-      }
-    }
 
     return $render_array;
   }
