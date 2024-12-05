@@ -16,12 +16,17 @@ use Drupal\collabora_online\Exception\CollaboraNotAvailableException;
 use Drupal\collabora_online\MediaHelper;
 use Drupal\collabora_online\Jwt\JwtTranscoder;
 use Drupal\Component\Datetime\TimeInterface;
-use Drupal\Core\Controller\ControllerBase;
+use Drupal\Core\DependencyInjection\AutowireTrait;
+use Drupal\Core\DependencyInjection\ContainerInjectionInterface;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\File\FileExists;
 use Drupal\Core\File\FileSystemInterface;
 use Drupal\Core\File\FileUrlGeneratorInterface;
 use Drupal\Core\Session\AccountSwitcherInterface;
+use Drupal\Core\StringTranslation\StringTranslationTrait;
+use Drupal\Core\StringTranslation\TranslationInterface;
+use Psr\Log\LoggerInterface;
+use Symfony\Component\DependencyInjection\Attribute\Autowire;
 use Symfony\Component\HttpFoundation\BinaryFileResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
@@ -29,18 +34,24 @@ use Symfony\Component\HttpFoundation\Response;
 /**
  * Provides WOPI route responses for the Collabora module.
  */
-class WopiController extends ControllerBase {
+class WopiController implements ContainerInjectionInterface {
+
+  use AutowireTrait;
+  use StringTranslationTrait;
 
   public function __construct(
-    EntityTypeManagerInterface $entityTypeManager,
+    protected readonly EntityTypeManagerInterface $entityTypeManager,
     protected readonly JwtTranscoder $jwtTranscoder,
     protected readonly AccountSwitcherInterface $accountSwitcher,
     protected readonly FileSystemInterface $fileSystem,
     protected readonly TimeInterface $time,
     protected readonly FileUrlGeneratorInterface $fileUrlGenerator,
     protected readonly MediaHelper $mediaHelper,
+    #[Autowire('logger.channel.collabora_online')]
+    protected readonly LoggerInterface $logger,
+    TranslationInterface $string_translation,
   ) {
-    $this->entityTypeManager = $entityTypeManager;
+    $this->setStringTranslation($string_translation);
   }
 
   /**
@@ -93,7 +104,7 @@ class WopiController extends ControllerBase {
     $can_write = $jwt_payload['wri'];
 
     if ($can_write && !$media->access('edit in collabora', $user)) {
-      $this->getLogger('cool')->error('Token and user permissions do not match.');
+      $this->logger->error('Token and user permissions do not match.');
       return static::permissionDenied();
     }
 
@@ -201,7 +212,7 @@ class WopiController extends ControllerBase {
       $file_stamp = \DateTimeImmutable::createFromFormat('U', $file->getChangedTime());
 
       if ($wopi_stamp != $file_stamp) {
-        $this->getLogger('cool')->error('Conflict saving file ' . $id . ' wopi: ' . $wopi_stamp->format('c') . ' differs from file: ' . $file_stamp->format('c'));
+        $this->logger->error('Conflict saving file ' . $id . ' wopi: ' . $wopi_stamp->format('c') . ' differs from file: ' . $file_stamp->format('c'));
 
         return new Response(
           json_encode(['COOLStatusCode' => 1010]),
@@ -247,7 +258,7 @@ class WopiController extends ControllerBase {
     if (count($reasons) > 0) {
       $save_reason .= ' (' . implode(', ', $reasons) . ')';
     }
-    $this->getLogger('cool')->error('Save reason: ' . $save_reason);
+    $this->logger->error('Save reason: ' . $save_reason);
     $media->setRevisionLogMessage($save_reason);
     $media->save();
 
@@ -325,7 +336,7 @@ class WopiController extends ControllerBase {
       $values = $this->jwtTranscoder->decode($token);
     }
     catch (CollaboraNotAvailableException $e) {
-      $this->getLogger('cool')->warning('A token cannot be decoded: @message', ['@mesage' => $e->getMessage()]);
+      $this->logger->warning('A token cannot be decoded: @message', ['@mesage' => $e->getMessage()]);
       return NULL;
     }
     if ($values === NULL) {
