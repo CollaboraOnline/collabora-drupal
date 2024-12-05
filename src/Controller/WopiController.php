@@ -208,7 +208,7 @@ class WopiController implements ContainerInjectionInterface {
     $file = $this->mediaHelper->getFileForMedia($media);
 
     if ($timestamp) {
-      $wopi_stamp = \DateTimeImmutable::createFromFormat(\DateTimeInterface::ISO8601, $timestamp);
+      $wopi_stamp = \DateTimeImmutable::createFromFormat(\DateTimeInterface::ATOM, $timestamp);
       $file_stamp = \DateTimeImmutable::createFromFormat('U', $file->getChangedTime());
 
       if ($wopi_stamp != $file_stamp) {
