@@ -78,11 +78,8 @@ class WopiTokenManager {
       $this->logger->error($e->getMessage());
       return NULL;
     }
-    if (!isset($payload['exp'])) {
-      return NULL;
-    }
-    if ($payload['exp'] < gettimeofday(TRUE)) {
-      // Token is expired.
+    if (!isset($payload['exp']) || $payload['exp'] < gettimeofday(TRUE)) {
+      // The token is expired, or no timeout was set.
       return NULL;
     }
     return $payload;
