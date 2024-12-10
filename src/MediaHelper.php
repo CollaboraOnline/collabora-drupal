@@ -67,9 +67,9 @@ class MediaHelper {
    * @param \Drupal\file\Entity\File $source
    *   File entity to reference.
    */
-  public function setMediaSource(MediaInterface $media, FileInterface $source): void {
-    $name = $media->getSource()->getSourceFieldDefinition($media->bundle->entity)->getName();
-    $media->set($name, $source);
+  public function setMediaSource(MediaInterface $media, FileInterface $file): void {
+    $field_name = $media->getSource()->getSourceFieldDefinition($media->bundle->entity)->getName();
+    $media->set($field_name, $file);
   }
 
 }
