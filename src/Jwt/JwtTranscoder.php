@@ -90,21 +90,6 @@ class JwtTranscoder {
   }
 
   /**
-   * Gets a token expiration timestamp based on the configured TTL.
-   *
-   * @return float
-   *   Expiration timestamp in seconds, with millisecond accuracy.
-   */
-  public function getExpireTimestamp(): float {
-    $cool_settings = $this->configFactory->get('collabora_online.settings')->get('cool');
-    $ttl_seconds = $cool_settings['access_token_ttl'] ?? 0;
-    // Set a fallback of 24 hours.
-    $ttl_seconds = $ttl_seconds ?: 86400;
-
-    return gettimeofday(TRUE) + $ttl_seconds;
-  }
-
-  /**
    * Obtains the signing key from the key storage.
    *
    * @return string
