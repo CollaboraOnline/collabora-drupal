@@ -29,14 +29,6 @@ use Symfony\Component\HttpFoundation\Response;
  */
 class ViewerController extends ControllerBase {
 
-  /**
-   * The controller constructor.
-   *
-   * @param \Drupal\collabora_online\Cool\CollaboraDiscoveryInterface $discovery
-   *   Service to fetch a WOPI client URL.
-   * @param \Drupal\Core\Render\RendererInterface $renderer
-   *   The renderer service.
-   */
   public function __construct(
     protected readonly CollaboraDiscoveryInterface $discovery,
     protected readonly RendererInterface $renderer,
