@@ -25,7 +25,7 @@ use Symfony\Component\DependencyInjection\Attribute\Autowire;
 /**
  * Encodes and decodes a JWT token.
  */
-class JwtTranscoder {
+class JwtTranscoder implements JwtTranscoderInterface {
 
   public function __construct(
     protected readonly ConfigFactoryInterface $configFactory,
@@ -36,21 +36,7 @@ class JwtTranscoder {
   ) {}
 
   /**
-   * Decodes and verifies a JWT token.
-   *
-   * Verification include:
-   *  - matching $id with fid in the payload
-   *  - verifying the expiration.
-   *
-   * @param string $token
-   *   The token to verify.
-   *
-   * @return array|null
-   *   Data decoded from the token, or NULL on failure or if the token has
-   *   expired.
-   *
-   * @throws \Drupal\collabora_online\Exception\CollaboraNotAvailableException
-   *   The key to use by Collabora is empty or not configured.
+   * {@inheritdoc}
    */
   public function decode(
     #[\SensitiveParameter]
@@ -72,18 +58,7 @@ class JwtTranscoder {
   }
 
   /**
-   * Creates a JWT token.
-   *
-   * @param array $payload
-   *   Values to encode in the token.
-   * @param int|float $expire_timestamp
-   *   Expiration timestamp, in seconds.
-   *
-   * @return string
-   *   The access token.
-   *
-   * @throws \Drupal\collabora_online\Exception\CollaboraNotAvailableException
-   *   The key to use by Collabora is empty or not configured.
+   * {@inheritdoc}
    */
   public function encode(array $payload, int|float $expire_timestamp): string {
     $payload['exp'] = $expire_timestamp;

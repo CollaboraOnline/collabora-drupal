@@ -16,7 +16,7 @@ namespace Drupal\collabora_online\Controller;
 
 use Drupal\collabora_online\Cool\CollaboraDiscoveryInterface;
 use Drupal\collabora_online\Exception\CollaboraNotAvailableException;
-use Drupal\collabora_online\Jwt\JwtTranscoder;
+use Drupal\collabora_online\Jwt\JwtTranscoderInterface;
 use Drupal\Core\Config\ConfigFactoryInterface;
 use Drupal\Core\DependencyInjection\AutowireTrait;
 use Drupal\Core\DependencyInjection\ContainerInjectionInterface;
@@ -41,7 +41,7 @@ class ViewerController implements ContainerInjectionInterface {
 
   public function __construct(
     protected readonly CollaboraDiscoveryInterface $discovery,
-    protected readonly JwtTranscoder $jwtTranscoder,
+    protected readonly JwtTranscoderInterface $jwtTranscoder,
     protected readonly RendererInterface $renderer,
     #[Autowire('logger.channel.collabora_online')]
     protected readonly LoggerInterface $logger,

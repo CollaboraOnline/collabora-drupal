@@ -13,8 +13,8 @@
 namespace Drupal\collabora_online\Controller;
 
 use Drupal\collabora_online\Exception\CollaboraNotAvailableException;
+use Drupal\collabora_online\Jwt\JwtTranscoderInterface;
 use Drupal\collabora_online\MediaHelper;
-use Drupal\collabora_online\Jwt\JwtTranscoder;
 use Drupal\Component\Datetime\TimeInterface;
 use Drupal\Core\DependencyInjection\AutowireTrait;
 use Drupal\Core\DependencyInjection\ContainerInjectionInterface;
@@ -41,7 +41,7 @@ class WopiController implements ContainerInjectionInterface {
 
   public function __construct(
     protected readonly EntityTypeManagerInterface $entityTypeManager,
-    protected readonly JwtTranscoder $jwtTranscoder,
+    protected readonly JwtTranscoderInterface $jwtTranscoder,
     protected readonly AccountSwitcherInterface $accountSwitcher,
     protected readonly FileSystemInterface $fileSystem,
     protected readonly TimeInterface $time,
