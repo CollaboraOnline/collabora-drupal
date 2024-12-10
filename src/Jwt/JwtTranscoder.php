@@ -17,55 +17,22 @@ namespace Drupal\collabora_online\Jwt;
 use Drupal\collabora_online\Exception\CollaboraNotAvailableException;
 use Drupal\Core\Config\ConfigFactoryInterface;
 use Drupal\key\KeyRepositoryInterface;
-use Firebase\JWT\JWT;
-use Firebase\JWT\Key;
 use Psr\Log\LoggerInterface;
 use Symfony\Component\DependencyInjection\Attribute\Autowire;
 
 /**
  * Encodes and decodes a JWT token.
  */
-class JwtTranscoder implements JwtTranscoderInterface {
+class JwtTranscoder extends JwtTranscoderBase {
 
   public function __construct(
     protected readonly ConfigFactoryInterface $configFactory,
     #[Autowire(service: 'key.repository')]
     protected readonly KeyRepositoryInterface $keyRepository,
     #[Autowire(service: 'logger.channel.collabora_online')]
-    protected readonly LoggerInterface $logger,
-  ) {}
-
-  /**
-   * {@inheritdoc}
-   */
-  public function decode(
-    #[\SensitiveParameter]
-    string $token,
-  ): array|null {
-    $key = $this->getKey();
-    try {
-      $payload = (array) JWT::decode($token, new Key($key, 'HS256'));
-    }
-    catch (\Exception $e) {
-      $this->logger->error($e->getMessage());
-      return NULL;
-    }
-    if (!isset($payload['exp']) || $payload['exp'] < gettimeofday(TRUE)) {
-      // The token is expired, or no timeout was set.
-      return NULL;
-    }
-    return $payload;
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public function encode(array $payload, int|float $expire_timestamp): string {
-    $payload['exp'] = $expire_timestamp;
-    $key = $this->getKey();
-    $jwt = JWT::encode($payload, $key, 'HS256');
-
-    return $jwt;
+    LoggerInterface $logger,
+  ) {
+    parent::__construct($logger);
   }
 
   /**
