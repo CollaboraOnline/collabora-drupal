@@ -17,6 +17,7 @@ namespace Drupal\collabora_online\Controller;
 use Drupal\collabora_online\Cool\CollaboraDiscoveryInterface;
 use Drupal\collabora_online\Exception\CollaboraNotAvailableException;
 use Drupal\collabora_online\Jwt\JwtTranscoder;
+use Drupal\Core\Config\ConfigFactoryInterface;
 use Drupal\Core\Controller\ControllerBase;
 use Drupal\Core\Render\RendererInterface;
 use Drupal\Core\Utility\Error;
@@ -33,7 +34,10 @@ class ViewerController extends ControllerBase {
     protected readonly CollaboraDiscoveryInterface $discovery,
     protected readonly JwtTranscoder $jwtTranscoder,
     protected readonly RendererInterface $renderer,
-  ) {}
+    ConfigFactoryInterface $configFactory,
+  ) {
+    $this->configFactory = $configFactory;
+  }
 
   /**
    * Returns a raw page for the iframe embed.
@@ -120,7 +124,7 @@ class ViewerController extends ControllerBase {
 
     $id = $media->id();
 
-    $expire_timestamp = $this->jwtTranscoder->getExpireTimestamp();
+    $expire_timestamp = $this->getExpireTimestamp();
     $access_token = $this->jwtTranscoder->encode(
       [
         'fid' => $id,
@@ -145,6 +149,21 @@ class ViewerController extends ControllerBase {
     }
 
     return $render_array;
+  }
+
+  /**
+   * Gets a token expiration timestamp based on the configured TTL.
+   *
+   * @return float
+   *   Expiration timestamp in seconds, with millisecond accuracy.
+   */
+  protected function getExpireTimestamp(): float {
+    $cool_settings = $this->configFactory->get('collabora_online.settings')->get('cool');
+    $ttl_seconds = $cool_settings['access_token_ttl'] ?? 0;
+    // Set a fallback of 24 hours.
+    $ttl_seconds = $ttl_seconds ?: 86400;
+
+    return gettimeofday(TRUE) + $ttl_seconds;
   }
 
 }
