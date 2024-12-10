@@ -14,45 +14,12 @@ declare(strict_types=1);
 
 namespace Drupal\Tests\collabora_online\Kernel;
 
-use Drupal\KernelTests\KernelTestBase;
-use Drupal\Tests\media\Traits\MediaTypeCreationTrait;
-use Drupal\Tests\user\Traits\UserCreationTrait;
 use Drupal\user\PermissionHandlerInterface;
 
 /**
  * Tests dynamically created permissions.
  */
-class PermissionTest extends KernelTestBase {
-
-  use MediaTypeCreationTrait;
-  use UserCreationTrait;
-
-  /**
-   * {@inheritdoc}
-   */
-  protected static $modules = [
-    'collabora_online',
-    'key',
-    'media',
-    'user',
-    'field',
-    'system',
-    'file',
-    'image',
-  ];
-
-  /**
-   * {@inheritdoc}
-   */
-  protected function setUp(): void {
-    parent::setUp();
-
-    $this->installEntitySchema('user');
-    $this->installEntitySchema('file');
-    $this->installSchema('file', 'file_usage');
-    $this->installEntitySchema('media');
-    $this->installConfig(['field', 'system', 'user', 'file', 'media']);
-  }
+class PermissionTest extends CollaboraKernelTestBase {
 
   /**
    * Tests that dynamic permissions are properly created.

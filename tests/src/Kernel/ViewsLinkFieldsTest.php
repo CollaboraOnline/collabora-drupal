@@ -16,35 +16,22 @@ namespace Drupal\Tests\collabora_online\Kernel;
 
 use Drupal\Core\Session\AccountInterface;
 use Drupal\Core\Url;
-use Drupal\KernelTests\KernelTestBase;
 use Drupal\media\Entity\Media;
 use Drupal\Tests\collabora_online\Traits\MediaCreationTrait;
-use Drupal\Tests\media\Traits\MediaTypeCreationTrait;
-use Drupal\Tests\user\Traits\UserCreationTrait;
 use Drupal\views\Views;
 
 /**
  * Tests link fields to preview and edit medias in views.
  */
-class ViewsLinkFieldsTest extends KernelTestBase {
+class ViewsLinkFieldsTest extends CollaboraKernelTestBase {
 
-  use UserCreationTrait;
   use MediaCreationTrait;
-  use MediaTypeCreationTrait;
 
   /**
    * {@inheritdoc}
    */
   protected static $modules = [
-    'collabora_online',
     'collabora_online_test',
-    'key',
-    'field',
-    'file',
-    'image',
-    'media',
-    'system',
-    'user',
     'views',
   ];
 
@@ -54,14 +41,10 @@ class ViewsLinkFieldsTest extends KernelTestBase {
   protected function setUp(): void {
     parent::setUp();
 
-    $this->installEntitySchema('file');
-    $this->installEntitySchema('media');
-    $this->installEntitySchema('user');
-    $this->installConfig(['user', 'views', 'collabora_online_test']);
-    $this->installSchema('file', ['file_usage']);
-    // Install user module to avoid user 1 permissions bypass.
-    \Drupal::moduleHandler()->loadInclude('user', 'install');
-    user_install();
+    $this->installConfig([
+      'views',
+      'collabora_online_test',
+    ]);
   }
 
   /**

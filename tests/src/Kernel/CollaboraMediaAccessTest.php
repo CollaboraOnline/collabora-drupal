@@ -18,34 +18,12 @@ use Drupal\Component\Serialization\Yaml;
 use Drupal\Core\Session\AccountInterface;
 use Drupal\Core\Session\AnonymousUserSession;
 use Drupal\Core\Url;
-use Drupal\KernelTests\KernelTestBase;
-use Drupal\Tests\collabora_online\Traits\MediaCreationTrait;
-use Drupal\Tests\media\Traits\MediaTypeCreationTrait;
-use Drupal\Tests\user\Traits\UserCreationTrait;
 use Drupal\user\RoleInterface;
 
 /**
  * Tests access for media operations and routes.
  */
-class CollaboraMediaAccessTest extends KernelTestBase {
-
-  use MediaTypeCreationTrait;
-  use UserCreationTrait;
-  use MediaCreationTrait;
-
-  /**
-   * {@inheritdoc}
-   */
-  protected static $modules = [
-    'collabora_online',
-    'key',
-    'user',
-    'media',
-    'field',
-    'image',
-    'system',
-    'file',
-  ];
+class CollaboraMediaAccessTest extends CollaboraKernelTestBase {
 
   /**
    * {@inheritdoc}
@@ -53,24 +31,8 @@ class CollaboraMediaAccessTest extends KernelTestBase {
   protected function setUp(): void {
     parent::setUp();
 
-    $this->installEntitySchema('user');
-    $this->installEntitySchema('file');
-    $this->installSchema('file', 'file_usage');
-    $this->installEntitySchema('media');
-    $this->installConfig([
-      'field',
-      'system',
-      'user',
-      'image',
-      'file',
-      'media',
-    ]);
-
     $this->createMediaType('file', ['id' => 'document']);
     $this->createMediaType('file', ['id' => 'book']);
-
-    // Consume the user id 1.
-    $this->createUser();
   }
 
   /**
