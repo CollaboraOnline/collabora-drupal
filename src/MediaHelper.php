@@ -21,20 +21,14 @@ use Drupal\media\MediaInterface;
 /**
  * Service to assist with media entities.
  */
-class MediaHelper {
+class MediaHelper implements MediaHelperInterface {
 
   public function __construct(
     protected readonly EntityTypeManagerInterface $entityTypeManager,
   ) {}
 
   /**
-   * Gets the file referenced by a media entity.
-   *
-   * @param \Drupal\media\MediaInterface $media
-   *   The media entity.
-   *
-   * @return \Drupal\file\FileInterface|null
-   *   The file entity, or NULL if not found.
+   * {@inheritdoc}
    */
   public function getFileForMedia(MediaInterface $media): ?FileInterface {
     $fid = $media->getSource()->getSourceFieldValue($media);
@@ -45,13 +39,7 @@ class MediaHelper {
   }
 
   /**
-   * Gets a file based on the media id.
-   *
-   * @param int|string $id
-   *   Media id which might be in string form like '123'.
-   *
-   * @return \Drupal\file\FileInterface|null
-   *   File referenced by the media entity, or NULL if not found.
+   * {@inheritdoc}
    */
   public function getFileForMediaId(int|string $id): ?FileInterface {
     /** @var \Drupal\media\MediaInterface|null $media */
@@ -60,12 +48,7 @@ class MediaHelper {
   }
 
   /**
-   * Sets the file entity reference for a media entity.
-   *
-   * @param \Drupal\media\MediaInterface $media
-   *   Media entity to be modified.
-   * @param \Drupal\file\Entity\File $source
-   *   File entity to reference.
+   * {@inheritdoc}
    */
   public function setMediaSource(MediaInterface $media, FileInterface $file): void {
     $field_name = $media->getSource()->getSourceFieldDefinition($media->bundle->entity)->getName();

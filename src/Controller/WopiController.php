@@ -14,7 +14,7 @@ namespace Drupal\collabora_online\Controller;
 
 use Drupal\collabora_online\Exception\CollaboraNotAvailableException;
 use Drupal\collabora_online\Jwt\JwtTranscoderInterface;
-use Drupal\collabora_online\MediaHelper;
+use Drupal\collabora_online\MediaHelperInterface;
 use Drupal\Component\Datetime\TimeInterface;
 use Drupal\Core\DependencyInjection\AutowireTrait;
 use Drupal\Core\DependencyInjection\ContainerInjectionInterface;
@@ -46,7 +46,7 @@ class WopiController implements ContainerInjectionInterface {
     protected readonly FileSystemInterface $fileSystem,
     protected readonly TimeInterface $time,
     protected readonly FileUrlGeneratorInterface $fileUrlGenerator,
-    protected readonly MediaHelper $mediaHelper,
+    protected readonly MediaHelperInterface $mediaHelper,
     #[Autowire('logger.channel.collabora_online')]
     protected readonly LoggerInterface $logger,
     TranslationInterface $string_translation,
