@@ -36,7 +36,7 @@ class MediaHelper {
    * @return \Drupal\file\FileInterface|null
    *   The file entity, or NULL if not found.
    */
-  public function getFileForMedia(MediaInterface $media) {
+  public function getFileForMedia(MediaInterface $media): ?FileInterface {
     $fid = $media->getSource()->getSourceFieldValue($media);
     /** @var \Drupal\file\FileInterface|null $file */
     $file = $this->entityTypeManager->getStorage('file')->load($fid);
@@ -53,7 +53,7 @@ class MediaHelper {
    * @return \Drupal\file\FileInterface|null
    *   File referenced by the media entity, or NULL if not found.
    */
-  public function getFileForMediaId($id) {
+  public function getFileForMediaId(int|string $id): ?FileInterface {
     /** @var \Drupal\media\MediaInterface|null $media */
     $media = $this->entityTypeManager->getStorage('media')->load($id);
     return $this->getFileForMedia($media);
@@ -67,7 +67,7 @@ class MediaHelper {
    * @param \Drupal\file\Entity\File $source
    *   File entity to reference.
    */
-  public function setMediaSource(MediaInterface $media, FileInterface $source) {
+  public function setMediaSource(MediaInterface $media, FileInterface $source): void {
     $name = $media->getSource()->getSourceFieldDefinition($media->bundle->entity)->getName();
     $media->set($name, $source);
   }
