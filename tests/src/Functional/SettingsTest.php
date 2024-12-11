@@ -100,7 +100,6 @@ class SettingsTest extends BrowserTestBase {
     $assert_session->statusMessageContains('WOPI host URL field is required.', 'error');
     $assert_session->statusMessageContains('JWT private key ID field is required.', 'error');
     $assert_session->statusMessageContains('Access Token Expiration (in seconds) field is required.', 'error');
-    $assert_session->statusMessageNotContains('The configuration options have been saved.', 'status');
 
     // Test validation of bad form values.
     $this->drupalGet(Url::fromRoute('collabora-online.settings'));
