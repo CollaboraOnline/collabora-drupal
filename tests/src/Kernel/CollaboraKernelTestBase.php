@@ -54,6 +54,7 @@ abstract class CollaboraKernelTestBase extends KernelTestBase {
     $this->installEntitySchema('file');
     $this->installSchema('file', 'file_usage');
     $this->installEntitySchema('media');
+    $this->installEntitySchema('key');
     $this->installConfig([
       'field',
       'system',
@@ -61,6 +62,7 @@ abstract class CollaboraKernelTestBase extends KernelTestBase {
       'image',
       'file',
       'media',
+      'collabora_online',
     ]);
 
     // Install user module to avoid user 1 permissions bypass.
