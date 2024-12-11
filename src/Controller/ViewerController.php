@@ -144,12 +144,10 @@ class ViewerController implements ContainerInjectionInterface {
     $wopi_base = $cool_settings['wopi_base'];
     $allowfullscreen = $cool_settings['allowfullscreen'] ?? FALSE;
 
-    $id = $media->id();
-
     $expire_timestamp = $this->getExpireTimestamp();
     $access_token = $this->jwtTranscoder->encode(
       [
-        'fid' => $id,
+        'fid' => $media->id(),
         'uid' => $this->currentUser->id(),
         'wri' => $can_write,
       ],
@@ -158,7 +156,7 @@ class ViewerController implements ContainerInjectionInterface {
 
     $render_array = [
       '#wopiClient' => $wopi_client,
-      '#wopiSrc' => urlencode($wopi_base . '/cool/wopi/files/' . $id),
+      '#wopiSrc' => urlencode($wopi_base . '/cool/wopi/files/' . $media->id()),
       '#accessToken' => $access_token,
       // Convert to milliseconds.
       '#accessTokenTtl' => $expire_timestamp * 1000,
