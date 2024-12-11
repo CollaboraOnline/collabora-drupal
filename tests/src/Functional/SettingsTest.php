@@ -112,6 +112,17 @@ class SettingsTest extends BrowserTestBase {
     $assert_session->statusMessageContains('The URL /internal is not valid.', 'error');
     $assert_session->statusMessageContains('The URL any-other-value is not valid.', 'error');
     $assert_session->statusMessageNotContains('Access Token Expiration (in seconds) must be a number.', 'status');
+
+    // Test form with no configuration.
+    \Drupal::configFactory()->getEditable('collabora_online.settings')->setData([])->save();
+    $this->drupalGet(Url::fromRoute('collabora-online.settings'));
+    $assert_session->fieldValueEquals('Collabora Online server URL', '');
+    $assert_session->fieldValueEquals('WOPI host URL', '');
+    $assert_session->fieldValueEquals('JWT private key ID', '');
+    $assert_session->fieldValueEquals('Access Token Expiration (in seconds)', '0');
+    $assert_session->fieldValueEquals('Disable TLS certificate check for COOL.', '');
+    $assert_session->fieldValueEquals('Allow COOL to use fullscreen mode.', '');
+    $assert_session->buttonExists('Save configuration');
   }
 
 }
