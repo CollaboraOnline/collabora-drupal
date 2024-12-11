@@ -15,32 +15,42 @@ declare(strict_types=1);
 namespace Drupal\collabora_online\Controller;
 
 use Drupal\collabora_online\Cool\CollaboraDiscoveryInterface;
-use Drupal\collabora_online\Cool\CoolUtils;
 use Drupal\collabora_online\Exception\CollaboraNotAvailableException;
-use Drupal\Core\Controller\ControllerBase;
+use Drupal\collabora_online\Jwt\JwtTranscoderInterface;
+use Drupal\Core\Config\ConfigFactoryInterface;
+use Drupal\Core\DependencyInjection\AutowireTrait;
+use Drupal\Core\DependencyInjection\ContainerInjectionInterface;
 use Drupal\Core\Render\RendererInterface;
+use Drupal\Core\Session\AccountInterface;
+use Drupal\Core\StringTranslation\StringTranslationTrait;
+use Drupal\Core\StringTranslation\TranslationInterface;
 use Drupal\Core\Utility\Error;
 use Drupal\media\MediaInterface;
+use Psr\Log\LoggerInterface;
+use Symfony\Component\DependencyInjection\Attribute\Autowire;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 
 /**
  * Provides route responses for the Collabora module.
  */
-class ViewerController extends ControllerBase {
+class ViewerController implements ContainerInjectionInterface {
 
-  /**
-   * The controller constructor.
-   *
-   * @param \Drupal\collabora_online\Cool\CollaboraDiscoveryInterface $discovery
-   *   Service to fetch a WOPI client URL.
-   * @param \Drupal\Core\Render\RendererInterface $renderer
-   *   The renderer service.
-   */
+  use AutowireTrait;
+  use StringTranslationTrait;
+
   public function __construct(
     protected readonly CollaboraDiscoveryInterface $discovery,
+    protected readonly JwtTranscoderInterface $jwtTranscoder,
     protected readonly RendererInterface $renderer,
-  ) {}
+    #[Autowire('logger.channel.collabora_online')]
+    protected readonly LoggerInterface $logger,
+    protected readonly ConfigFactoryInterface $configFactory,
+    protected readonly AccountInterface $currentUser,
+    TranslationInterface $string_translation,
+  ) {
+    $this->setStringTranslation($string_translation);
+  }
 
   /**
    * Returns a raw page for the iframe embed.
@@ -57,15 +67,11 @@ class ViewerController extends ControllerBase {
    *   Response suitable for iframe, without the usual page decorations.
    */
   public function editor(MediaInterface $media, Request $request, $edit = FALSE) {
-    $options = [
-      'closebutton' => 'true',
-    ];
-
     try {
       $wopi_client_url = $this->discovery->getWopiClientURL();
     }
     catch (CollaboraNotAvailableException $e) {
-      $this->getLogger('cool')->warning(
+      $this->logger->warning(
         "Collabora Online is not available.<br>\n" . Error::DEFAULT_ERROR_MESSAGE,
         Error::decodeException($e) + [],
       );
@@ -78,7 +84,7 @@ class ViewerController extends ControllerBase {
 
     $current_request_scheme = $request->getScheme();
     if (!str_starts_with($wopi_client_url, $current_request_scheme . '://')) {
-      $this->getLogger('cool')->error($this->t(
+      $this->logger->error($this->t(
         "The current request uses '@current_request_scheme' url scheme, but the Collabora client url is '@wopi_client_url'.",
         [
           '@current_request_scheme' => $current_request_scheme,
@@ -92,7 +98,20 @@ class ViewerController extends ControllerBase {
       );
     }
 
-    $render_array = CoolUtils::getViewerRender($media, $wopi_client_url, $edit, $options);
+    try {
+      $render_array = $this->getViewerRender($media, $wopi_client_url, $edit);
+    }
+    catch (CollaboraNotAvailableException $e) {
+      $this->logger->warning(
+        "Cannot show the viewer/editor.<br>\n" . Error::DEFAULT_ERROR_MESSAGE,
+        Error::decodeException($e) + [],
+      );
+      return new Response(
+        (string) $this->t('The Collabora Online editor/viewer is not available.'),
+        Response::HTTP_BAD_REQUEST,
+        ['content-type' => 'text/plain'],
+      );
+    }
 
     $render_array['#theme'] = 'collabora_online_full';
     $render_array['#attached']['library'][] = 'collabora_online/cool.frame';
@@ -101,6 +120,66 @@ class ViewerController extends ControllerBase {
     $response->setContent((string) $this->renderer->renderRoot($render_array));
 
     return $response;
+  }
+
+  /**
+   * Gets a render array for a cool viewer.
+   *
+   * @param \Drupal\media\MediaInterface $media
+   *   The media entity to view / edit.
+   * @param string $wopi_client
+   *   The WOPI client url.
+   * @param bool $can_write
+   *   Whether this is a viewer (false) or an edit (true). Permissions will
+   *   also be checked.
+   *
+   * @return array
+   *   A stub render element.
+   *
+   * @throws \Drupal\collabora_online\Exception\CollaboraNotAvailableException
+   *   The key to use by Collabora is empty or not configured.
+   */
+  protected function getViewerRender(MediaInterface $media, string $wopi_client, bool $can_write) {
+    $cool_settings = $this->configFactory->get('collabora_online.settings')->get('cool');
+    $wopi_base = $cool_settings['wopi_base'];
+    $allowfullscreen = $cool_settings['allowfullscreen'] ?? FALSE;
+
+    $expire_timestamp = $this->getExpireTimestamp();
+    $access_token = $this->jwtTranscoder->encode(
+      [
+        'fid' => $media->id(),
+        'uid' => $this->currentUser->id(),
+        'wri' => $can_write,
+      ],
+      $expire_timestamp,
+    );
+
+    $render_array = [
+      '#wopiClient' => $wopi_client,
+      '#wopiSrc' => urlencode($wopi_base . '/cool/wopi/files/' . $media->id()),
+      '#accessToken' => $access_token,
+      // Convert to milliseconds.
+      '#accessTokenTtl' => $expire_timestamp * 1000,
+      '#allowfullscreen' => $allowfullscreen ? 'allowfullscreen' : '',
+      '#closebutton' => 'true',
+    ];
+
+    return $render_array;
+  }
+
+  /**
+   * Gets a token expiration timestamp based on the configured TTL.
+   *
+   * @return float
+   *   Expiration timestamp in seconds, with millisecond accuracy.
+   */
+  protected function getExpireTimestamp(): float {
+    $cool_settings = $this->configFactory->get('collabora_online.settings')->get('cool');
+    $ttl_seconds = $cool_settings['access_token_ttl'] ?? 0;
+    // Set a fallback of 24 hours.
+    $ttl_seconds = $ttl_seconds ?: 86400;
+
+    return gettimeofday(TRUE) + $ttl_seconds;
   }
 
 }

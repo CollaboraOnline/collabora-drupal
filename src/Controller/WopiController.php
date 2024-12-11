@@ -12,11 +12,21 @@
 
 namespace Drupal\collabora_online\Controller;
 
-use Drupal\collabora_online\Cool\CoolUtils;
-use Drupal\Core\Controller\ControllerBase;
+use Drupal\collabora_online\Exception\CollaboraNotAvailableException;
+use Drupal\collabora_online\Jwt\JwtTranscoderInterface;
+use Drupal\collabora_online\MediaHelperInterface;
+use Drupal\Component\Datetime\TimeInterface;
+use Drupal\Core\DependencyInjection\AutowireTrait;
+use Drupal\Core\DependencyInjection\ContainerInjectionInterface;
+use Drupal\Core\Entity\EntityTypeManagerInterface;
+use Drupal\Core\File\FileExists;
 use Drupal\Core\File\FileSystemInterface;
-use Drupal\file\Entity\File;
-use Drupal\user\Entity\User;
+use Drupal\Core\File\FileUrlGeneratorInterface;
+use Drupal\Core\Session\AccountSwitcherInterface;
+use Drupal\Core\StringTranslation\StringTranslationTrait;
+use Drupal\Core\StringTranslation\TranslationInterface;
+use Psr\Log\LoggerInterface;
+use Symfony\Component\DependencyInjection\Attribute\Autowire;
 use Symfony\Component\HttpFoundation\BinaryFileResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
@@ -24,7 +34,25 @@ use Symfony\Component\HttpFoundation\Response;
 /**
  * Provides WOPI route responses for the Collabora module.
  */
-class WopiController extends ControllerBase {
+class WopiController implements ContainerInjectionInterface {
+
+  use AutowireTrait;
+  use StringTranslationTrait;
+
+  public function __construct(
+    protected readonly EntityTypeManagerInterface $entityTypeManager,
+    protected readonly JwtTranscoderInterface $jwtTranscoder,
+    protected readonly AccountSwitcherInterface $accountSwitcher,
+    protected readonly FileSystemInterface $fileSystem,
+    protected readonly TimeInterface $time,
+    protected readonly FileUrlGeneratorInterface $fileUrlGenerator,
+    protected readonly MediaHelperInterface $mediaHelper,
+    #[Autowire('logger.channel.collabora_online')]
+    protected readonly LoggerInterface $logger,
+    TranslationInterface $string_translation,
+  ) {
+    $this->setStringTranslation($string_translation);
+  }
 
   /**
    * Creates a failure response that is understood by Collabora.
@@ -51,29 +79,32 @@ class WopiController extends ControllerBase {
    * @return \Symfony\Component\HttpFoundation\Response
    *   The response with file contents.
    */
-  public function wopiCheckFileInfo(string $id, Request $request) {
+  public function wopiCheckFileInfo(string $id, Request $request): Response {
     $token = $request->query->get('access_token');
 
-    $jwt_payload = CoolUtils::verifyTokenForId($token, $id);
-    if ($jwt_payload == NULL) {
+    $jwt_payload = $this->verifyTokenForMediaId($token, $id);
+    if ($jwt_payload === NULL) {
       return static::permissionDenied();
     }
 
     /** @var \Drupal\media\MediaInterface|null $media */
-    $media = \Drupal::entityTypeManager()->getStorage('media')->load($id);
-    if (!$media) {
+    $media = $this->entityTypeManager->getStorage('media')->load($id);
+    if ($media === NULL) {
       return static::permissionDenied();
     }
 
-    $file = CoolUtils::getFileById($id);
+    $file = $this->mediaHelper->getFileForMediaId($id);
     $mtime = date_create_immutable_from_format('U', $file->getChangedTime());
     // @todo What if the uid in the payload is not set?
-    // @todo What if $user is NULL?
-    $user = User::load($jwt_payload->uid);
-    $can_write = $jwt_payload->wri;
+    /** @var \Drupal\user\UserInterface|null $user */
+    $user = $this->entityTypeManager->getStorage('user')->load($jwt_payload['uid']);
+    if ($user === NULL) {
+      return static::permissionDenied();
+    }
+    $can_write = $jwt_payload['wri'];
 
     if ($can_write && !$media->access('edit in collabora', $user)) {
-      \Drupal::logger('cool')->error('Token and user permissions do not match.');
+      $this->logger->error('Token and user permissions do not match.');
       return static::permissionDenied();
     }
 
@@ -81,7 +112,7 @@ class WopiController extends ControllerBase {
       'BaseFileName' => $file->getFilename(),
       'Size' => $file->getSize(),
       'LastModifiedTime' => $mtime->format('c'),
-      'UserId' => $jwt_payload->uid,
+      'UserId' => $jwt_payload['uid'],
       'UserFriendlyName' => $user->getDisplayName(),
       'UserExtraInfo' => [
         'mail' => $user->getEmail(),
@@ -93,9 +124,7 @@ class WopiController extends ControllerBase {
 
     $user_picture = $user->user_picture?->entity;
     if ($user_picture) {
-      /** @var \Drupal\Core\File\FileUrlGeneratorInterface $file_url_generator */
-      $file_url_generator = \Drupal::service('file_url_generator');
-      $payload['UserExtraInfo']['avatar'] = $file_url_generator->generateAbsoluteString($user_picture->getFileUri());
+      $payload['UserExtraInfo']['avatar'] = $this->fileUrlGenerator->generateAbsoluteString($user_picture->getFileUri());
     }
 
     $jsonPayload = json_encode($payload);
@@ -119,19 +148,19 @@ class WopiController extends ControllerBase {
    * @return \Symfony\Component\HttpFoundation\Response
    *   The response with file contents.
    */
-  public function wopiGetFile(string $id, Request $request) {
+  public function wopiGetFile(string $id, Request $request): Response {
     $token = $request->query->get('access_token');
 
-    $jwt_payload = CoolUtils::verifyTokenForId($token, $id);
-    if ($jwt_payload == NULL) {
+    $jwt_payload = $this->verifyTokenForMediaId($token, $id);
+    if ($jwt_payload === NULL) {
       return static::permissionDenied();
     }
 
-    $user = User::load($jwt_payload->uid);
-    $accountSwitcher = \Drupal::service('account_switcher');
-    $accountSwitcher->switchTo($user);
+    /** @var \Drupal\user\UserInterface|null $user */
+    $user = $this->entityTypeManager->getStorage('user')->load($jwt_payload['uid']);
+    $this->accountSwitcher->switchTo($user);
 
-    $file = CoolUtils::getFileById($id);
+    $file = $this->mediaHelper->getFileForMediaId($id);
     $mimetype = $file->getMimeType();
 
     $response = new BinaryFileResponse(
@@ -139,7 +168,7 @@ class WopiController extends ControllerBase {
       Response::HTTP_OK,
       ['content-type' => $mimetype]
     );
-    $accountSwitcher->switchBack();
+    $this->accountSwitcher->switchBack();
     return $response;
   }
 
@@ -154,34 +183,36 @@ class WopiController extends ControllerBase {
    * @return \Symfony\Component\HttpFoundation\Response
    *   The response.
    */
-  public function wopiPutFile(string $id, Request $request) {
+  public function wopiPutFile(string $id, Request $request): Response {
     $token = $request->query->get('access_token');
     $timestamp = $request->headers->get('x-cool-wopi-timestamp');
     $modified_by_user = $request->headers->get('x-cool-wopi-ismodifiedbyuser') == 'true';
     $autosave = $request->headers->get('x-cool-wopi-isautosave') == 'true';
     $exitsave = $request->headers->get('x-cool-wopi-isexitsave') == 'true';
 
-    $jwt_payload = CoolUtils::verifyTokenForId($token, $id);
-    if ($jwt_payload == NULL || !$jwt_payload->wri) {
+    $jwt_payload = $this->verifyTokenForMediaId($token, $id);
+    if ($jwt_payload == NULL || empty($jwt_payload['wri'])) {
       return static::permissionDenied();
     }
 
-    $fs = \Drupal::service('file_system');
+    /** @var \Drupal\media\MediaInterface|null $media */
+    $media = $this->entityTypeManager->getStorage('media')->load($id);
+    /** @var \Drupal\user\UserInterface|null $user */
+    $user = $this->entityTypeManager->getStorage('user')->load($jwt_payload['uid']);
+    if ($media === NULL || $user === NULL) {
+      return static::permissionDenied();
+    }
 
-    $media = \Drupal::entityTypeManager()->getStorage('media')->load($id);
-    $user = User::load($jwt_payload->uid);
+    $this->accountSwitcher->switchTo($user);
 
-    $accountSwitcher = \Drupal::service('account_switcher');
-    $accountSwitcher->switchTo($user);
-
-    $file = CoolUtils::getFile($media);
+    $file = $this->mediaHelper->getFileForMedia($media);
 
     if ($timestamp) {
-      $wopi_stamp = date_create_immutable_from_format(\DateTimeInterface::ISO8601, $timestamp);
-      $file_stamp = date_create_immutable_from_format('U', $file->getChangedTime());
+      $wopi_stamp = \DateTimeImmutable::createFromFormat(\DateTimeInterface::ATOM, $timestamp);
+      $file_stamp = \DateTimeImmutable::createFromFormat('U', $file->getChangedTime());
 
       if ($wopi_stamp != $file_stamp) {
-        \Drupal::logger('cool')->error('Conflict saving file ' . $id . ' wopi: ' . $wopi_stamp->format('c') . ' differs from file: ' . $file_stamp->format('c'));
+        $this->logger->error('Conflict saving file ' . $id . ' wopi: ' . $wopi_stamp->format('c') . ' differs from file: ' . $file_stamp->format('c'));
 
         return new Response(
           json_encode(['COOLStatusCode' => 1010]),
@@ -191,26 +222,27 @@ class WopiController extends ControllerBase {
       }
     }
 
-    $dir = $fs->dirname($file->getFileUri());
+    $dir = $this->fileSystem->dirname($file->getFileUri());
     $dest = $dir . '/' . $file->getFilename();
 
     $content = $request->getContent();
     $owner_id = $file->getOwnerId();
-    $uri = $fs->saveData($content, $dest, FileSystemInterface::EXISTS_RENAME);
+    $uri = $this->fileSystem->saveData($content, $dest, FileExists::Rename);
 
-    $file = File::create(['uri' => $uri]);
+    /** @var \Drupal\file\FileInterface|null $file */
+    $file = $this->entityTypeManager->getStorage('file')->create(['uri' => $uri]);
     $file->setOwnerId($owner_id);
     if (is_file($dest)) {
-      $file->setFilename($fs->basename($dest));
+      $file->setFilename($this->fileSystem->basename($dest));
     }
     $file->setPermanent();
     $file->setSize(strlen($content));
     $file->save();
     $mtime = date_create_immutable_from_format('U', $file->getChangedTime());
 
-    CoolUtils::setMediaSource($media, $file);
+    $this->mediaHelper->setMediaSource($media, $file);
     $media->setRevisionUser($user);
-    $media->setRevisionCreationTime(\Drupal::service('datetime.time')->getRequestTime());
+    $media->setRevisionCreationTime($this->time->getRequestTime());
 
     $save_reason = 'Saved by Collabora Online';
     $reasons = [];
@@ -226,7 +258,7 @@ class WopiController extends ControllerBase {
     if (count($reasons) > 0) {
       $save_reason .= ' (' . implode(', ', $reasons) . ')';
     }
-    \Drupal::logger('cool')->error('Save reason: ' . $save_reason);
+    $this->logger->error('Save reason: ' . $save_reason);
     $media->setRevisionLogMessage($save_reason);
     $media->save();
 
@@ -240,7 +272,7 @@ class WopiController extends ControllerBase {
       ['content-type' => 'application/json']
     );
 
-    $accountSwitcher->switchBack();
+    $this->accountSwitcher->switchBack();
     return $response;
   }
 
@@ -257,7 +289,7 @@ class WopiController extends ControllerBase {
    * @return \Symfony\Component\HttpFoundation\Response
    *   Response to be consumed by Collabora Online.
    */
-  public function wopi(string $action, string $id, Request $request) {
+  public function wopi(string $action, string $id, Request $request): Response {
     $returnCode = Response::HTTP_BAD_REQUEST;
     switch ($action) {
       case 'info':
@@ -276,6 +308,44 @@ class WopiController extends ControllerBase {
       ['content-type' => 'text/plain']
     );
     return $response;
+  }
+
+  /**
+   * Decodes and verifies a JWT token.
+   *
+   * Verification include:
+   *  - matching $id with fid in the payload
+   *  - verifying the expiration.
+   *
+   * @param string $token
+   *   The token to verify.
+   * @param int|string $expected_media_id
+   *   Media id expected to be in the token payload.
+   *   This could be a stringified integer like '123'.
+   *
+   * @return array|null
+   *   Data decoded from the token, or NULL on failure or if the token has
+   *   expired.
+   */
+  protected function verifyTokenForMediaId(
+    #[\SensitiveParameter]
+    string $token,
+    int|string $expected_media_id,
+  ): array|null {
+    try {
+      $values = $this->jwtTranscoder->decode($token);
+    }
+    catch (CollaboraNotAvailableException $e) {
+      $this->logger->warning('A token cannot be decoded: @message', ['@mesage' => $e->getMessage()]);
+      return NULL;
+    }
+    if ($values === NULL) {
+      return NULL;
+    }
+    if ($values['fid'] !== $expected_media_id) {
+      return NULL;
+    }
+    return $values;
   }
 
 }

@@ -11,6 +11,8 @@
  */
 
 use Drupal\collabora_online\Cool\CoolUtils;
+use Drupal\collabora_online\CollaboraUrl;
+use Drupal\collabora_online\MediaHelperInterface;
 use Drupal\Core\Access\AccessResult;
 use Drupal\Core\Access\AccessResultInterface;
 use Drupal\Core\Entity\EntityInterface;
@@ -91,8 +93,10 @@ function collabora_online_entity_operation(EntityInterface $entity) {
     return [];
   }
 
-  $file = CoolUtils::getFile($media);
-  $type = CoolUtils::getDocumentType($file);
+  /** @var \Drupal\collabora_online\MediaHelperInterface $media_helper */
+  $media_helper = \Drupal::service(MediaHelperInterface::class);
+  $file = $media_helper->getFileForMedia($media);
+  $type = $file->getMimeType();
 
   if ($type == NULL) {
     return [];
@@ -102,7 +106,7 @@ function collabora_online_entity_operation(EntityInterface $entity) {
     'collabora_online_view' => [
       'title' => t("View in Collabora Online"),
       'weight' => 50,
-      'url' => CoolUtils::getEditorUrl($media, FALSE),
+      'url' => CollaboraUrl::previewMedia($media),
     ],
   ];
 
@@ -110,7 +114,7 @@ function collabora_online_entity_operation(EntityInterface $entity) {
     $entries['collabora_online_edit'] = [
       'title' => t("Edit in Collabora Online"),
       'weight' => 50,
-      'url' => CoolUtils::getEditorUrl($media, TRUE),
+      'url' => CollaboraUrl::editMedia($media),
     ];
   }
 
