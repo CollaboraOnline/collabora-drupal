@@ -20,7 +20,7 @@ use Drupal\Tests\BrowserTestBase;
 /**
  * Tests the Collabora configuration.
  */
-class SettingsTest extends BrowserTestBase {
+class ConfigFormTest extends BrowserTestBase {
 
   /**
    * {@inheritdoc}
@@ -37,7 +37,7 @@ class SettingsTest extends BrowserTestBase {
   /**
    * Tests the configuration for the Collabora settings form.
    */
-  public function testSettingsForm(): void {
+  public function testConfigForm(): void {
     $assert_session = $this->assertSession();
 
     // User without permission can't access the configuration page.
