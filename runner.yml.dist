@@ -43,12 +43,9 @@ drupal:
         collabora \
         'wwHYDJCstKi7pBfwtiV4y5iEDtnGaS+ALk2OR7DO5EZxSYkcnak5b0v1ZvdlpFXKP+RGijZvh7r+geV4SHJ4kw==' \
         --label=Collabora \
-        --key-type=jwt_hs \
+        --key-type=collabora_jwt_hs \
         --key-provider=config \
-        --key-input=text_field \
-        --key-type-settings='{"algorithm": "HS256" }'
-
-    - "./vendor/bin/drush -y config-set jwt.config key_id collabora"
+        --key-input=text_field
 
     # Configure media module.
     - "./vendor/bin/drush -y config-set media.settings standalone_url 1"
