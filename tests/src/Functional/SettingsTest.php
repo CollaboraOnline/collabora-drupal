@@ -51,7 +51,7 @@ class SettingsTest extends BrowserTestBase {
     $this->drupalGet(Url::fromRoute('collabora-online.settings'));
     $assert_session->statusCodeEquals(200);
 
-    // Check fields and default values.
+    // The form contains default values from module install.
     $this->drupalGet(Url::fromRoute('collabora-online.settings'));
     $assert_session->fieldValueEquals('Collabora Online server URL', 'https://localhost:9980/');
     $assert_session->fieldValueEquals('WOPI host URL', 'https://localhost/');
@@ -60,13 +60,13 @@ class SettingsTest extends BrowserTestBase {
     $assert_session->fieldValueEquals('Disable TLS certificate check for COOL.', '');
     $assert_session->fieldValueEquals('Allow COOL to use fullscreen mode.', '1');
 
-    // Check that fields values are saved.
+    // Change the form values, then submit the form.
     $assert_session->fieldExists('Collabora Online server URL')
       ->setValue('http://collaboraserver.com/');
     $assert_session->fieldExists('WOPI host URL')
       ->setValue('http://wopihost.com/');
     $assert_session->fieldExists('JWT private key ID')
-      ->setValue('a_random_token');
+      ->setValue('name_of_a_key');
     $assert_session->fieldExists('Access Token Expiration (in seconds)')
       ->setValue('3600');
     $assert_session->fieldExists('Disable TLS certificate check for COOL.')
@@ -77,17 +77,17 @@ class SettingsTest extends BrowserTestBase {
     $assert_session->buttonExists('Save configuration')->press();
     $assert_session->statusMessageContains('The configuration options have been saved.', 'status');
 
-    // Check the values in fields.
+    // The settings have been updated.
     $this->drupalGet(Url::fromRoute('collabora-online.settings'));
     $assert_session->fieldValueEquals('Collabora Online server URL', 'http://collaboraserver.com/');
     // Slash is removed at the end of Wopi URL.
     $assert_session->fieldValueEquals('WOPI host URL', 'http://wopihost.com');
-    $assert_session->fieldValueEquals('JWT private key ID', 'a_random_token');
+    $assert_session->fieldValueEquals('JWT private key ID', 'name_of_a_key');
     $assert_session->fieldValueEquals('Access Token Expiration (in seconds)', '3600');
     $assert_session->fieldValueEquals('Disable TLS certificate check for COOL.', '1');
     $assert_session->fieldValueEquals('Allow COOL to use fullscreen mode.', '');
 
-    // Check required fields, set empty values and check errors displayed.
+    // Test validation of required fields.
     $this->drupalGet(Url::fromRoute('collabora-online.settings'));
     $assert_session->fieldExists('Collabora Online server URL')->setValue('');
     $assert_session->fieldExists('WOPI host URL')->setValue('');
@@ -102,7 +102,7 @@ class SettingsTest extends BrowserTestBase {
     $assert_session->statusMessageContains('Access Token Expiration (in seconds) field is required.', 'error');
     $assert_session->statusMessageNotContains('The configuration options have been saved.', 'status');
 
-    // Check validation for fields.
+    // Test validation of bad form values.
     $this->drupalGet(Url::fromRoute('collabora-online.settings'));
     // Set invalid value for URL fields.
     $assert_session->fieldExists('Collabora Online server URL')->setValue('/internal');
