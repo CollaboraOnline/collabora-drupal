@@ -34,4 +34,23 @@ interface CollaboraDiscoveryInterface {
    */
   public function getWopiClientURL(string $mimetype = 'text/plain'): string;
 
+  /**
+   * Gets the public key used for proofing.
+   *
+   * @return string|null
+   *   The recent key, or NULL if none found.
+   */
+  public function getProofKey(): ?string;
+
+  /**
+   * Gets the old public key for proofing.
+   *
+   * This covers the case when the public key was already updated, but an
+   * incoming request has a proof that was generated with the previous key.
+   *
+   * @return string|null
+   *   The old key, or NULL if none found.
+   */
+  public function getProofKeyOld(): ?string;
+
 }

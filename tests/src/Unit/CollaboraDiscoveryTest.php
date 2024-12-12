@@ -38,30 +38,87 @@ class CollaboraDiscoveryTest extends UnitTestCase {
   }
 
   /**
+   * Tests reading proof keys from the discovery.xml.
+   *
+   * @covers ::getProofKey
+   * @covers ::getProofKeyOld
+   */
+  public function testProofKey(): void {
+    $file = dirname(__DIR__, 2) . '/fixtures/discovery.proof-key.xml';
+    $discovery = $this->getDiscoveryFromFile($file);
+    $this->assertSame(
+      'BgIAAACkAABSU0ExAAgAAAEAAQCxJYuefceQ4XI3/iUQvL9+ebLFZSRdM1n6fkB+OtILJexHUsD/aItTWgzB/G6brdxLlyHXoPjbJl4QoWZVrr1XY+ZHQ/a9Yzf/VN2mPLKFB9hmnUPI580VpFfkC3gCgpqwFwMpAkQSzYSDFQ/7W4ryPP6irvVzhg16IqQ9oEhZWmwy6caKcqh4BK31oI8SrI6bsZLBMTli70197UWHmgIGk4JJbeC8cBFb6uZDaidAcRn1HSAF2JnaEscUNMIsiNMM/71BT6U6hVSv5Qk0oISMLfVOeCPQZ6OmYo4M42wDKBpaJGMOpgoeQX6Feq+agf7uBvd8S/ITGZ8WinQfHZaQ',
+      $discovery->getProofKey(),
+    );
+    $this->assertSame(
+      'BgIAAACkAABSU0ExAAgAAAEAAQDj9QjZQ9bOOw5LfAMxMLMDTLgHsNvBcdRpYQ8S9qK9ylJevgp+j66k9/uyKXSwI9WTVHW+XLTCPq6aId+XqB5e8+H5rov7e4Itkpnr6eXZ1jAu9TW2jEnqCYdGqG6Pv0kbRv1gUFEsjciy8i9UAQ12Ons7J58nQLd3tJ4WATANoCyVJLfA7BQ6IRSq8/K3jqmSE8xu3HDLX+lnMrsK2KL4lYcjerGZpmOKI5tPZbC5xSMkB9alE5NhTYeYw25CyG4FHoss2AwNgvSQDaf6d/icNg5ZoGQwtISGKL6IFc4oogFHFdvR4FQCQ61wdz7RmHjJUpsPFio8htuSeMjbC7fS',
+      $discovery->getProofKeyOld(),
+    );
+  }
+
+  /**
+   * Tests behavior if discovery.xml does not have proof keys.
+   *
+   * @covers ::getProofKey
+   * @covers ::getProofKeyOld
+   */
+  public function testNoProofKey(): void {
+    $xml = '<wopi-discovery></wopi-discovery>';
+    $discovery = $this->getDiscoveryFromXml($xml);
+    $this->assertNull($discovery->getProofKey());
+    $this->assertNull($discovery->getProofKeyOld());
+  }
+
+  /**
    * Tests error behavior for blank xml content.
    *
    * @covers ::getWopiClientURL
+   * @covers ::getProofKey
+   * @covers ::getProofKeyOld
+   *
+   * @dataProvider provideAllMethods
    */
-  public function testBlankXml(): void {
+  public function testBlankXml(callable $callback): void {
     $discovery = $this->getDiscoveryFromXml('');
 
     $this->expectException(CollaboraNotAvailableException::class);
     $this->expectExceptionMessage('The discovery.xml file is empty.');
-    $discovery->getWopiClientURL();
+    $callback($discovery);
   }
 
   /**
    * Tests error behavior for malformed xml content.
    *
    * @covers ::getWopiClientURL
+   * @covers ::getProofKey
+   * @covers ::getProofKeyOld
+   *
+   * @dataProvider provideAllMethods
    */
-  public function testBrokenXml(): void {
+  public function testBrokenXml(callable $callback): void {
     $xml = 'This file does not contain valid xml.';
     $discovery = $this->getDiscoveryFromXml($xml);
 
     $this->expectException(CollaboraNotAvailableException::class);
     $this->expectExceptionMessageMatches('#^Error in the retrieved discovery.xml file: #');
-    $discovery->getWopiClientURL();
+    $callback($discovery);
+  }
+
+  /**
+   * Provides all methods as callbacks.
+   *
+   * This is used for tests where each method will throw the same exception.
+   *
+   * @return list<array{\Closure(\Drupal\collabora_online\Cool\CollaboraDiscoveryInterface): void}>
+   *   Argument tuples.
+   */
+  public static function provideAllMethods(): array {
+    return [
+      // Closures in data providers are ok in unit tests.
+      'getWopiClientURL' => [fn (CollaboraDiscoveryInterface $discovery) => $discovery->getWopiClientURL()],
+      'getProofKey' => [fn (CollaboraDiscoveryInterface $discovery) => $discovery->getProofKey()],
+      'getProofKeyOld' => [fn (CollaboraDiscoveryInterface $discovery) => $discovery->getProofKeyOld()],
+    ];
   }
 
   /**

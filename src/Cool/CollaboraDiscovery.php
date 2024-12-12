@@ -47,6 +47,24 @@ class CollaboraDiscovery implements CollaboraDiscoveryInterface {
   }
 
   /**
+   * {@inheritdoc}
+   */
+  public function getProofKey(): ?string {
+    $discovery_parsed = $this->getParsedXml();
+    $attribute = $discovery_parsed->xpath('/wopi-discovery/proof-key/@value')[0] ?? NULL;
+    return $attribute?->__toString();
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getProofKeyOld(): ?string {
+    $discovery_parsed = $this->getParsedXml();
+    $attribute = $discovery_parsed->xpath('/wopi-discovery/proof-key/@oldvalue')[0] ?? NULL;
+    return $attribute?->__toString();
+  }
+
+  /**
    * Fetches the discovery.xml, and gets the parsed contents.
    *
    * @return \SimpleXMLElement
