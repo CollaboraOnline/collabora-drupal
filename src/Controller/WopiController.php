@@ -81,6 +81,9 @@ class WopiController implements ContainerInjectionInterface {
    */
   public function wopiCheckFileInfo(string $id, Request $request): Response {
     $token = $request->query->get('access_token');
+    if ($token === NULL) {
+      return static::permissionDenied();
+    }
 
     $jwt_payload = $this->verifyTokenForMediaId($token, $id);
     if ($jwt_payload === NULL) {
