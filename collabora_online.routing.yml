@@ -47,7 +47,7 @@ collabora-online.wopi.info:
     action: 'info'
   methods: [ GET ]
   requirements:
-    _permission: 'access content'
+    _collabora_online_wopi_access: 'TRUE'
     _format: 'collabora_online_wopi'
   options:
     parameters:
@@ -63,7 +63,7 @@ collabora-online.wopi.contents:
     action: 'content'
   methods: [ GET ]
   requirements:
-    _permission: 'access content'
+    _collabora_online_wopi_access: 'TRUE'
     _format: 'collabora_online_wopi'
   options:
     parameters:
@@ -79,7 +79,7 @@ collabora-online.wopi.save:
     action: 'save'
   methods: [ POST ]
   requirements:
-    _permission: 'access content'
+    _collabora_online_wopi_access: 'TRUE'
     _format: 'collabora_online_wopi'
   options:
     parameters:
