@@ -14,6 +14,7 @@ declare(strict_types=1);
 
 namespace Drupal\Tests\collabora_online\Kernel;
 
+use ColinODell\PsrTestLogger\TestLogger;
 use Drupal\collabora_online\Jwt\JwtTranscoderInterface;
 use Drupal\file\Entity\File;
 use Drupal\file\FileInterface;
@@ -60,10 +61,19 @@ class WopiControllerTest extends CollaboraKernelTestBase {
   protected FileInterface $file;
 
   /**
+   * The test logger channel.
+   *
+   * @var \ColinODell\PsrTestLogger\TestLogger
+   */
+  protected TestLogger $logger;
+
+  /**
    * {@inheritdoc}
    */
   protected function setUp(): void {
     parent::setUp();
+    $this->logger = new TestLogger();
+    \Drupal::service('logger.factory')->addLogger($this->logger);
 
     $collabora_settings = \Drupal::configFactory()->getEditable('collabora_online.settings');
     $cool = $collabora_settings->get('cool');
@@ -252,6 +262,7 @@ class WopiControllerTest extends CollaboraKernelTestBase {
       'Authentication failed.',
       $request
     );
+    $this->assertTrue($this->logger->hasRecord('Token and user permissions do not match.'), 'error');
   }
 
   /**
