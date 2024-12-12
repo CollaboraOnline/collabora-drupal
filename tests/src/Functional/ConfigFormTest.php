@@ -19,6 +19,8 @@ use Drupal\Tests\BrowserTestBase;
 
 /**
  * Tests the Collabora configuration.
+ *
+ * @coversDefaultClass \Drupal\collabora_online\Form\ConfigForm
  */
 class ConfigFormTest extends BrowserTestBase {
 
