@@ -23,6 +23,18 @@ use Symfony\Component\HttpFoundation\Response;
 class WopiControllerTest extends WopiControllerTestBase {
 
   /**
+   * {@inheritdoc}
+   */
+  protected function setUp(): void {
+    parent::setUp();
+
+    // Disable the WOPI proof for this test.
+    $this->config('collabora_online.settings')
+      ->set('cool.wopi_proof', FALSE)
+      ->save();
+  }
+
+  /**
    * Tests successful requests to the 'collabora-online.wopi.info' route.
    *
    * @covers ::wopiCheckFileInfo
