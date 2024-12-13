@@ -184,7 +184,7 @@ class WopiController implements ContainerInjectionInterface {
    *   The response.
    */
   public function wopiPutFile(string $id, Request $request): Response {
-    $token = $request->query->get('access_token');
+    $token = $request->get('access_token');
     $timestamp = $request->headers->get('x-cool-wopi-timestamp');
     $modified_by_user = $request->headers->get('x-cool-wopi-ismodifiedbyuser') == 'true';
     $autosave = $request->headers->get('x-cool-wopi-isautosave') == 'true';
