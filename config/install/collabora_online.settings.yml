@@ -3,8 +3,9 @@ cool:
   server: https://localhost:9980/
   # The WOPI base
   wopi_base: https://localhost/
-  # The JWT key id
-  key_id: cool
+  # The JWT key id.
+  # This is empty at first, because the key has yet to be created.
+  key_id: ''
   # Access Token TTL
   access_token_ttl: 86400
   # Disable cert checks.

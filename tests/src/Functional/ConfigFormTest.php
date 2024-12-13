@@ -15,10 +15,13 @@ declare(strict_types=1);
 namespace Drupal\Tests\collabora_online\Functional;
 
 use Drupal\Core\Url;
+use Drupal\key\Entity\Key;
 use Drupal\Tests\BrowserTestBase;
 
 /**
  * Tests the Collabora configuration.
+ *
+ * @coversDefaultClass \Drupal\collabora_online\Form\ConfigForm
  */
 class ConfigFormTest extends BrowserTestBase {
 
@@ -55,18 +58,38 @@ class ConfigFormTest extends BrowserTestBase {
     $this->drupalGet(Url::fromRoute('collabora-online.settings'));
     $assert_session->fieldValueEquals('Collabora Online server URL', 'https://localhost:9980/');
     $assert_session->fieldValueEquals('WOPI host URL', 'https://localhost/');
-    $assert_session->fieldValueEquals('JWT private key ID', 'cool');
+    $assert_session->fieldValueEquals('JWT private key', '');
     $assert_session->fieldValueEquals('Access Token Expiration (in seconds)', '86400');
     $assert_session->fieldValueEquals('Disable TLS certificate check for COOL.', '');
     $assert_session->fieldValueEquals('Allow COOL to use fullscreen mode.', '1');
+
+    // The key select element has no options, because no compatible key exists.
+    $this->assertSame(
+      [
+        '- Select a key -' => '- Select a key -',
+      ],
+      $this->getOptions('JWT private key'),
+    );
+
+    $this->createKeys();
+
+    // The key select options contains only compatible keys.
+    $this->drupalGet(Url::fromRoute('collabora-online.settings'));
+    $this->assertSame(
+      [
+        '- Select a key -' => '- Select a key -',
+        'collabora_test' => 'Collabora test key',
+      ],
+      $this->getOptions('JWT private key'),
+    );
 
     // Change the form values, then submit the form.
     $assert_session->fieldExists('Collabora Online server URL')
       ->setValue('http://collaboraserver.com/');
     $assert_session->fieldExists('WOPI host URL')
       ->setValue('http://wopihost.com/');
-    $assert_session->fieldExists('JWT private key ID')
-      ->setValue('name_of_a_key');
+    $assert_session->fieldExists('JWT private key')
+      ->setValue('collabora_test');
     $assert_session->fieldExists('Access Token Expiration (in seconds)')
       ->setValue('3600');
     $assert_session->fieldExists('Disable TLS certificate check for COOL.')
@@ -82,7 +105,7 @@ class ConfigFormTest extends BrowserTestBase {
     $assert_session->fieldValueEquals('Collabora Online server URL', 'http://collaboraserver.com/');
     // Slash is removed at the end of Wopi URL.
     $assert_session->fieldValueEquals('WOPI host URL', 'http://wopihost.com');
-    $assert_session->fieldValueEquals('JWT private key ID', 'name_of_a_key');
+    $assert_session->fieldValueEquals('JWT private key', 'collabora_test');
     $assert_session->fieldValueEquals('Access Token Expiration (in seconds)', '3600');
     $assert_session->fieldValueEquals('Disable TLS certificate check for COOL.', '1');
     $assert_session->fieldValueEquals('Allow COOL to use fullscreen mode.', '');
@@ -91,14 +114,14 @@ class ConfigFormTest extends BrowserTestBase {
     $this->drupalGet(Url::fromRoute('collabora-online.settings'));
     $assert_session->fieldExists('Collabora Online server URL')->setValue('');
     $assert_session->fieldExists('WOPI host URL')->setValue('');
-    $assert_session->fieldExists('JWT private key ID')->setValue('');
+    $assert_session->fieldExists('JWT private key')->setValue('');
     $assert_session->fieldExists('Access Token Expiration (in seconds)')->setValue('');
     $assert_session->fieldExists('Disable TLS certificate check for COOL.')->uncheck();
     $assert_session->fieldExists('Allow COOL to use fullscreen mode.')->uncheck();
     $assert_session->buttonExists('Save configuration')->press();
     $assert_session->statusMessageContains('Collabora Online server URL field is required.', 'error');
     $assert_session->statusMessageContains('WOPI host URL field is required.', 'error');
-    $assert_session->statusMessageContains('JWT private key ID field is required.', 'error');
+    $assert_session->statusMessageContains('JWT private key field is required.', 'error');
     $assert_session->statusMessageContains('Access Token Expiration (in seconds) field is required.', 'error');
 
     // Test validation of bad form values.
@@ -118,11 +141,30 @@ class ConfigFormTest extends BrowserTestBase {
     $this->drupalGet(Url::fromRoute('collabora-online.settings'));
     $assert_session->fieldValueEquals('Collabora Online server URL', '');
     $assert_session->fieldValueEquals('WOPI host URL', '');
-    $assert_session->fieldValueEquals('JWT private key ID', '');
+    $assert_session->fieldValueEquals('JWT private key', '');
     $assert_session->fieldValueEquals('Access Token Expiration (in seconds)', '0');
     $assert_session->fieldValueEquals('Disable TLS certificate check for COOL.', '');
     $assert_session->fieldValueEquals('Allow COOL to use fullscreen mode.', '');
     $assert_session->buttonExists('Save configuration');
+  }
+
+  /**
+   * Creates some keys.
+   */
+  protected function createKeys(): void {
+    // Create a JWT key, which we can then choose in the form.
+    Key::create([
+      'id' => 'collabora_test',
+      'label' => 'Collabora test key',
+      'key_type' => 'collabora_jwt_hs',
+      'key_provider' => 'config',
+    ])->save();
+
+    // Create another key which should not appear in the select.
+    Key::create([
+      'id' => 'other_key',
+      'label' => 'Other key',
+    ])->save();
   }
 
 }
