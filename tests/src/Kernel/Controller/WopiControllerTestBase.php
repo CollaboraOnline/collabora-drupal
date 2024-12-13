@@ -22,9 +22,12 @@ use Drupal\media\MediaInterface;
 use Drupal\Tests\collabora_online\Kernel\CollaboraKernelTestBase;
 use Drupal\user\UserInterface;
 use Symfony\Component\HttpFoundation\Request;
+use Symfony\Component\HttpFoundation\Response;
 
 /**
- * Base class to test controller responses in Collabora.
+ * Base class to test Wopi controller requests in Collabora.
+ *
+ * Contains structure and common tests.
  */
 abstract class WopiControllerTestBase extends CollaboraKernelTestBase {
 
@@ -40,21 +43,21 @@ abstract class WopiControllerTestBase extends CollaboraKernelTestBase {
    *
    * @var \Drupal\user\UserInterface
    */
-  protected UserInterface|string $user;
+  protected UserInterface $user;
 
   /**
    * The media where to perform operations.
    *
    * @var \Drupal\media\MediaInterface
    */
-  protected MediaInterface|string $media;
+  protected MediaInterface $media;
 
   /**
    * The source file.
    *
    * @var \Drupal\file\FileInterface
    */
-  protected FileInterface|string $file;
+  protected FileInterface $file;
 
   /**
    * The test logger channel.
@@ -92,6 +95,23 @@ abstract class WopiControllerTestBase extends CollaboraKernelTestBase {
     $this->file = File::load($fid);
 
     $this->setCurrentUser($this->user);
+  }
+
+  /**
+   * Tests response with a bad access token.
+   */
+  public function testAccessDeniedToken(): void {
+    $request = $this->createRequest([
+      'id' => $this->media->id(),
+      'access_token' => 'a',
+    ]);
+
+    $this->assertResponse(
+      Response::HTTP_FORBIDDEN,
+      'Authentication failed.',
+      'text/plain',
+      $request
+    );
   }
 
   /**
@@ -157,7 +177,7 @@ abstract class WopiControllerTestBase extends CollaboraKernelTestBase {
   protected function createRequest(array $params): Request {
     return Request::create(
       $this->getRequestUri(),
-      self::METHOD,
+      static::METHOD,
       $params
     );
   }

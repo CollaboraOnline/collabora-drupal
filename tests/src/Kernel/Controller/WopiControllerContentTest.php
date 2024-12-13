@@ -18,7 +18,7 @@ use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 
 /**
- * Tests the WopiController content.
+ * Tests the 'content' action in WopiController.
  *
  * @see \Drupal\collabora_online\Controller\WopiController::wopiGetFile()
  */
@@ -30,7 +30,6 @@ class WopiControllerContentTest extends WopiControllerTestBase {
   public function testSuccess(): void {
     $request = $this->createRequest([
       'id' => $this->media->id(),
-      'action' => 'content',
       'access_token' => $this->getAccessToken(),
     ]);
 

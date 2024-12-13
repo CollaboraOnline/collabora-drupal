@@ -17,7 +17,7 @@ namespace Drupal\Tests\collabora_online\Kernel\Controller;
 use Symfony\Component\HttpFoundation\Response;
 
 /**
- * Tests the info operation in WopiController.
+ * Tests the 'info' action in WopiController.
  *
  * @see \Drupal\collabora_online\Controller\WopiController::wopiCheckFileInfo()
  */
@@ -29,7 +29,6 @@ class WopiControllerInfoTest extends WopiControllerTestBase {
   public function testSuccess(): void {
     $request = $this->createRequest([
       'id' => $this->media->id(),
-      'action' => 'info',
       'access_token' => $this->getAccessToken(),
     ]);
 
@@ -62,7 +61,6 @@ class WopiControllerInfoTest extends WopiControllerTestBase {
   public function testSuccessWrite(): void {
     $request = $this->createRequest([
       'id' => $this->media->id(),
-      'action' => 'info',
       'access_token' => $this->getAccessToken(write: TRUE),
     ]);
 
@@ -89,33 +87,14 @@ class WopiControllerInfoTest extends WopiControllerTestBase {
   }
 
   /**
-   * Tests response with a bad access token.
-   */
-  public function testAccessDeniedToken(): void {
-    $request = $this->createRequest([
-      'id' => $this->media->id(),
-      'action' => 'info',
-      'access_token' => 'a',
-    ]);
-
-    $this->assertResponse(
-      Response::HTTP_FORBIDDEN,
-      'Authentication failed.',
-      'text/plain',
-      $request
-    );
-  }
-
-  /**
    * Tests a request using deleted media.
    */
   public function testAccessDeniedMedia(): void {
     $this->media->delete();
 
     $request = $this->createRequest([
-        'id' => '1',
-        'action' => 'info',
-        'access_token' => $this->getAccessToken(),
+      'id' => '1',
+      'access_token' => $this->getAccessToken(),
     ]);
 
     $this->assertResponse(
@@ -132,7 +111,6 @@ class WopiControllerInfoTest extends WopiControllerTestBase {
   public function testAccessDeniedUser(): void {
     $request = $this->createRequest([
       'id' => $this->media->id(),
-      'action' => 'info',
       'access_token' => $this->getAccessToken(uid: 5),
     ]);
 
