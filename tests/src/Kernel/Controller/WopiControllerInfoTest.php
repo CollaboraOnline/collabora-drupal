@@ -97,12 +97,7 @@ class WopiControllerInfoTest extends WopiControllerTestBase {
       'access_token' => $this->getAccessToken(),
     ]);
 
-    $this->assertResponse(
-      Response::HTTP_FORBIDDEN,
-      'Authentication failed.',
-      'text/plain',
-      $request
-    );
+    $this->assertAccessDeniedResponse($request);
   }
 
   /**
@@ -114,12 +109,7 @@ class WopiControllerInfoTest extends WopiControllerTestBase {
       'access_token' => $this->getAccessToken(uid: 5),
     ]);
 
-    $this->assertResponse(
-      Response::HTTP_FORBIDDEN,
-      'Authentication failed.',
-      'text/plain',
-      $request
-    );
+    $this->assertAccessDeniedResponse($request);
   }
 
   /**
@@ -134,12 +124,7 @@ class WopiControllerInfoTest extends WopiControllerTestBase {
       'access_token' => $this->getAccessToken(write: TRUE),
     ]);
 
-    $this->assertResponse(
-      Response::HTTP_FORBIDDEN,
-      'Authentication failed.',
-      'text/plain',
-      $request
-    );
+    $this->assertAccessDeniedResponse($request);
     $this->assertTrue($this->logger->hasRecord('Token and user permissions do not match.'), 'error');
   }
 

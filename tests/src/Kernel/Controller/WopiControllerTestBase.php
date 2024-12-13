@@ -166,6 +166,21 @@ abstract class WopiControllerTestBase extends CollaboraKernelTestBase {
   }
 
   /**
+   * Asserts an access denied response given a request.
+   *
+   * @param \Symfony\Component\HttpFoundation\Request $request
+   *   The request to perform.
+   */
+  protected function assertAccessDeniedResponse(Request $request): void {
+    $this->assertResponse(
+      Response::HTTP_FORBIDDEN,
+      'Authentication failed.',
+      'text/plain',
+      $request
+    );
+  }
+
+  /**
    * Creates a request.
    *
    * @param array $params
