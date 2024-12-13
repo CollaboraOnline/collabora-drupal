@@ -34,18 +34,7 @@ drupal:
     - "./vendor/bin/drush -y config-set collabora_online.settings cool.server http://collabora.test:9980/"
     - "./vendor/bin/drush -y config-set collabora_online.settings cool.wopi_base http://web.test:8080"
     - "./vendor/bin/drush -y config-set collabora_online.settings cool.key_id collabora"
-    - "./vendor/bin/drush -y config-set collabora_online.settings cool.access_token_ttl 86400"
     - "./vendor/bin/drush -y config-set collabora_online.settings cool.disable_cert_check 1"
-
-    # Create the JWT key.
-    - |
-      ./vendor/bin/drush key-save \
-        collabora \
-        'wwHYDJCstKi7pBfwtiV4y5iEDtnGaS+ALk2OR7DO5EZxSYkcnak5b0v1ZvdlpFXKP+RGijZvh7r+geV4SHJ4kw==' \
-        --label=Collabora \
-        --key-type=collabora_jwt_hs \
-        --key-provider=config \
-        --key-input=text_field
 
     # Configure media module.
     - "./vendor/bin/drush -y config-set media.settings standalone_url 1"
