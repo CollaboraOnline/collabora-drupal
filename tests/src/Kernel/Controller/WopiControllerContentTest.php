@@ -34,10 +34,10 @@ class WopiControllerContentTest extends WopiControllerTestBase {
     ]);
 
     $this->assertResponse(
-     Response::HTTP_OK,
-     $this->file->getFileUri(),
-     $this->file->getMimeType(),
-     $request
+      Response::HTTP_OK,
+      $this->file->getFileUri(),
+      $this->file->getMimeType(),
+      $request
     );
   }
 
