@@ -161,6 +161,9 @@ class WopiController implements ContainerInjectionInterface {
     $this->accountSwitcher->switchTo($user);
 
     $file = $this->mediaHelper->getFileForMediaId($id);
+    if ($file === NULL) {
+      return static::permissionDenied();
+    }
     $mimetype = $file->getMimeType();
 
     $response = new BinaryFileResponse(
