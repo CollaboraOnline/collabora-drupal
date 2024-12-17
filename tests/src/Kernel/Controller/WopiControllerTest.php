@@ -152,7 +152,7 @@ class WopiControllerTest extends CollaboraKernelTestBase {
       $this->logger->reset();
       $this->assertJsonResponseOk($expected_response_data, $request);
       $log_message ??= 'Save reason: Saved by Collabora Online';
-      $this->assertTrue($this->logger->hasRecord($log_message), 'error');
+      $this->assertTrue($this->logger->hasRecord($log_message));
     };
 
     // Test a successful save request without timestamp header.
