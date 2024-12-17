@@ -44,6 +44,9 @@ class MediaHelper implements MediaHelperInterface {
   public function getFileForMediaId(int|string $id): ?FileInterface {
     /** @var \Drupal\media\MediaInterface|null $media */
     $media = $this->entityTypeManager->getStorage('media')->load($id);
+    if ($media === NULL) {
+      return NULL;
+    }
     return $this->getFileForMedia($media);
   }
 
