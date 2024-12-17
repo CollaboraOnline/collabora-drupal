@@ -276,11 +276,7 @@ class WopiControllerTest extends CollaboraKernelTestBase {
    * @return array<string, \Symfony\Component\HttpFoundation\Request>
    *   Requests keyed by a distinguishable name.
    */
-  protected function createRequests(
-    ?int $media_id = NULL,
-    ?int $user_id = NULL,
-    array $token_payload = [],
-  ): array {
+  protected function createRequests(?int $media_id = NULL, ?int $user_id = NULL, array $token_payload = []): array {
     $create_request = fn (string $uri_suffix, string $method = 'GET', bool $write = FALSE) => $this->createRequest(
       $uri_suffix,
       $method,
