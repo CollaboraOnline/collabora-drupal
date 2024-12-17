@@ -37,17 +37,6 @@ interface MediaHelperInterface {
   public function getFileForMedia(MediaInterface $media): ?FileInterface;
 
   /**
-   * Gets a file based on the media id.
-   *
-   * @param int|string $id
-   *   Media id which might be in string form like '123'.
-   *
-   * @return \Drupal\file\FileInterface|null
-   *   File referenced by the media entity, or NULL if not found.
-   */
-  public function getFileForMediaId(int|string $id): ?FileInterface;
-
-  /**
    * Sets the file entity reference for a media entity.
    *
    * @param \Drupal\media\MediaInterface $media

@@ -38,7 +38,6 @@ class MediaHelperTest extends CollaboraKernelTestBase {
    * Tests all methods at once, for performance reasons.
    *
    * @covers \Drupal\collabora_online\MediaHelper::getFileForMedia()
-   * @covers \Drupal\collabora_online\MediaHelper::getFileForMediaId()
    * @covers \Drupal\collabora_online\MediaHelper::setMediaSource()
    */
   public function testMediaHelper(): void {
@@ -62,11 +61,6 @@ class MediaHelperTest extends CollaboraKernelTestBase {
       $helper->getFileForMedia($media)->id(),
     );
 
-    $this->assertEquals(
-      $file->id(),
-      $helper->getFileForMediaId($media->id())->id(),
-    );
-
     file_put_contents('public://test1.txt', 'Hello test 1');
     $other_file = File::create([
       'uri' => 'public://test1.txt',
@@ -80,30 +74,24 @@ class MediaHelperTest extends CollaboraKernelTestBase {
       $media->get('field_media_file')->getValue()[0]['target_id'],
     );
 
-    // The first method reads the file id from the existing media instance,
-    // which already has the new value.
+    // The media entity now has the new value, even without saving.
     $this->assertEquals(
       $other_file->id(),
       $helper->getFileForMedia($media)->id(),
     );
-    // The other method loads a fresh media entity instance, which still has the
-    // old value.
-    // The test documents this behavior, whether it is desirable or not.
+
+    // The stored media still has the old value.
     $this->assertEquals(
       $file->id(),
-      $helper->getFileForMediaId($media->id())->id(),
+      $helper->getFileForMedia(Media::load($media->id()))->id(),
     );
 
     $media->save();
 
-    // After saving, both methods return the new file.
+    // After saving, the stored media now has the new value.
     $this->assertEquals(
       $other_file->id(),
-      $helper->getFileForMedia($media)->id(),
-    );
-    $this->assertEquals(
-      $other_file->id(),
-      $helper->getFileForMediaId($media->id())->id(),
+      $helper->getFileForMedia(Media::load($media->id()))->id(),
     );
   }
 
