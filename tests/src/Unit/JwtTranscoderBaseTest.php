@@ -116,8 +116,8 @@ class JwtTranscoderBaseTest extends UnitTestCase {
     $transcoder = $this->createTranscoder($logger);
     $expire_timestamp = gettimeofday(TRUE) + 55555;
     $token = $transcoder->encode(['a' => 'A'], $expire_timestamp);
-    // Insert a bad character in the signature part.
-    $token[-2] = 'x';
+    // Change one character in the signature part.
+    $token[-2] = ($token[-2] !== 'x') ? 'x' : 'y';
     $payload = $transcoder->decode($token);
     $this->assertNull($payload);
     $this->assertSame(
