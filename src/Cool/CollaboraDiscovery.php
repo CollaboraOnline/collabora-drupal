@@ -56,13 +56,27 @@ class CollaboraDiscovery implements CollaboraDiscoveryInterface {
    */
   protected function getParsedXml(): \SimpleXMLElement {
     $xml = $this->discoveryFetcher->getDiscoveryXml();
+    return $this->parseXml($xml);
+  }
 
-    $discovery_parsed = simplexml_load_string($xml);
-    if (!$discovery_parsed) {
+  /**
+   * Parses an XML string.
+   *
+   * @param string $xml
+   *   XML string.
+   *
+   * @return \SimpleXMLElement
+   *   Parsed XML.
+   *
+   * @throws \Drupal\collabora_online\Exception\CollaboraNotAvailableException
+   *   The XML is invalid or empty.
+   */
+  protected function parseXml(string $xml): \SimpleXMLElement {
+    $parsed_xml = simplexml_load_string($xml);
+    if (!$parsed_xml) {
       throw new CollaboraNotAvailableException('The retrieved discovery.xml file is not a valid XML file.');
     }
-
-    return $discovery_parsed;
+    return $parsed_xml;
   }
 
 }
