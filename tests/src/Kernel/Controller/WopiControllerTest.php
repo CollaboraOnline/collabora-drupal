@@ -16,6 +16,7 @@ namespace Drupal\Tests\collabora_online\Kernel\Controller;
 
 use ColinODell\PsrTestLogger\TestLogger;
 use Drupal\collabora_online\Jwt\JwtTranscoderInterface;
+use Drupal\Component\Serialization\Json;
 use Drupal\file\Entity\File;
 use Drupal\file\FileInterface;
 use Drupal\media\MediaInterface;
@@ -100,32 +101,26 @@ class WopiControllerTest extends CollaboraKernelTestBase {
    */
   public function testWopiGetFileInfo(): void {
     $file_changed_time = date_create_immutable_from_format('U', (string) $this->file->getChangedTime());
-    $assert_response = function (Request $request, bool $write) use ($file_changed_time) {
-      $this->assertResponse(
-        Response::HTTP_OK,
-        json_encode([
-          'BaseFileName' => $this->file->getFilename(),
-          'Size' => $this->file->getSize(),
-          'LastModifiedTime' => $file_changed_time->format('c'),
-          'UserId' => $this->user->id(),
-          'UserFriendlyName' => $this->user->getDisplayName(),
-          'UserExtraInfo' => [
-            'mail' => $this->user->getEmail(),
-          ],
-          'UserCanWrite' => $write,
-          'IsAdminUser' => FALSE,
-          'IsAnonymousUser' => FALSE,
-        ]),
-        'application/json',
-        $request,
-      );
-    };
+    $expected_response_data = [
+      'BaseFileName' => $this->file->getFilename(),
+      'Size' => $this->file->getSize(),
+      'LastModifiedTime' => $file_changed_time->format('c'),
+      'UserId' => $this->user->id(),
+      'UserFriendlyName' => $this->user->getDisplayName(),
+      'UserExtraInfo' => [
+        'mail' => $this->user->getEmail(),
+      ],
+      'UserCanWrite' => FALSE,
+      'IsAdminUser' => FALSE,
+      'IsAnonymousUser' => FALSE,
+    ];
 
     $request = $this->createRequest();
-    $assert_response($request, FALSE);
+    $this->assertJsonResponseOk($expected_response_data, $request);
 
     $request = $this->createRequest(write: TRUE);
-    $assert_response($request, TRUE);
+    $expected_response_data['UserCanWrite'] = TRUE;
+    $this->assertJsonResponseOk($expected_response_data, $request);
   }
 
   /**
@@ -150,16 +145,12 @@ class WopiControllerTest extends CollaboraKernelTestBase {
    */
   public function testWopiPutFile(): void {
     $file_changed_time = date_create_immutable_from_format('U', (string) $this->file->getChangedTime());
-    $assert_response = function (Request $request, string $log_message) use ($file_changed_time): void {
+    $expected_response_data = [
+      'LastModifiedTime' => $file_changed_time->format('c'),
+    ];
+    $assert_response = function (Request $request, string $log_message) use ($expected_response_data): void {
       $this->logger->reset();
-      $this->assertResponse(
-        Response::HTTP_OK,
-        json_encode([
-          'LastModifiedTime' => $file_changed_time->format('c'),
-        ]),
-        'application/json',
-        $request
-      );
+      $this->assertJsonResponseOk($expected_response_data, $request);
       $log_message ??= 'Save reason: Saved by Collabora Online';
       $this->assertTrue($this->logger->hasRecord($log_message), 'error');
     };
@@ -199,12 +190,11 @@ class WopiControllerTest extends CollaboraKernelTestBase {
     $file_changed_time = date_create_immutable_from_format('U', (string) ($this->file->getChangedTime() + 1000));
     $request->headers->set('x-cool-wopi-timestamp', $file_changed_time->format(\DateTimeInterface::ATOM));
 
-    $this->assertResponse(
+    $this->assertJsonResponse(
       Response::HTTP_CONFLICT,
-      json_encode([
+      [
         'COOLStatusCode' => 1010,
-      ]),
-      'application/json',
+      ],
       $request
     );
   }
@@ -372,6 +362,41 @@ class WopiControllerTest extends CollaboraKernelTestBase {
       'exp' => $expire_timestamp,
     ];
     return $transcoder->encode($payload, $expire_timestamp);
+  }
+
+  /**
+   * Asserts status code and content in a response given a request.
+   *
+   * @param array $expected_data
+   *   The expected response JSON data.
+   * @param \Symfony\Component\HttpFoundation\Request $request
+   *   The request to perform.
+   * @param string $message
+   *   Message to distinguish this from other assertions.
+   */
+  protected function assertJsonResponseOk(array $expected_data, Request $request, string $message = ''): void {
+    $this->assertJsonResponse(Response::HTTP_OK, $expected_data, $request, $message);
+  }
+
+  /**
+   * Asserts a json response given a request.
+   *
+   * @param int $expected_code
+   *   The expected response status code.
+   * @param array $expected_data
+   *   The expected response JSON data.
+   * @param \Symfony\Component\HttpFoundation\Request $request
+   *   The request to perform.
+   * @param string $message
+   *   Message to distinguish this from other assertions.
+   */
+  protected function assertJsonResponse(int $expected_code, array $expected_data, Request $request, string $message = ''): void {
+    $response = $this->handleRequest($request);
+    $this->assertEquals($expected_code, $response->getStatusCode(), $message);
+    $this->assertEquals('application/json', $response->headers->get('Content-Type'), $message);
+    $content = $response->getContent();
+    $data = Json::decode($content);
+    $this->assertSame($expected_data, $data, $message);
   }
 
   /**
