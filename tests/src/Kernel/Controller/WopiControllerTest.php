@@ -211,7 +211,11 @@ class WopiControllerTest extends CollaboraKernelTestBase {
     foreach ($requests as $name => $request) {
       // Replace the token with a value that is not in the JWT format.
       $request->query->set('access_token', 'bad_token');
-      $this->assertAccessDeniedResponse($request, $name);
+      $this->assertAccessDeniedResponse(
+        'Empty token values',
+        $request,
+        $name,
+      );
     }
   }
 
@@ -226,7 +230,11 @@ class WopiControllerTest extends CollaboraKernelTestBase {
     // Inject a bad value into the token payload.
     $requests = $this->createRequests(token_payload: ['fid' => 4321]);
     foreach ($requests as $name => $request) {
-      $this->assertAccessDeniedResponse($request, $name);
+      $this->assertAccessDeniedResponse(
+        sprintf('Found fid %s in request path, but fid 4321 in token payload', $this->media->id()),
+        $request,
+        $name,
+      );
     }
   }
 
@@ -240,7 +248,11 @@ class WopiControllerTest extends CollaboraKernelTestBase {
   public function testMediaNotFound(): void {
     $requests = $this->createRequests(media_id: 555);
     foreach ($requests as $name => $request) {
-      $this->assertAccessDeniedResponse($request, $name);
+      $this->assertAccessDeniedResponse(
+        'Media not found.',
+        $request,
+        $name,
+      );
     }
   }
 
@@ -255,7 +267,11 @@ class WopiControllerTest extends CollaboraKernelTestBase {
     $requests = $this->createRequests(user_id: 555);
     unset($requests['file']);
     foreach ($requests as $name => $request) {
-      $this->assertAccessDeniedResponse($request, $name);
+      $this->assertAccessDeniedResponse(
+        'User not found.',
+        $request,
+        $name,
+      );
     }
   }
 
@@ -398,18 +414,20 @@ class WopiControllerTest extends CollaboraKernelTestBase {
   /**
    * Asserts an access denied response given a request.
    *
+   * @param string $expected_response_message
+   *   Message expected to be in the response.
    * @param \Symfony\Component\HttpFoundation\Request $request
    *   The request to perform.
-   * @param string $message
+   * @param string $assertion_message
    *   Message to distinguish this from other assertions.
    */
-  protected function assertAccessDeniedResponse(Request $request, string $message = ''): void {
+  protected function assertAccessDeniedResponse(string $expected_response_message, Request $request, string $assertion_message = ''): void {
     $this->assertResponse(
       Response::HTTP_FORBIDDEN,
-      'Authentication failed.',
+      $expected_response_message,
       'text/plain',
       $request,
-      $message,
+      $assertion_message,
     );
   }
 
