@@ -41,15 +41,6 @@ class MediaHelper implements MediaHelperInterface {
   /**
    * {@inheritdoc}
    */
-  public function getFileForMediaId(int|string $id): ?FileInterface {
-    /** @var \Drupal\media\MediaInterface|null $media */
-    $media = $this->entityTypeManager->getStorage('media')->load($id);
-    return $this->getFileForMedia($media);
-  }
-
-  /**
-   * {@inheritdoc}
-   */
   public function setMediaSource(MediaInterface $media, FileInterface $file): void {
     $field_name = $media->getSource()->getSourceFieldDefinition($media->bundle->entity)->getName();
     $media->set($field_name, $file);

@@ -93,7 +93,11 @@ class WopiController implements ContainerInjectionInterface {
       return static::permissionDenied();
     }
 
-    $file = $this->mediaHelper->getFileForMediaId($id);
+    $file = $this->mediaHelper->getFileForMedia($media);
+    if ($file === NULL) {
+      return static::permissionDenied();
+    }
+
     $mtime = date_create_immutable_from_format('U', $file->getChangedTime());
     // @todo What if the uid in the payload is not set?
     /** @var \Drupal\user\UserInterface|null $user */
@@ -160,7 +164,16 @@ class WopiController implements ContainerInjectionInterface {
     $user = $this->entityTypeManager->getStorage('user')->load($jwt_payload['uid']);
     $this->accountSwitcher->switchTo($user);
 
-    $file = $this->mediaHelper->getFileForMediaId($id);
+    /** @var \Drupal\media\MediaInterface|null $media */
+    $media = $this->entityTypeManager->getStorage('media')->load($id);
+    if ($media === NULL) {
+      return static::permissionDenied();
+    }
+
+    $file = $this->mediaHelper->getFileForMedia($media);
+    if ($file === NULL) {
+      return static::permissionDenied();
+    }
     $mimetype = $file->getMimeType();
 
     $response = new BinaryFileResponse(
@@ -184,7 +197,7 @@ class WopiController implements ContainerInjectionInterface {
    *   The response.
    */
   public function wopiPutFile(string $id, Request $request): Response {
-    $token = $request->query->get('access_token');
+    $token = $request->get('access_token');
     $timestamp = $request->headers->get('x-cool-wopi-timestamp');
     $modified_by_user = $request->headers->get('x-cool-wopi-ismodifiedbyuser') == 'true';
     $autosave = $request->headers->get('x-cool-wopi-isautosave') == 'true';
