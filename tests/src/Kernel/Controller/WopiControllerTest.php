@@ -100,7 +100,7 @@ class WopiControllerTest extends CollaboraKernelTestBase {
    * @covers ::wopiCheckFileInfo
    */
   public function testWopiGetFileInfo(): void {
-    $file_changed_time = date_create_immutable_from_format('U', (string) $this->file->getChangedTime());
+    $file_changed_time = \DateTimeImmutable::createFromFormat('U', (string) $this->file->getChangedTime());
     $expected_response_data = [
       'BaseFileName' => $this->file->getFilename(),
       'Size' => $this->file->getSize(),
@@ -144,7 +144,7 @@ class WopiControllerTest extends CollaboraKernelTestBase {
    * @covers ::wopiPutFile
    */
   public function testWopiPutFile(): void {
-    $file_changed_time = date_create_immutable_from_format('U', (string) $this->file->getChangedTime());
+    $file_changed_time = \DateTimeImmutable::createFromFormat('U', (string) $this->file->getChangedTime());
     $expected_response_data = [
       'LastModifiedTime' => $file_changed_time->format('c'),
     ];
@@ -187,7 +187,7 @@ class WopiControllerTest extends CollaboraKernelTestBase {
     $request = $this->createRequest('/contents', 'POST', write: TRUE);
 
     // Set a time in the future to force the error.
-    $file_changed_time = date_create_immutable_from_format('U', (string) ($this->file->getChangedTime() + 1000));
+    $file_changed_time = \DateTimeImmutable::createFromFormat('U', (string) ($this->file->getChangedTime() + 1000));
     $request->headers->set('x-cool-wopi-timestamp', $file_changed_time->format(\DateTimeInterface::ATOM));
 
     $this->assertJsonResponse(
