@@ -150,8 +150,8 @@ abstract class WopiControllerTestBase extends CollaboraKernelTestBase {
     $uri = '/cool/wopi/files/' . $media_id . $uri_suffix;
     $token = $this->createAccessToken($media_id, $user_id, $write, $token_payload);
     $parameters = [
-      'id' => $media_id,
       'access_token' => $token,
+      'access_token_ttl' => '0',
     ];
     return Request::create($uri, $method, $parameters);
   }
