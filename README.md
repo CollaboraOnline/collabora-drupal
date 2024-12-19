@@ -69,6 +69,9 @@ docker-compose up -d
 
 docker-compose exec web composer install
 docker-compose exec web ./vendor/bin/run drupal:site-install
+
+docker-compose exec collabora coolconfig generate-proof-key
+docker-compose restart collabora
 ```
 
 Optionally, generate an admin login link.
