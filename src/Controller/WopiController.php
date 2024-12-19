@@ -118,9 +118,6 @@ class WopiController implements ContainerInjectionInterface {
       'LastModifiedTime' => $mtime->format('c'),
       'UserId' => $jwt_payload['uid'],
       'UserFriendlyName' => $user->getDisplayName(),
-      'UserExtraInfo' => [
-        'mail' => $user->getEmail(),
-      ],
       'UserCanWrite' => $can_write,
       'IsAdminUser' => $user->hasPermission('administer collabora instance'),
       'IsAnonymousUser' => $user->isAnonymous(),

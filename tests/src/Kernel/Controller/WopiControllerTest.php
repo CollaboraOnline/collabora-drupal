@@ -107,9 +107,6 @@ class WopiControllerTest extends CollaboraKernelTestBase {
       'LastModifiedTime' => $file_changed_time->format('c'),
       'UserId' => $this->user->id(),
       'UserFriendlyName' => $this->user->getDisplayName(),
-      'UserExtraInfo' => [
-        'mail' => $this->user->getEmail(),
-      ],
       'UserCanWrite' => FALSE,
       'IsAdminUser' => FALSE,
       'IsAnonymousUser' => FALSE,
