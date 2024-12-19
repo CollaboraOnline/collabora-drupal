@@ -61,6 +61,7 @@ class ConfigFormTest extends BrowserTestBase {
     $assert_session->fieldValueEquals('JWT private key', '');
     $assert_session->fieldValueEquals('Access Token Expiration (in seconds)', '86400');
     $assert_session->fieldValueEquals('Disable TLS certificate check for COOL.', '');
+    $assert_session->fieldValueEquals('Verify proof header and timestamp in incoming WOPI requests.', '1');
     $assert_session->fieldValueEquals('Allow COOL to use fullscreen mode.', '1');
 
     // The key select element has no options, because no compatible key exists.
@@ -94,6 +95,8 @@ class ConfigFormTest extends BrowserTestBase {
       ->setValue('3600');
     $assert_session->fieldExists('Disable TLS certificate check for COOL.')
       ->check();
+    $assert_session->fieldExists('Verify proof header and timestamp in incoming WOPI requests.')
+      ->uncheck();
     // Since default is checked we disable the full screen option.
     $assert_session->fieldExists('Allow COOL to use fullscreen mode.')
       ->uncheck();
@@ -108,6 +111,7 @@ class ConfigFormTest extends BrowserTestBase {
     $assert_session->fieldValueEquals('JWT private key', 'collabora_test');
     $assert_session->fieldValueEquals('Access Token Expiration (in seconds)', '3600');
     $assert_session->fieldValueEquals('Disable TLS certificate check for COOL.', '1');
+    $assert_session->fieldValueEquals('Verify proof header and timestamp in incoming WOPI requests.', '');
     $assert_session->fieldValueEquals('Allow COOL to use fullscreen mode.', '');
 
     // Test validation of required fields.
@@ -144,6 +148,7 @@ class ConfigFormTest extends BrowserTestBase {
     $assert_session->fieldValueEquals('JWT private key', '');
     $assert_session->fieldValueEquals('Access Token Expiration (in seconds)', '0');
     $assert_session->fieldValueEquals('Disable TLS certificate check for COOL.', '');
+    $assert_session->fieldValueEquals('Verify proof header and timestamp in incoming WOPI requests.', '1');
     $assert_session->fieldValueEquals('Allow COOL to use fullscreen mode.', '');
     $assert_session->buttonExists('Save configuration');
   }

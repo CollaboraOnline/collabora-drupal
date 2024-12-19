@@ -15,7 +15,7 @@ declare(strict_types=1);
 namespace Drupal\collabora_online\Cool;
 
 /**
- * Service to get a WOPI client url for a given MIME type.
+ * Service to get a WOPI client URL for a given MIME type.
  */
 interface CollaboraDiscoveryInterface {
 
@@ -23,15 +23,34 @@ interface CollaboraDiscoveryInterface {
    * Gets the URL for the WOPI client.
    *
    * @param string $mimetype
-   *   Mime type for which to get the WOPI client url.
+   *   Mime type for which to get the WOPI client URL.
    *   This refers to config entries in the discovery.xml file.
    *
    * @return string
-   *   The WOPI client url.
+   *   The WOPI client URL.
    *
    * @throws \Drupal\collabora_online\Exception\CollaboraNotAvailableException
-   *   The client url cannot be retrieved.
+   *   The client URL cannot be retrieved.
    */
   public function getWopiClientURL(string $mimetype = 'text/plain'): string;
+
+  /**
+   * Gets the public key used for proofing.
+   *
+   * @return string|null
+   *   The recent key, or NULL if none found.
+   */
+  public function getProofKey(): ?string;
+
+  /**
+   * Gets the old public key for proofing.
+   *
+   * This covers the case when the public key was already updated, but an
+   * incoming request has a proof that was generated with the previous key.
+   *
+   * @return string|null
+   *   The old key, or NULL if none found.
+   */
+  public function getProofKeyOld(): ?string;
 
 }
