@@ -21,7 +21,14 @@ For a local demo or test installation, [see below](#development--demo-installati
 - (optional) For the 'Collabora Online Group' sub-module, you also need the
   [Group](https://drupa.org/project/group) and [Group Media](https://drupa.org/project/groupmedia) modules.
 
-### Installation steps
+### Collabora Online server preparation
+
+It is recommended to generate a proof key as documented here:\
+docker-compose exec collabora coolconfig generate-proof-key
+
+If not, the proof mechanism needs to be disabled in the module settings.
+
+### Module installation steps
 
 See the [Drupal guide to install
 modules](https://www.drupal.org/docs/extending-drupal/installing-modules).
@@ -39,7 +46,7 @@ field in the `composer.json` of your project.
 Then you can go into Drupal logged as an admin and go to _Extend_. In
 the list you should be able to find _Collabora Online_ and enable it.
 
-From there you can access the module specific configuration.
+From there you can access the module-specific configuration.
 
 Please check the "Configuration" section below!
 
