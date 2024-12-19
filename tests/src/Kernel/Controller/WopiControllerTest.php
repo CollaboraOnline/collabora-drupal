@@ -361,7 +361,7 @@ class WopiControllerTest extends CollaboraKernelTestBase {
   }
 
   /**
-   * Asserts status code and content in a response given a request.
+   * Asserts a successful json response given a request.
    *
    * @param array $expected_data
    *   The expected response JSON data.
