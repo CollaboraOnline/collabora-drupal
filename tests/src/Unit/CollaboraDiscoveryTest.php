@@ -76,14 +76,14 @@ class CollaboraDiscoveryTest extends UnitTestCase {
    * @covers ::getProofKey
    * @covers ::getProofKeyOld
    *
-   * @dataProvider provideAllMethods
+   * @dataProvider provideAllMethodNames
    */
-  public function testBlankXml(callable $callback): void {
+  public function testBlankXml(string $method): void {
     $discovery = $this->getDiscoveryFromXml('');
 
     $this->expectException(CollaboraNotAvailableException::class);
     $this->expectExceptionMessage('The discovery.xml file is empty.');
-    $callback($discovery);
+    $discovery->$method();
   }
 
   /**
@@ -93,15 +93,15 @@ class CollaboraDiscoveryTest extends UnitTestCase {
    * @covers ::getProofKey
    * @covers ::getProofKeyOld
    *
-   * @dataProvider provideAllMethods
+   * @dataProvider provideAllMethodNames
    */
-  public function testBrokenXml(callable $callback): void {
+  public function testBrokenXml(string $method): void {
     $xml = 'This file does not contain valid xml.';
     $discovery = $this->getDiscoveryFromXml($xml);
 
     $this->expectException(CollaboraNotAvailableException::class);
     $this->expectExceptionMessageMatches('#^Error in the retrieved discovery.xml file: #');
-    $callback($discovery);
+    $discovery->$method();
   }
 
   /**
@@ -109,15 +109,14 @@ class CollaboraDiscoveryTest extends UnitTestCase {
    *
    * This is used for tests where each method will throw the same exception.
    *
-   * @return list<array{\Closure(\Drupal\collabora_online\Cool\CollaboraDiscoveryInterface): void}>
-   *   Argument tuples.
+   * @return list<array{string}>
+   *   Argument tuples with method names.
    */
-  public static function provideAllMethods(): array {
+  public static function provideAllMethodNames(): array {
     return [
-      // Closures in data providers are ok in unit tests.
-      'getWopiClientURL' => [fn (CollaboraDiscoveryInterface $discovery) => $discovery->getWopiClientURL()],
-      'getProofKey' => [fn (CollaboraDiscoveryInterface $discovery) => $discovery->getProofKey()],
-      'getProofKeyOld' => [fn (CollaboraDiscoveryInterface $discovery) => $discovery->getProofKeyOld()],
+      'getWopiClientURL' => ['getWopiClientURL'],
+      'getProofKey' => ['getProofKey'],
+      'getProofKeyOld' => ['getProofKeyOld'],
     ];
   }
 
