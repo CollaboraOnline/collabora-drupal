@@ -24,7 +24,7 @@ For a local demo or test installation, [see below](#development--demo-installati
 ### Collabora Online server preparation
 
 It is recommended to generate a proof key as documented here:\
-docker-compose exec collabora coolconfig generate-proof-key
+https://sdk.collaboraonline.com/docs/advanced_integration.html#wopi-proof
 
 If not, the proof mechanism needs to be disabled in the module settings.
 
