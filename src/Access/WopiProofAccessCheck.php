@@ -15,6 +15,8 @@ declare(strict_types=1);
 namespace Drupal\collabora_online\Access;
 
 use Drupal\collabora_online\Cool\CollaboraDiscoveryInterface;
+use Drupal\collabora_online\Util\DotNetTime;
+use Drupal\Component\Datetime\TimeInterface;
 use Drupal\Core\Access\AccessResult;
 use Drupal\Core\Access\AccessResultInterface;
 use Drupal\Core\Config\ConfigFactoryInterface;
@@ -42,6 +44,9 @@ class WopiProofAccessCheck implements AccessInterface {
     #[Autowire(service: 'logger.channel.collabora_online')]
     protected readonly LoggerInterface $logger,
     protected readonly ConfigFactoryInterface $configFactory,
+    protected readonly TimeInterface $time,
+    // The recommended TTL is 20 minutes.
+    protected readonly int $ttlSeconds = 20 * 60,
   ) {}
 
   /**
@@ -66,15 +71,64 @@ class WopiProofAccessCheck implements AccessInterface {
   }
 
   /**
-   * Checks if the request has a WOPI proof.
+   * Checks the WOPI proof and the timeout, without adding cache metadata.
    *
    * @param \Symfony\Component\HttpFoundation\Request $request
    *   The request.
    *
    * @return \Drupal\Core\Access\AccessResult
-   *   The access result.
+   *   An access result without cache metadata.
+   *   Instead, calling code should set cache max age 0.
    */
   protected function doCheckAccess(Request $request): AccessResult {
+    $timeout_access = $this->checkTimeout($request);
+    if (!$timeout_access->isAllowed()) {
+      return $timeout_access;
+    }
+    // There is no need for ->andIf(), because there is no cache metadata to
+    // merge.
+    return $this->checkProof($request);
+  }
+
+  /**
+   * Checks if the X-WOPI-Timestamp is expired, without cache metadata.
+   *
+   * @param \Symfony\Component\HttpFoundation\Request $request
+   *   The request.
+   *
+   * @return \Drupal\Core\Access\AccessResult
+   *   An access result without cache metadata.
+   */
+  protected function checkTimeout(Request $request): AccessResult {
+    $wopi_ticks_str = $request->headers->get('X-WOPI-Timestamp', '');
+    // Unfortunately, is_numeric() confuses the IDE's static analysis, so use
+    // regular expression instead.
+    if (!preg_match('#^[1-9]\d+$#', $wopi_ticks_str)) {
+      return AccessResult::forbidden('The X-WOPI-Timestamp header is missing, empty or invalid.');
+    }
+    $wopi_timestamp = DotNetTime::ticksToTimestamp((float) $wopi_ticks_str);
+    $now_timestamp = $this->time->getRequestTime();
+    $wopi_age_seconds = $now_timestamp - $wopi_timestamp;
+    if ($wopi_age_seconds > $this->ttlSeconds) {
+      return AccessResult::forbidden(sprintf(
+        'The X-WOPI-Timestamp header is %s seconds old, which is more than the %s seconds TTL.',
+        $wopi_age_seconds,
+        $this->ttlSeconds,
+      ));
+    }
+    return AccessResult::allowed();
+  }
+
+  /**
+   * Checks the WOPI proof, without adding cache metadata.
+   *
+   * @param \Symfony\Component\HttpFoundation\Request $request
+   *   The request.
+   *
+   * @return \Drupal\Core\Access\AccessResult
+   *   An access result without cache metadata.
+   */
+  protected function checkProof(Request $request): AccessResult {
     $keys = $this->getKeys();
     if (!isset($keys['current'])) {
       return AccessResult::forbidden('Missing or incomplete WOPI proof keys.');
