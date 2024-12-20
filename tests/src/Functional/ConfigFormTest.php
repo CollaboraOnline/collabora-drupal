@@ -60,9 +60,9 @@ class ConfigFormTest extends BrowserTestBase {
     $assert_session->fieldValueEquals('WOPI host URL', 'https://localhost/');
     $assert_session->fieldValueEquals('JWT private key', '');
     $assert_session->fieldValueEquals('Access Token Expiration (in seconds)', '86400');
-    $assert_session->fieldValueEquals('Disable TLS certificate check for COOL.', '');
-    $assert_session->fieldValueEquals('Verify proof header and timestamp in incoming WOPI requests.', '1');
-    $assert_session->fieldValueEquals('Allow COOL to use fullscreen mode.', '1');
+    $assert_session->checkboxNotChecked('Disable TLS certificate check for COOL.');
+    $assert_session->checkboxChecked('Verify proof header and timestamp in incoming WOPI requests.');
+    $assert_session->checkboxChecked('Allow COOL to use fullscreen mode.');
 
     // The key select element has no options, because no compatible key exists.
     $this->assertSame(
@@ -110,9 +110,9 @@ class ConfigFormTest extends BrowserTestBase {
     $assert_session->fieldValueEquals('WOPI host URL', 'http://wopihost.com');
     $assert_session->fieldValueEquals('JWT private key', 'collabora_test');
     $assert_session->fieldValueEquals('Access Token Expiration (in seconds)', '3600');
-    $assert_session->fieldValueEquals('Disable TLS certificate check for COOL.', '1');
-    $assert_session->fieldValueEquals('Verify proof header and timestamp in incoming WOPI requests.', '');
-    $assert_session->fieldValueEquals('Allow COOL to use fullscreen mode.', '');
+    $assert_session->checkboxChecked('Disable TLS certificate check for COOL.');
+    $assert_session->checkboxNotChecked('Verify proof header and timestamp in incoming WOPI requests.');
+    $assert_session->checkboxNotChecked('Allow COOL to use fullscreen mode.');
 
     // Test validation of required fields.
     $this->drupalGet(Url::fromRoute('collabora-online.settings'));
@@ -147,9 +147,9 @@ class ConfigFormTest extends BrowserTestBase {
     $assert_session->fieldValueEquals('WOPI host URL', '');
     $assert_session->fieldValueEquals('JWT private key', '');
     $assert_session->fieldValueEquals('Access Token Expiration (in seconds)', '0');
-    $assert_session->fieldValueEquals('Disable TLS certificate check for COOL.', '');
-    $assert_session->fieldValueEquals('Verify proof header and timestamp in incoming WOPI requests.', '1');
-    $assert_session->fieldValueEquals('Allow COOL to use fullscreen mode.', '');
+    $assert_session->checkboxNotChecked('Disable TLS certificate check for COOL.');
+    $assert_session->checkboxChecked('Verify proof header and timestamp in incoming WOPI requests.');
+    $assert_session->checkboxNotChecked('Allow COOL to use fullscreen mode.');
     $assert_session->buttonExists('Save configuration');
   }
 
