@@ -18,7 +18,7 @@ use Drupal\collabora_online\Exception\CollaboraNotAvailableException;
 use Symfony\Component\ErrorHandler\ErrorHandler;
 
 /**
- * Service to get a WOPI client URL for a given MIME type.
+ * Service to get values from the discovery.xml.
  */
 class CollaboraDiscovery implements CollaboraDiscoveryInterface {
 
