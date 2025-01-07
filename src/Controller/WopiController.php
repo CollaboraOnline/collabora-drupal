@@ -25,13 +25,13 @@ use Drupal\Core\File\FileUrlGeneratorInterface;
 use Drupal\Core\Session\AccountSwitcherInterface;
 use Drupal\Core\StringTranslation\StringTranslationTrait;
 use Drupal\Core\StringTranslation\TranslationInterface;
+use Drupal\media\MediaInterface;
 use Psr\Log\LoggerInterface;
 use Symfony\Component\DependencyInjection\Attribute\Autowire;
 use Symfony\Component\HttpFoundation\BinaryFileResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpKernel\Exception\AccessDeniedHttpException;
-use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 
 /**
  * Provides WOPI route responses for the Collabora module.
@@ -59,27 +59,21 @@ class WopiController implements ContainerInjectionInterface {
   /**
    * Handles the WOPI 'info' request for a media entity.
    *
-   * @param string $id
-   *   Media id from url.
+   * @param \Drupal\media\MediaInterface $media
+   *   Media entity.
    * @param \Symfony\Component\HttpFoundation\Request $request
    *   Request object with query parameters.
    *
    * @return \Symfony\Component\HttpFoundation\Response
    *   The response with file contents.
    */
-  public function wopiCheckFileInfo(string $id, Request $request): Response {
+  public function wopiCheckFileInfo(MediaInterface $media, Request $request): Response {
     $token = $request->query->get('access_token');
     if ($token === NULL) {
       throw new AccessDeniedHttpException('Missing access token.');
     }
 
-    $jwt_payload = $this->verifyTokenForMediaId($token, $id);
-
-    /** @var \Drupal\media\MediaInterface|null $media */
-    $media = $this->entityTypeManager->getStorage('media')->load($id);
-    if ($media === NULL) {
-      throw new NotFoundHttpException('Media not found.');
-    }
+    $jwt_payload = $this->verifyTokenForMediaId($token, $media->id());
 
     $file = $this->mediaHelper->getFileForMedia($media);
     if ($file === NULL) {
@@ -129,28 +123,22 @@ class WopiController implements ContainerInjectionInterface {
   /**
    * Handles the wopi "content" request for a media entity.
    *
-   * @param string $id
-   *   Media id from url.
+   * @param \Drupal\media\MediaInterface $media
+   *   Media entity.
    * @param \Symfony\Component\HttpFoundation\Request $request
    *   Request object with query parameters.
    *
    * @return \Symfony\Component\HttpFoundation\Response
    *   The response with file contents.
    */
-  public function wopiGetFile(string $id, Request $request): Response {
+  public function wopiGetFile(MediaInterface $media, Request $request): Response {
     $token = $request->query->get('access_token');
 
-    $jwt_payload = $this->verifyTokenForMediaId($token, $id);
+    $jwt_payload = $this->verifyTokenForMediaId($token, $media->id());
 
     /** @var \Drupal\user\UserInterface|null $user */
     $user = $this->entityTypeManager->getStorage('user')->load($jwt_payload['uid']);
     $this->accountSwitcher->switchTo($user);
-
-    /** @var \Drupal\media\MediaInterface|null $media */
-    $media = $this->entityTypeManager->getStorage('media')->load($id);
-    if ($media === NULL) {
-      throw new NotFoundHttpException('Media not found.');
-    }
 
     $file = $this->mediaHelper->getFileForMedia($media);
     if ($file === NULL) {
@@ -170,30 +158,24 @@ class WopiController implements ContainerInjectionInterface {
   /**
    * Handles the wopi "save" request for a media entity.
    *
-   * @param string $id
-   *   Media id from url.
+   * @param \Drupal\media\MediaInterface $media
+   *   Media entity.
    * @param \Symfony\Component\HttpFoundation\Request $request
    *   Request object with headers, query parameters and payload.
    *
    * @return \Symfony\Component\HttpFoundation\Response
    *   The response.
    */
-  public function wopiPutFile(string $id, Request $request): Response {
+  public function wopiPutFile(MediaInterface $media, Request $request): Response {
     $token = $request->get('access_token');
     $timestamp = $request->headers->get('x-cool-wopi-timestamp');
     $modified_by_user = $request->headers->get('x-cool-wopi-ismodifiedbyuser') == 'true';
     $autosave = $request->headers->get('x-cool-wopi-isautosave') == 'true';
     $exitsave = $request->headers->get('x-cool-wopi-isexitsave') == 'true';
 
-    $jwt_payload = $this->verifyTokenForMediaId($token, $id);
+    $jwt_payload = $this->verifyTokenForMediaId($token, $media->id());
     if (empty($jwt_payload['wri'])) {
       throw new AccessDeniedHttpException('The token only grants read access.');
-    }
-
-    /** @var \Drupal\media\MediaInterface|null $media */
-    $media = $this->entityTypeManager->getStorage('media')->load($id);
-    if ($media === NULL) {
-      throw new NotFoundHttpException('Media not found.');
     }
 
     /** @var \Drupal\user\UserInterface|null $user */
@@ -211,7 +193,7 @@ class WopiController implements ContainerInjectionInterface {
       $file_stamp = \DateTimeImmutable::createFromFormat('U', $file->getChangedTime());
 
       if ($wopi_stamp != $file_stamp) {
-        $this->logger->error('Conflict saving file ' . $id . ' wopi: ' . $wopi_stamp->format('c') . ' differs from file: ' . $file_stamp->format('c'));
+        $this->logger->error('Conflict saving file ' . $media->id() . ' wopi: ' . $wopi_stamp->format('c') . ' differs from file: ' . $file_stamp->format('c'));
 
         return new Response(
           json_encode(['COOLStatusCode' => 1010]),
@@ -280,25 +262,25 @@ class WopiController implements ContainerInjectionInterface {
    *
    * @param string $action
    *   One of 'info', 'content' or 'save', depending with path is visited.
-   * @param string $id
-   *   Media id from url.
+   * @param \Drupal\media\MediaInterface $media
+   *   Media entity from the media id in the URL.
    * @param \Symfony\Component\HttpFoundation\Request $request
    *   Request object for headers and query parameters.
    *
    * @return \Symfony\Component\HttpFoundation\Response
    *   Response to be consumed by Collabora Online.
    */
-  public function wopi(string $action, string $id, Request $request): Response {
+  public function wopi(string $action, MediaInterface $media, Request $request): Response {
     $returnCode = Response::HTTP_BAD_REQUEST;
     switch ($action) {
       case 'info':
-        return $this->wopiCheckFileInfo($id, $request);
+        return $this->wopiCheckFileInfo($media, $request);
 
       case 'content':
-        return $this->wopiGetFile($id, $request);
+        return $this->wopiGetFile($media, $request);
 
       case 'save':
-        return $this->wopiPutFile($id, $request);
+        return $this->wopiPutFile($media, $request);
     }
 
     $response = new Response(

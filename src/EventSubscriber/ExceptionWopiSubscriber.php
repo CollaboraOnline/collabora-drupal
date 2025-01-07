@@ -42,6 +42,13 @@ class ExceptionWopiSubscriber extends HttpExceptionSubscriberBase {
     $code = $exception->getStatusCode();
     $headers = $exception->getHeaders();
 
+    if ($code === 404) {
+      if (str_starts_with($content, 'The "media" parameter was not converted')) {
+        // The existing message reveals more detail than needed.
+        $content = 'Media not found.';
+      }
+    }
+
     // If the exception is cacheable, generate a cacheable response.
     if ($exception instanceof CacheableDependencyInterface) {
       $response = new CacheableResponse($content, $code, $headers);
