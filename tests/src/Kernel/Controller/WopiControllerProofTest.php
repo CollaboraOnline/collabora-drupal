@@ -16,6 +16,7 @@ namespace Drupal\Tests\collabora_online\Kernel\Controller;
 
 use Drupal\collabora_online\Cool\CollaboraDiscoveryInterface;
 use Drupal\collabora_online\Util\DotNetTime;
+use Firebase\JWT\JWT;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 
@@ -125,6 +126,10 @@ class WopiControllerProofTest extends WopiControllerTestBase {
       $request->headers->set('X-WOPI-ProofOld', $proof_old ?? $wopi_proof);
       $this->wopiProofKey = $key_recent ?? self::PROOF_KEY;
       $this->wopiProofKeyOld = $key_old ?? self::PROOF_KEY;
+      // Set a timestamp that is earlier than the timeout.
+      // For now there is no parameter to manipulate this, but it is still part
+      // of the "state", so it makes sense to setup in this function.
+      JWT::$timestamp = 1734605245;
     };
 
     // With all values at their default, access is granted.
