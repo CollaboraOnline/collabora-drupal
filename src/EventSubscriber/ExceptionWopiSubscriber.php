@@ -38,14 +38,17 @@ class ExceptionWopiSubscriber extends HttpExceptionSubscriberBase {
   public function on4xx(ExceptionEvent $event) {
     /** @var \Symfony\Component\HttpKernel\Exception\HttpExceptionInterface $exception */
     $exception = $event->getThrowable();
+    $content = $exception->getMessage();
+    $code = $exception->getStatusCode();
+    $headers = $exception->getHeaders();
 
     // If the exception is cacheable, generate a cacheable response.
     if ($exception instanceof CacheableDependencyInterface) {
-      $response = new CacheableResponse($exception->getMessage(), $exception->getStatusCode(), $exception->getHeaders());
+      $response = new CacheableResponse($content, $code, $headers);
       $response->addCacheableDependency($exception);
     }
     else {
-      $response = new Response($exception->getMessage(), $exception->getStatusCode(), $exception->getHeaders());
+      $response = new Response($content, $code, $headers);
     }
 
     $response->headers->set('Content-Type', 'text/plain');
