@@ -45,8 +45,8 @@ abstract class JwtTranscoderBase implements JwtTranscoderInterface {
       $this->logger->error($e->getMessage());
       return NULL;
     }
-    if (!isset($payload['exp']) || $payload['exp'] < gettimeofday(TRUE)) {
-      // The token is expired, or no timeout was set.
+    if (!isset($payload['exp'])) {
+      // The token does not have an expiration timestamp.
       return NULL;
     }
     return $payload;
