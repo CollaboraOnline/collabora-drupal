@@ -48,6 +48,8 @@ class ExceptionWopiSubscriber extends HttpExceptionSubscriberBase {
       $response = new Response($exception->getMessage(), $exception->getStatusCode(), $exception->getHeaders());
     }
 
+    $response->headers->set('Content-Type', 'text/plain');
+
     $event->setResponse($response);
   }
 
