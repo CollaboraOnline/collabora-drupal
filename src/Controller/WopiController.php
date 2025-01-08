@@ -149,9 +149,6 @@ class WopiController implements ContainerInjectionInterface {
    */
   public function wopiPutFile(MediaInterface $media, FileInterface $file, UserInterface $user, bool $can_write, Request $request): Response {
     $timestamp = $request->headers->get('x-cool-wopi-timestamp');
-    $modified_by_user = $request->headers->get('x-cool-wopi-ismodifiedbyuser') == 'true';
-    $autosave = $request->headers->get('x-cool-wopi-isautosave') == 'true';
-    $exitsave = $request->headers->get('x-cool-wopi-isexitsave') == 'true';
 
     if (!$can_write) {
       throw new AccessDeniedHttpException('The token only grants read access.');
@@ -196,20 +193,7 @@ class WopiController implements ContainerInjectionInterface {
     $media->setRevisionUser($user);
     $media->setRevisionCreationTime($this->time->getRequestTime());
 
-    $save_reason = 'Saved by Collabora Online';
-    $reasons = [];
-    if ($modified_by_user) {
-      $reasons[] = 'Modified by user';
-    }
-    if ($autosave) {
-      $reasons[] = 'Autosaved';
-    }
-    if ($exitsave) {
-      $reasons[] = 'Save on Exit';
-    }
-    if (count($reasons) > 0) {
-      $save_reason .= ' (' . implode(', ', $reasons) . ')';
-    }
+    $save_reason = $this->buildSaveReason($request);
     $this->logger->error('Save reason: ' . $save_reason);
     $media->setRevisionLogMessage($save_reason);
     $media->save();
@@ -226,6 +210,38 @@ class WopiController implements ContainerInjectionInterface {
 
     $this->accountSwitcher->switchBack();
     return $response;
+  }
+
+  /**
+   * Builds a reason string why the file is being saved.
+   *
+   * This is used for a log message an for the revision log message.
+   *
+   * @param \Symfony\Component\HttpFoundation\Request $request
+   *   Incoming request.
+   *
+   * @return string
+   *   Reason string.
+   */
+  protected function buildSaveReason(Request $request): string {
+    $save_reason = 'Saved by Collabora Online';
+    $reasons = [];
+    $modified_by_user = $request->headers->get('x-cool-wopi-ismodifiedbyuser') == 'true';
+    $autosave = $request->headers->get('x-cool-wopi-isautosave') == 'true';
+    $exitsave = $request->headers->get('x-cool-wopi-isexitsave') == 'true';
+    if ($modified_by_user) {
+      $reasons[] = 'Modified by user';
+    }
+    if ($autosave) {
+      $reasons[] = 'Autosaved';
+    }
+    if ($exitsave) {
+      $reasons[] = 'Save on Exit';
+    }
+    if (count($reasons) > 0) {
+      $save_reason .= ' (' . implode(', ', $reasons) . ')';
+    }
+    return $save_reason;
   }
 
   /**
