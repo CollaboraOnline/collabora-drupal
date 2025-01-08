@@ -277,7 +277,6 @@ class WopiController implements ContainerInjectionInterface {
    *   Response to be consumed by Collabora Online.
    */
   public function wopi(string $action, MediaInterface $media, Request $request): Response {
-    $returnCode = Response::HTTP_BAD_REQUEST;
     switch ($action) {
       case 'info':
         return $this->wopiCheckFileInfo($media, $request);
@@ -291,7 +290,7 @@ class WopiController implements ContainerInjectionInterface {
 
     $response = new Response(
       'Invalid WOPI action ' . $action,
-      $returnCode,
+      Response::HTTP_BAD_REQUEST,
       ['content-type' => 'text/plain'],
     );
     return $response;
