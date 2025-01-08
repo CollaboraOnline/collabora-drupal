@@ -149,7 +149,14 @@ class WopiController implements ContainerInjectionInterface {
       $file_stamp = \DateTimeImmutable::createFromFormat('U', $file->getChangedTime());
 
       if ($wopi_stamp != $file_stamp) {
-        $this->logger->error('Conflict saving file ' . $media->id() . ' wopi: ' . $wopi_stamp->format('c') . ' differs from file: ' . $file_stamp->format('c'));
+        $this->logger->error(
+          'Conflict saving file for media @media_id: WOPI time @wopi_time differs from file time @file_time.',
+          [
+            '@media_id' => $media->id(),
+            '@wopi_time' => $wopi_stamp->format('c'),
+            '@file_time' => $file_stamp->format('c'),
+          ],
+        );
 
         return new JsonResponse(
           ['COOLStatusCode' => 1010],
