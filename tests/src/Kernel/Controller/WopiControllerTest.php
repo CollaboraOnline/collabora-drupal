@@ -15,7 +15,6 @@ declare(strict_types=1);
 namespace Drupal\Tests\collabora_online\Kernel\Controller;
 
 use Drupal\Core\Logger\RfcLogLevel;
-use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 
 /**
@@ -83,54 +82,64 @@ class WopiControllerTest extends WopiControllerTestBase {
    */
   public function testWopiPutFile(): void {
     $file_changed_time = \DateTimeImmutable::createFromFormat('U', (string) $this->file->getChangedTime());
-    $assert_response = $this->callbackTestWopiPutFile();
 
     // Test a successful save request without timestamp header.
-    $request = $this->createRequest('/contents', 'POST', write: TRUE);
-    $log_message = 'Save reason: Saved by Collabora Online';
-    $assert_response($request, $log_message);
+    $this->doTestWopiPutFile();
 
     // Test a successful save request with a timestamp header.
-    $request->headers->set('x-cool-wopi-timestamp', $file_changed_time->format(\DateTimeInterface::ATOM));
-    $assert_response($request, $log_message);
+    $headers = [];
+    $headers['x-cool-wopi-timestamp'] = $file_changed_time->format(\DateTimeInterface::ATOM);
+    $this->doTestWopiPutFile($headers);
 
     // Test how different headers result in different log messages.
-    $request->headers->set('x-cool-wopi-ismodifiedbyuser', 'true');
-    $log_message = 'Save reason: Saved by Collabora Online (Modified by user)';
-    $assert_response($request, $log_message);
+    $headers['x-cool-wopi-ismodifiedbyuser'] = 'true';
+    $this->doTestWopiPutFile(
+      $headers,
+      'Saved by Collabora Online (Modified by user)',
+    );
 
-    $request->headers->set('x-cool-wopi-isautosave', 'true');
-    $log_message = 'Save reason: Saved by Collabora Online (Modified by user, Autosaved)';
-    $assert_response($request, $log_message);
+    $headers['x-cool-wopi-isautosave'] = 'true';
+    $this->doTestWopiPutFile(
+      $headers,
+      'Saved by Collabora Online (Modified by user, Autosaved)',
+    );
 
-    $request->headers->set('x-cool-wopi-isexitsave', 'true');
-    $log_message = 'Save reason: Saved by Collabora Online (Modified by user, Autosaved, Save on Exit)';
-    $assert_response($request, $log_message);
+    $headers['x-cool-wopi-isexitsave'] = 'true';
+    $this->doTestWopiPutFile(
+      $headers,
+      'Saved by Collabora Online (Modified by user, Autosaved, Save on Exit)',
+    );
   }
 
   /**
-   * Creates a callback to use in testWopiPutFile().
+   * Does test the 'collabora-online.wopi.save' route with specific parameters.
    *
-   * @return \Closure(\Symfony\Component\HttpFoundation\Request, string): void
-   *   Callback which does the following:
-   *     - Visit the request
+   * This is called repeatedly from the same test method, to save time.
+   *
+   * @param array<string, string> $request_headers
+   *   Request headers.
+   * @param string $reason_message
+   *   Reason message expected to appear in the log and in the revision log.
    */
-  protected function callbackTestWopiPutFile(): \Closure {
+  protected function doTestWopiPutFile(
+    array $request_headers = [],
+    string $reason_message = 'Saved by Collabora Online',
+  ): void {
+    // The request time is always the same.
     $file_changed_time = \DateTimeImmutable::createFromFormat('U', (string) $this->file->getChangedTime());
     $expected_response_data = [
       'LastModifiedTime' => $file_changed_time->format('c'),
     ];
-    $file = $this->file;
-    return function (Request $request, string $log_message) use ($expected_response_data, &$file): void {
-      $this->logger->reset();
-      $this->assertJsonResponseOk($expected_response_data, $request);
-      $this->assertTrue($this->logger->hasRecord($log_message));
-      // Assert that a new file was created.
-      $new_file = $this->loadCurrentMediaFile();
-      $this->assertGreaterThan((int) $file->id(), (int) $new_file->id());
-      $this->assertNotEquals($file->getFileUri(), $new_file->getFileUri());
-      $file = $new_file;
-    };
+    $old_file = $this->loadCurrentMediaFile();
+    $this->logger->reset();
+    $request = $this->createRequest('/contents', 'POST', write: TRUE);
+    $request->headers->add($request_headers);
+    $this->assertJsonResponseOk($expected_response_data, $request);
+    $this->assertTrue($this->logger->hasRecord('Save reason: ' . $reason_message));
+    // Assert that a new file was created.
+    $new_file = $this->loadCurrentMediaFile();
+    $this->assertGreaterThan((int) $old_file->id(), (int) $new_file->id());
+    $this->assertNotEquals($old_file->getFileUri(), $new_file->getFileUri());
   }
 
   /**
