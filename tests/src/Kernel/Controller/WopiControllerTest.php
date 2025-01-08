@@ -83,21 +83,7 @@ class WopiControllerTest extends WopiControllerTestBase {
    */
   public function testWopiPutFile(): void {
     $file_changed_time = \DateTimeImmutable::createFromFormat('U', (string) $this->file->getChangedTime());
-    $expected_response_data = [
-      'LastModifiedTime' => $file_changed_time->format('c'),
-    ];
-    $file = $this->file;
-    $assert_response = function (Request $request, string $log_message) use ($expected_response_data, &$file): void {
-      $this->logger->reset();
-      $this->assertJsonResponseOk($expected_response_data, $request);
-      $log_message ??= 'Save reason: Saved by Collabora Online';
-      $this->assertTrue($this->logger->hasRecord($log_message));
-      // Assert that a new file was created.
-      $new_file = $this->loadCurrentMediaFile();
-      $this->assertGreaterThan((int) $file->id(), (int) $new_file->id());
-      $this->assertNotEquals($file->getFileUri(), $new_file->getFileUri());
-      $file = $new_file;
-    };
+    $assert_response = $this->callbackTestWopiPutFile();
 
     // Test a successful save request without timestamp header.
     $request = $this->createRequest('/contents', 'POST', write: TRUE);
@@ -120,6 +106,32 @@ class WopiControllerTest extends WopiControllerTestBase {
     $request->headers->set('x-cool-wopi-isexitsave', 'true');
     $log_message = 'Save reason: Saved by Collabora Online (Modified by user, Autosaved, Save on Exit)';
     $assert_response($request, $log_message);
+  }
+
+  /**
+   * Creates a callback to use in testWopiPutFile().
+   *
+   * @return \Closure(\Symfony\Component\HttpFoundation\Request, string): void
+   *   Callback which does the following:
+   *     - Visit the request
+   */
+  protected function callbackTestWopiPutFile(): \Closure {
+    $file_changed_time = \DateTimeImmutable::createFromFormat('U', (string) $this->file->getChangedTime());
+    $expected_response_data = [
+      'LastModifiedTime' => $file_changed_time->format('c'),
+    ];
+    $file = $this->file;
+    return function (Request $request, string $log_message) use ($expected_response_data, &$file): void {
+      $this->logger->reset();
+      $this->assertJsonResponseOk($expected_response_data, $request);
+      $log_message ??= 'Save reason: Saved by Collabora Online';
+      $this->assertTrue($this->logger->hasRecord($log_message));
+      // Assert that a new file was created.
+      $new_file = $this->loadCurrentMediaFile();
+      $this->assertGreaterThan((int) $file->id(), (int) $new_file->id());
+      $this->assertNotEquals($file->getFileUri(), $new_file->getFileUri());
+      $file = $new_file;
+    };
   }
 
   /**
