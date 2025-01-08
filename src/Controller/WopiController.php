@@ -97,10 +97,10 @@ class WopiController implements ContainerInjectionInterface {
       $response_data['UserExtraInfo']['avatar'] = $this->fileUrlGenerator->generateAbsoluteString($user_picture->getFileUri());
     }
 
-    $jsonPayload = json_encode($response_data);
+    $response_json = json_encode($response_data);
 
     $response = new Response(
-      $jsonPayload,
+      $response_json,
       Response::HTTP_OK,
       ['content-type' => 'application/json'],
     );
