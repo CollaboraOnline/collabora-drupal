@@ -166,18 +166,18 @@ class WopiController implements ContainerInjectionInterface {
     $owner_id = $file->getOwnerId();
     $uri = $this->fileSystem->saveData($content, $dest, FileExists::Rename);
 
-    /** @var \Drupal\file\FileInterface|null $file */
-    $file = $this->entityTypeManager->getStorage('file')->create(['uri' => $uri]);
-    $file->setOwnerId($owner_id);
+    /** @var \Drupal\file\FileInterface|null $new_file */
+    $new_file = $this->entityTypeManager->getStorage('file')->create(['uri' => $uri]);
+    $new_file->setOwnerId($owner_id);
     if (is_file($dest)) {
-      $file->setFilename($this->fileSystem->basename($dest));
+      $new_file->setFilename($this->fileSystem->basename($dest));
     }
-    $file->setPermanent();
-    $file->setSize(strlen($content));
-    $file->save();
-    $mtime = date_create_immutable_from_format('U', $file->getChangedTime());
+    $new_file->setPermanent();
+    $new_file->setSize(strlen($content));
+    $new_file->save();
+    $mtime = date_create_immutable_from_format('U', $new_file->getChangedTime());
 
-    $this->mediaHelper->setMediaSource($media, $file);
+    $this->mediaHelper->setMediaSource($media, $new_file);
     $media->setRevisionUser($user);
     $media->setRevisionCreationTime($this->time->getRequestTime());
 
