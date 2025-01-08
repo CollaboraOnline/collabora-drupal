@@ -25,6 +25,7 @@ use Drupal\Core\File\FileUrlGeneratorInterface;
 use Drupal\Core\Session\AccountSwitcherInterface;
 use Drupal\Core\StringTranslation\StringTranslationTrait;
 use Drupal\Core\StringTranslation\TranslationInterface;
+use Drupal\file\FileInterface;
 use Drupal\media\MediaInterface;
 use Drupal\user\UserInterface;
 use Psr\Log\LoggerInterface;
@@ -62,6 +63,8 @@ class WopiController implements ContainerInjectionInterface {
    *
    * @param \Drupal\media\MediaInterface $media
    *   Media entity.
+   * @param \Drupal\file\FileInterface $file
+   *   File attached to the media entity.
    * @param \Drupal\user\UserInterface $user
    *   User entity from the uid in the JWT payload.
    * @param array $jwt_payload
@@ -70,12 +73,7 @@ class WopiController implements ContainerInjectionInterface {
    * @return \Symfony\Component\HttpFoundation\Response
    *   The response with file contents.
    */
-  public function wopiCheckFileInfo(MediaInterface $media, UserInterface $user, array $jwt_payload): Response {
-    $file = $this->mediaHelper->getFileForMedia($media);
-    if ($file === NULL) {
-      throw new AccessDeniedHttpException('No file attached to media.');
-    }
-
+  public function wopiCheckFileInfo(MediaInterface $media, FileInterface $file, UserInterface $user, array $jwt_payload): Response {
     $mtime = date_create_immutable_from_format('U', $file->getChangedTime());
     $can_write = $jwt_payload['wri'];
 
@@ -113,21 +111,17 @@ class WopiController implements ContainerInjectionInterface {
   /**
    * Handles the wopi "content" request for a media entity.
    *
-   * @param \Drupal\media\MediaInterface $media
-   *   Media entity.
+   * @param \Drupal\file\FileInterface $file
+   *   File attached to the media entity.
    * @param \Drupal\user\UserInterface $user
    *   User entity from the uid in the JWT payload.
    *
    * @return \Symfony\Component\HttpFoundation\Response
    *   The response with file contents.
    */
-  public function wopiGetFile(MediaInterface $media, UserInterface $user): Response {
+  public function wopiGetFile(FileInterface $file, UserInterface $user): Response {
     $this->accountSwitcher->switchTo($user);
 
-    $file = $this->mediaHelper->getFileForMedia($media);
-    if ($file === NULL) {
-      throw new AccessDeniedHttpException('No file attached to media.');
-    }
     $mimetype = $file->getMimeType();
 
     $response = new BinaryFileResponse(
@@ -144,6 +138,8 @@ class WopiController implements ContainerInjectionInterface {
    *
    * @param \Drupal\media\MediaInterface $media
    *   Media entity.
+   * @param \Drupal\file\FileInterface $file
+   *   File attached to the media entity.
    * @param \Drupal\user\UserInterface $user
    *   User entity from the uid in the JWT payload.
    * @param \Symfony\Component\HttpFoundation\Request $request
@@ -154,7 +150,7 @@ class WopiController implements ContainerInjectionInterface {
    * @return \Symfony\Component\HttpFoundation\Response
    *   The response.
    */
-  public function wopiPutFile(MediaInterface $media, UserInterface $user, Request $request, array $jwt_payload): Response {
+  public function wopiPutFile(MediaInterface $media, FileInterface $file, UserInterface $user, Request $request, array $jwt_payload): Response {
     $timestamp = $request->headers->get('x-cool-wopi-timestamp');
     $modified_by_user = $request->headers->get('x-cool-wopi-ismodifiedbyuser') == 'true';
     $autosave = $request->headers->get('x-cool-wopi-isautosave') == 'true';
@@ -165,8 +161,6 @@ class WopiController implements ContainerInjectionInterface {
     }
 
     $this->accountSwitcher->switchTo($user);
-
-    $file = $this->mediaHelper->getFileForMedia($media);
 
     if ($timestamp) {
       $wopi_stamp = \DateTimeImmutable::createFromFormat(\DateTimeInterface::ATOM, $timestamp);
@@ -263,15 +257,20 @@ class WopiController implements ContainerInjectionInterface {
       throw new AccessDeniedHttpException('User not found.');
     }
 
+    $file = $this->mediaHelper->getFileForMedia($media);
+    if ($file === NULL) {
+      throw new AccessDeniedHttpException('No file attached to media.');
+    }
+
     switch ($action) {
       case 'info':
-        return $this->wopiCheckFileInfo($media, $user, $jwt_payload);
+        return $this->wopiCheckFileInfo($media, $file, $user, $jwt_payload);
 
       case 'content':
-        return $this->wopiGetFile($media, $user);
+        return $this->wopiGetFile($file, $user);
 
       case 'save':
-        return $this->wopiPutFile($media, $user, $request, $jwt_payload);
+        return $this->wopiPutFile($media, $file, $user, $request, $jwt_payload);
     }
 
     $response = new Response(
