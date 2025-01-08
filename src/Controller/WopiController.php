@@ -22,7 +22,6 @@ use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\File\FileExists;
 use Drupal\Core\File\FileSystemInterface;
 use Drupal\Core\File\FileUrlGeneratorInterface;
-use Drupal\Core\Session\AccountSwitcherInterface;
 use Drupal\Core\StringTranslation\StringTranslationTrait;
 use Drupal\Core\StringTranslation\TranslationInterface;
 use Drupal\file\FileInterface;
@@ -47,7 +46,6 @@ class WopiController implements ContainerInjectionInterface {
   public function __construct(
     protected readonly EntityTypeManagerInterface $entityTypeManager,
     protected readonly JwtTranscoderInterface $jwtTranscoder,
-    protected readonly AccountSwitcherInterface $accountSwitcher,
     protected readonly FileSystemInterface $fileSystem,
     protected readonly TimeInterface $time,
     protected readonly FileUrlGeneratorInterface $fileUrlGenerator,
@@ -146,8 +144,6 @@ class WopiController implements ContainerInjectionInterface {
       throw new AccessDeniedHttpException('The token only grants read access.');
     }
 
-    $this->accountSwitcher->switchTo($user);
-
     if ($timestamp) {
       $wopi_stamp = \DateTimeImmutable::createFromFormat(\DateTimeInterface::ATOM, $timestamp);
       $file_stamp = \DateTimeImmutable::createFromFormat('U', $file->getChangedTime());
@@ -155,13 +151,11 @@ class WopiController implements ContainerInjectionInterface {
       if ($wopi_stamp != $file_stamp) {
         $this->logger->error('Conflict saving file ' . $media->id() . ' wopi: ' . $wopi_stamp->format('c') . ' differs from file: ' . $file_stamp->format('c'));
 
-        $response = new JsonResponse(
+        return new JsonResponse(
           ['COOLStatusCode' => 1010],
           Response::HTTP_CONFLICT,
           ['content-type' => 'application/json'],
         );
-        $this->accountSwitcher->switchBack();
-        return $response;
       }
     }
 
@@ -192,16 +186,13 @@ class WopiController implements ContainerInjectionInterface {
     $media->setRevisionLogMessage($save_reason);
     $media->save();
 
-    $response = new JsonResponse(
+    return new JsonResponse(
       [
         'LastModifiedTime' => $mtime->format('c'),
       ],
       Response::HTTP_OK,
       ['content-type' => 'application/json'],
     );
-
-    $this->accountSwitcher->switchBack();
-    return $response;
   }
 
   /**
