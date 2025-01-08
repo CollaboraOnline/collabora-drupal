@@ -15,6 +15,7 @@ declare(strict_types=1);
 namespace Drupal\Tests\collabora_online\Kernel\Controller;
 
 use Drupal\Core\Logger\RfcLogLevel;
+use Drupal\media\Entity\Media;
 use Symfony\Component\HttpFoundation\Response;
 
 /**
@@ -138,6 +139,8 @@ class WopiControllerTest extends WopiControllerTestBase {
       $request,
     );
     $this->assertTrue($this->logger->hasRecord('Save reason: ' . $reason_message));
+    $media = Media::load($this->media->id());
+    $this->assertSame($reason_message, $media->getRevisionLogMessage());
     // Assert that a new file was created.
     $new_file = $this->loadCurrentMediaFile();
     $this->assertGreaterThan((int) $old_file->id(), (int) $new_file->id());
