@@ -101,9 +101,7 @@ class WopiProofAccessCheck implements AccessInterface {
    */
   protected function checkTimeout(Request $request): AccessResult {
     $wopi_ticks_str = $request->headers->get('X-WOPI-Timestamp', '');
-    // Unfortunately, is_numeric() confuses the IDE's static analysis, so use
-    // regular expression instead.
-    if (!preg_match('#^[1-9]\d+$#', $wopi_ticks_str)) {
+    if (!is_numeric($wopi_ticks_str)) {
       return AccessResult::forbidden('The X-WOPI-Timestamp header is missing, empty or invalid.');
     }
     $wopi_timestamp = DotNetTime::ticksToTimestamp((float) $wopi_ticks_str);
