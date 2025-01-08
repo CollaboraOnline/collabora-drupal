@@ -31,6 +31,7 @@ use Drupal\user\UserInterface;
 use Psr\Log\LoggerInterface;
 use Symfony\Component\DependencyInjection\Attribute\Autowire;
 use Symfony\Component\HttpFoundation\BinaryFileResponse;
+use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpKernel\Exception\AccessDeniedHttpException;
@@ -97,10 +98,8 @@ class WopiController implements ContainerInjectionInterface {
       $response_data['UserExtraInfo']['avatar'] = $this->fileUrlGenerator->generateAbsoluteString($user_picture->getFileUri());
     }
 
-    $response_json = json_encode($response_data);
-
-    $response = new Response(
-      $response_json,
+    $response = new JsonResponse(
+      $response_data,
       Response::HTTP_OK,
       ['content-type' => 'application/json'],
     );
@@ -163,8 +162,8 @@ class WopiController implements ContainerInjectionInterface {
       if ($wopi_stamp != $file_stamp) {
         $this->logger->error('Conflict saving file ' . $media->id() . ' wopi: ' . $wopi_stamp->format('c') . ' differs from file: ' . $file_stamp->format('c'));
 
-        return new Response(
-          json_encode(['COOLStatusCode' => 1010]),
+        return new JsonResponse(
+          ['COOLStatusCode' => 1010],
           Response::HTTP_CONFLICT,
           ['content-type' => 'application/json'],
         );
@@ -198,12 +197,10 @@ class WopiController implements ContainerInjectionInterface {
     $media->setRevisionLogMessage($save_reason);
     $media->save();
 
-    $payload = json_encode([
-      'LastModifiedTime' => $mtime->format('c'),
-    ]);
-
-    $response = new Response(
-      $payload,
+    $response = new JsonResponse(
+      [
+        'LastModifiedTime' => $mtime->format('c'),
+      ],
       Response::HTTP_OK,
       ['content-type' => 'application/json'],
     );
