@@ -110,22 +110,16 @@ class WopiController implements ContainerInjectionInterface {
    *
    * @param \Drupal\file\FileInterface $file
    *   File attached to the media entity.
-   * @param \Drupal\user\UserInterface $user
-   *   User entity from the uid in the JWT payload.
    *
    * @return \Symfony\Component\HttpFoundation\Response
    *   The response with file contents.
    */
-  public function wopiGetFile(FileInterface $file, UserInterface $user): Response {
-    $this->accountSwitcher->switchTo($user);
-
-    $response = new BinaryFileResponse(
+  public function wopiGetFile(FileInterface $file): Response {
+    return new BinaryFileResponse(
       $file->getFileUri(),
       Response::HTTP_OK,
       ['content-type' => $file->getMimeType()],
     );
-    $this->accountSwitcher->switchBack();
-    return $response;
   }
 
   /**
@@ -280,7 +274,7 @@ class WopiController implements ContainerInjectionInterface {
         return $this->wopiCheckFileInfo($media, $file, $user, $can_write);
 
       case 'content':
-        return $this->wopiGetFile($file, $user);
+        return $this->wopiGetFile($file);
 
       case 'save':
         return $this->wopiPutFile($media, $file, $user, $can_write, $request);
