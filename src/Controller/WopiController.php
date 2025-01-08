@@ -138,32 +138,13 @@ class WopiController implements ContainerInjectionInterface {
    *   The response.
    */
   public function wopiPutFile(MediaInterface $media, FileInterface $file, UserInterface $user, bool $can_write, Request $request): Response {
-    $timestamp = $request->headers->get('x-cool-wopi-timestamp');
-
     if (!$can_write) {
       throw new AccessDeniedHttpException('The token only grants read access.');
     }
 
-    if ($timestamp) {
-      $wopi_stamp = \DateTimeImmutable::createFromFormat(\DateTimeInterface::ATOM, $timestamp);
-      $file_stamp = \DateTimeImmutable::createFromFormat('U', $file->getChangedTime());
-
-      if ($wopi_stamp != $file_stamp) {
-        $this->logger->error(
-          'Conflict saving file for media @media_id: WOPI time @wopi_time differs from file time @file_time.',
-          [
-            '@media_id' => $media->id(),
-            '@wopi_time' => $wopi_stamp->format('c'),
-            '@file_time' => $file_stamp->format('c'),
-          ],
-        );
-
-        return new JsonResponse(
-          ['COOLStatusCode' => 1010],
-          Response::HTTP_CONFLICT,
-          ['content-type' => 'application/json'],
-        );
-      }
+    $conflict_response = $this->checkSaveTimestampConflict($request, $media, $file);
+    if ($conflict_response) {
+      return $conflict_response;
     }
 
     $dir = $this->fileSystem->dirname($file->getFileUri());
@@ -198,6 +179,50 @@ class WopiController implements ContainerInjectionInterface {
         'LastModifiedTime' => $mtime->format('c'),
       ],
       Response::HTTP_OK,
+      ['content-type' => 'application/json'],
+    );
+  }
+
+  /**
+   * Checks for a timestamp conflict on save.
+   *
+   * A conflicting timestamp indicates that the file was updated outside of the
+   * Collabora editing session.
+   *
+   * @param \Symfony\Component\HttpFoundation\Request $request
+   *   Incoming WOPI save request.
+   * @param \Drupal\media\MediaInterface $media
+   *   Media entity, only used for logging.
+   * @param \Drupal\file\FileInterface $file
+   *   File entity attached to the media entity.
+   *
+   * @return \Symfony\Component\HttpFoundation\Response|null
+   *   Failure response, or NULL if no conflict.
+   */
+  protected function checkSaveTimestampConflict(Request $request, MediaInterface $media, FileInterface $file): ?Response {
+    $timestamp = $request->headers->get('x-cool-wopi-timestamp');
+    if (!$timestamp) {
+      return NULL;
+    }
+    $wopi_stamp = \DateTimeImmutable::createFromFormat(\DateTimeInterface::ATOM, $timestamp);
+    $file_stamp = \DateTimeImmutable::createFromFormat('U', $file->getChangedTime());
+
+    if ($wopi_stamp == $file_stamp) {
+      return NULL;
+    }
+
+    $this->logger->error(
+      'Conflict saving file for media @media_id: WOPI time @wopi_time differs from file time @file_time.',
+      [
+        '@media_id' => $media->id(),
+        '@wopi_time' => $wopi_stamp->format('c'),
+        '@file_time' => $file_stamp->format('c'),
+      ],
+    );
+
+    return new JsonResponse(
+      ['COOLStatusCode' => 1010],
+      Response::HTTP_CONFLICT,
       ['content-type' => 'application/json'],
     );
   }
