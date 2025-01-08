@@ -124,7 +124,6 @@ class WopiControllerTest extends WopiControllerTestBase {
     return function (Request $request, string $log_message) use ($expected_response_data, &$file): void {
       $this->logger->reset();
       $this->assertJsonResponseOk($expected_response_data, $request);
-      $log_message ??= 'Save reason: Saved by Collabora Online';
       $this->assertTrue($this->logger->hasRecord($log_message));
       // Assert that a new file was created.
       $new_file = $this->loadCurrentMediaFile();
