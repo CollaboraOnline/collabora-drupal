@@ -26,6 +26,7 @@ use Drupal\Core\Session\AccountSwitcherInterface;
 use Drupal\Core\StringTranslation\StringTranslationTrait;
 use Drupal\Core\StringTranslation\TranslationInterface;
 use Drupal\media\MediaInterface;
+use Drupal\user\UserInterface;
 use Psr\Log\LoggerInterface;
 use Symfony\Component\DependencyInjection\Attribute\Autowire;
 use Symfony\Component\HttpFoundation\BinaryFileResponse;
@@ -61,25 +62,21 @@ class WopiController implements ContainerInjectionInterface {
    *
    * @param \Drupal\media\MediaInterface $media
    *   Media entity.
+   * @param \Drupal\user\UserInterface $user
+   *   User entity from the uid in the JWT payload.
    * @param array $jwt_payload
    *   Data from the JWT token.
    *
    * @return \Symfony\Component\HttpFoundation\Response
    *   The response with file contents.
    */
-  public function wopiCheckFileInfo(MediaInterface $media, array $jwt_payload): Response {
+  public function wopiCheckFileInfo(MediaInterface $media, UserInterface $user, array $jwt_payload): Response {
     $file = $this->mediaHelper->getFileForMedia($media);
     if ($file === NULL) {
       throw new AccessDeniedHttpException('No file attached to media.');
     }
 
     $mtime = date_create_immutable_from_format('U', $file->getChangedTime());
-    // @todo What if the uid in the payload is not set?
-    /** @var \Drupal\user\UserInterface|null $user */
-    $user = $this->entityTypeManager->getStorage('user')->load($jwt_payload['uid']);
-    if ($user === NULL) {
-      throw new AccessDeniedHttpException('User not found.');
-    }
     $can_write = $jwt_payload['wri'];
 
     if ($can_write && !$media->access('edit in collabora', $user)) {
@@ -91,7 +88,7 @@ class WopiController implements ContainerInjectionInterface {
       'BaseFileName' => $file->getFilename(),
       'Size' => $file->getSize(),
       'LastModifiedTime' => $mtime->format('c'),
-      'UserId' => $jwt_payload['uid'],
+      'UserId' => $user->id(),
       'UserFriendlyName' => $user->getDisplayName(),
       'UserCanWrite' => $can_write,
       'IsAdminUser' => $user->hasPermission('administer collabora instance'),
@@ -118,15 +115,13 @@ class WopiController implements ContainerInjectionInterface {
    *
    * @param \Drupal\media\MediaInterface $media
    *   Media entity.
-   * @param array $jwt_payload
-   *   Data from the JWT token.
+   * @param \Drupal\user\UserInterface $user
+   *   User entity from the uid in the JWT payload.
    *
    * @return \Symfony\Component\HttpFoundation\Response
    *   The response with file contents.
    */
-  public function wopiGetFile(MediaInterface $media, array $jwt_payload): Response {
-    /** @var \Drupal\user\UserInterface|null $user */
-    $user = $this->entityTypeManager->getStorage('user')->load($jwt_payload['uid']);
+  public function wopiGetFile(MediaInterface $media, UserInterface $user): Response {
     $this->accountSwitcher->switchTo($user);
 
     $file = $this->mediaHelper->getFileForMedia($media);
@@ -149,6 +144,8 @@ class WopiController implements ContainerInjectionInterface {
    *
    * @param \Drupal\media\MediaInterface $media
    *   Media entity.
+   * @param \Drupal\user\UserInterface $user
+   *   User entity from the uid in the JWT payload.
    * @param \Symfony\Component\HttpFoundation\Request $request
    *   Request object with headers, query parameters and payload.
    * @param array $jwt_payload
@@ -157,7 +154,7 @@ class WopiController implements ContainerInjectionInterface {
    * @return \Symfony\Component\HttpFoundation\Response
    *   The response.
    */
-  public function wopiPutFile(MediaInterface $media, Request $request, array $jwt_payload): Response {
+  public function wopiPutFile(MediaInterface $media, UserInterface $user, Request $request, array $jwt_payload): Response {
     $timestamp = $request->headers->get('x-cool-wopi-timestamp');
     $modified_by_user = $request->headers->get('x-cool-wopi-ismodifiedbyuser') == 'true';
     $autosave = $request->headers->get('x-cool-wopi-isautosave') == 'true';
@@ -165,12 +162,6 @@ class WopiController implements ContainerInjectionInterface {
 
     if (empty($jwt_payload['wri'])) {
       throw new AccessDeniedHttpException('The token only grants read access.');
-    }
-
-    /** @var \Drupal\user\UserInterface|null $user */
-    $user = $this->entityTypeManager->getStorage('user')->load($jwt_payload['uid']);
-    if ($user === NULL) {
-      throw new AccessDeniedHttpException('User not found.');
     }
 
     $this->accountSwitcher->switchTo($user);
@@ -266,15 +257,21 @@ class WopiController implements ContainerInjectionInterface {
     }
     $jwt_payload = $this->verifyTokenForMedia($token, $media);
 
+    /** @var \Drupal\user\UserInterface|null $user */
+    $user = $this->entityTypeManager->getStorage('user')->load($jwt_payload['uid']);
+    if ($user === NULL) {
+      throw new AccessDeniedHttpException('User not found.');
+    }
+
     switch ($action) {
       case 'info':
-        return $this->wopiCheckFileInfo($media, $jwt_payload);
+        return $this->wopiCheckFileInfo($media, $user, $jwt_payload);
 
       case 'content':
-        return $this->wopiGetFile($media, $jwt_payload);
+        return $this->wopiGetFile($media, $user);
 
       case 'save':
-        return $this->wopiPutFile($media, $request, $jwt_payload);
+        return $this->wopiPutFile($media, $user, $request, $jwt_payload);
     }
 
     $response = new Response(
