@@ -73,7 +73,7 @@ class WopiController implements ContainerInjectionInterface {
       throw new AccessDeniedHttpException('Missing access token.');
     }
 
-    $jwt_payload = $this->verifyTokenForMediaId($token, $media->id());
+    $jwt_payload = $this->verifyTokenForMedia($token, $media);
 
     $file = $this->mediaHelper->getFileForMedia($media);
     if ($file === NULL) {
@@ -134,7 +134,7 @@ class WopiController implements ContainerInjectionInterface {
   public function wopiGetFile(MediaInterface $media, Request $request): Response {
     $token = $request->query->get('access_token');
 
-    $jwt_payload = $this->verifyTokenForMediaId($token, $media->id());
+    $jwt_payload = $this->verifyTokenForMedia($token, $media);
 
     /** @var \Drupal\user\UserInterface|null $user */
     $user = $this->entityTypeManager->getStorage('user')->load($jwt_payload['uid']);
@@ -173,7 +173,7 @@ class WopiController implements ContainerInjectionInterface {
     $autosave = $request->headers->get('x-cool-wopi-isautosave') == 'true';
     $exitsave = $request->headers->get('x-cool-wopi-isexitsave') == 'true';
 
-    $jwt_payload = $this->verifyTokenForMediaId($token, $media->id());
+    $jwt_payload = $this->verifyTokenForMedia($token, $media);
     if (empty($jwt_payload['wri'])) {
       throw new AccessDeniedHttpException('The token only grants read access.');
     }
@@ -300,9 +300,8 @@ class WopiController implements ContainerInjectionInterface {
    *
    * @param string $token
    *   The token to verify.
-   * @param int|string $expected_media_id
-   *   Media id expected to be in the token payload.
-   *   This could be a stringified integer like '123'.
+   * @param \Drupal\media\MediaInterface $media
+   *   Media entity.
    *
    * @return array
    *   Data decoded from the token.
@@ -310,10 +309,10 @@ class WopiController implements ContainerInjectionInterface {
    * @throws \Symfony\Component\HttpKernel\Exception\AccessDeniedHttpException
    *   The token is malformed, invalid or has expired.
    */
-  protected function verifyTokenForMediaId(
+  protected function verifyTokenForMedia(
     #[\SensitiveParameter]
     string $token,
-    int|string $expected_media_id,
+    MediaInterface $media,
   ): array {
     try {
       $values = $this->jwtTranscoder->decode($token);
@@ -325,12 +324,12 @@ class WopiController implements ContainerInjectionInterface {
     if ($values === NULL) {
       throw new AccessDeniedHttpException('Empty token values');
     }
-    if ((string) $values['fid'] !== (string) $expected_media_id) {
+    if ((string) $values['fid'] !== (string) $media->id()) {
       throw new AccessDeniedHttpException(sprintf(
         // The token payload is not encrypted, just encoded.
         // It is ok to reveal its values in the response for logging.
         'Found fid %s in request path, but fid %s in token payload',
-        $expected_media_id,
+        $media->id(),
         $values['fid'],
       ));
     }
