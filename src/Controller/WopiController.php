@@ -121,12 +121,10 @@ class WopiController implements ContainerInjectionInterface {
   public function wopiGetFile(FileInterface $file, UserInterface $user): Response {
     $this->accountSwitcher->switchTo($user);
 
-    $mimetype = $file->getMimeType();
-
     $response = new BinaryFileResponse(
       $file->getFileUri(),
       Response::HTTP_OK,
-      ['content-type' => $mimetype],
+      ['content-type' => $file->getMimeType()],
     );
     $this->accountSwitcher->switchBack();
     return $response;
