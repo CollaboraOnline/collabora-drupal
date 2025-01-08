@@ -151,14 +151,15 @@ class WopiController implements ContainerInjectionInterface {
     $new_file = $this->createNewFileEntity($file, $new_file_content);
     $mtime = date_create_immutable_from_format('U', $new_file->getChangedTime());
 
+    $save_reason = $this->buildSaveReason($request);
+
     $this->mediaHelper->setMediaSource($media, $new_file);
     $media->setRevisionUser($user);
     $media->setRevisionCreationTime($this->time->getRequestTime());
-
-    $save_reason = $this->buildSaveReason($request);
-    $this->logger->error('Save reason: ' . $save_reason);
     $media->setRevisionLogMessage($save_reason);
     $media->save();
+
+    $this->logger->error('Save reason: ' . $save_reason);
 
     return new JsonResponse(
       [
