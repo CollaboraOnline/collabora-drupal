@@ -67,15 +67,14 @@ class WopiController implements ContainerInjectionInterface {
    *   File attached to the media entity.
    * @param \Drupal\user\UserInterface $user
    *   User entity from the uid in the JWT payload.
-   * @param array $jwt_payload
-   *   Data from the JWT token.
+   * @param bool $can_write
+   *   TRUE if the user has write access to the media.
    *
    * @return \Symfony\Component\HttpFoundation\Response
    *   The response with file contents.
    */
-  public function wopiCheckFileInfo(MediaInterface $media, FileInterface $file, UserInterface $user, array $jwt_payload): Response {
+  public function wopiCheckFileInfo(MediaInterface $media, FileInterface $file, UserInterface $user, bool $can_write): Response {
     $mtime = date_create_immutable_from_format('U', $file->getChangedTime());
-    $can_write = $jwt_payload['wri'];
 
     if ($can_write && !$media->access('edit in collabora', $user)) {
       $this->logger->error('Token and user permissions do not match.');
@@ -142,21 +141,21 @@ class WopiController implements ContainerInjectionInterface {
    *   File attached to the media entity.
    * @param \Drupal\user\UserInterface $user
    *   User entity from the uid in the JWT payload.
+   * @param bool $can_write
+   *   TRUE if the user has write access to the media.
    * @param \Symfony\Component\HttpFoundation\Request $request
    *   Request object with headers, query parameters and payload.
-   * @param array $jwt_payload
-   *   Data from the JWT token.
    *
    * @return \Symfony\Component\HttpFoundation\Response
    *   The response.
    */
-  public function wopiPutFile(MediaInterface $media, FileInterface $file, UserInterface $user, Request $request, array $jwt_payload): Response {
+  public function wopiPutFile(MediaInterface $media, FileInterface $file, UserInterface $user, bool $can_write, Request $request): Response {
     $timestamp = $request->headers->get('x-cool-wopi-timestamp');
     $modified_by_user = $request->headers->get('x-cool-wopi-ismodifiedbyuser') == 'true';
     $autosave = $request->headers->get('x-cool-wopi-isautosave') == 'true';
     $exitsave = $request->headers->get('x-cool-wopi-isexitsave') == 'true';
 
-    if (empty($jwt_payload['wri'])) {
+    if (!$can_write) {
       throw new AccessDeniedHttpException('The token only grants read access.');
     }
 
@@ -262,15 +261,17 @@ class WopiController implements ContainerInjectionInterface {
       throw new AccessDeniedHttpException('No file attached to media.');
     }
 
+    $can_write = !empty($jwt_payload['wri']);
+
     switch ($action) {
       case 'info':
-        return $this->wopiCheckFileInfo($media, $file, $user, $jwt_payload);
+        return $this->wopiCheckFileInfo($media, $file, $user, $can_write);
 
       case 'content':
         return $this->wopiGetFile($file, $user);
 
       case 'save':
-        return $this->wopiPutFile($media, $file, $user, $request, $jwt_payload);
+        return $this->wopiPutFile($media, $file, $user, $can_write, $request);
     }
 
     $response = new Response(
