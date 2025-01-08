@@ -124,8 +124,8 @@ class WopiControllerTest extends WopiControllerTestBase {
     $request = $this->createRequest('/contents', 'POST', write: TRUE);
 
     // Set a time in the future to force the error.
-    $file_changed_time = \DateTimeImmutable::createFromFormat('U', (string) ($this->file->getChangedTime() + 1000));
-    $request->headers->set('x-cool-wopi-timestamp', $file_changed_time->format(\DateTimeInterface::ATOM));
+    $wopi_changed_time = \DateTimeImmutable::createFromFormat('U', (string) ($this->file->getChangedTime() + 1000));
+    $request->headers->set('x-cool-wopi-timestamp', $wopi_changed_time->format(\DateTimeInterface::ATOM));
 
     $this->assertJsonResponse(
       Response::HTTP_CONFLICT,
