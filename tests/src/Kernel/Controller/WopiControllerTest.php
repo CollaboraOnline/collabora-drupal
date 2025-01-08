@@ -132,7 +132,7 @@ class WopiControllerTest extends WopiControllerTestBase {
       [
         'COOLStatusCode' => 1010,
       ],
-      $request
+      $request,
     );
   }
 

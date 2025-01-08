@@ -120,7 +120,7 @@ class WopiController implements ContainerInjectionInterface {
     $response = new Response(
       $jsonPayload,
       Response::HTTP_OK,
-      ['content-type' => 'application/json']
+      ['content-type' => 'application/json'],
     );
     return $response;
   }
@@ -160,7 +160,7 @@ class WopiController implements ContainerInjectionInterface {
     $response = new BinaryFileResponse(
       $file->getFileUri(),
       Response::HTTP_OK,
-      ['content-type' => $mimetype]
+      ['content-type' => $mimetype],
     );
     $this->accountSwitcher->switchBack();
     return $response;
@@ -267,7 +267,7 @@ class WopiController implements ContainerInjectionInterface {
     $response = new Response(
       $payload,
       Response::HTTP_OK,
-      ['content-type' => 'application/json']
+      ['content-type' => 'application/json'],
     );
 
     $this->accountSwitcher->switchBack();
@@ -303,7 +303,7 @@ class WopiController implements ContainerInjectionInterface {
     $response = new Response(
       'Invalid WOPI action ' . $action,
       $returnCode,
-      ['content-type' => 'text/plain']
+      ['content-type' => 'text/plain'],
     );
     return $response;
   }

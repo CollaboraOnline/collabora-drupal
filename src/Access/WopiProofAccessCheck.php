@@ -175,7 +175,7 @@ class WopiProofAccessCheck implements AccessInterface {
       pack('N', strlen($url)),
       strtoupper($url),
       pack('N', 8),
-      pack('J', $timestamp_ticks)
+      pack('J', $timestamp_ticks),
     );
   }
 
