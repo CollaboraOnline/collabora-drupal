@@ -9,6 +9,7 @@ use Drupal\collabora_online\Jwt\JwtTranscoderInterface;
 use Drupal\Component\Serialization\Json;
 use Drupal\file\Entity\File;
 use Drupal\file\FileInterface;
+use Drupal\media\Entity\Media;
 use Drupal\media\MediaInterface;
 use Drupal\Tests\collabora_online\Kernel\CollaboraKernelTestBase;
 use Drupal\user\UserInterface;
@@ -302,6 +303,21 @@ abstract class WopiControllerTestBase extends CollaboraKernelTestBase {
     /** @var \Symfony\Component\HttpKernel\HttpKernelInterface $kernel */
     $kernel = \Drupal::service('http_kernel');
     return $kernel->handle($request);
+  }
+
+  /**
+   * Loads the file currently attached to the media.
+   *
+   * This can be different from $this->file, if the media has been updated.
+   *
+   * @return \Drupal\file\FileInterface|null
+   *   File entity.
+   */
+  protected function loadCurrentMediaFile(): ?FileInterface {
+    $media = Media::load($this->media->id());
+    $fid = $media->getSource()->getSourceFieldValue($media);
+    $this->assertNotNull($fid);
+    return File::load($fid);
   }
 
 }
