@@ -133,6 +133,9 @@ class WopiController implements ContainerInjectionInterface {
    */
   public function wopiGetFile(MediaInterface $media, Request $request): Response {
     $token = $request->query->get('access_token');
+    if ($token === NULL) {
+      throw new AccessDeniedHttpException('Missing access token.');
+    }
 
     $jwt_payload = $this->verifyTokenForMedia($token, $media);
 
@@ -168,6 +171,9 @@ class WopiController implements ContainerInjectionInterface {
    */
   public function wopiPutFile(MediaInterface $media, Request $request): Response {
     $token = $request->get('access_token');
+    if ($token === NULL) {
+      throw new AccessDeniedHttpException('Missing access token.');
+    }
     $timestamp = $request->headers->get('x-cool-wopi-timestamp');
     $modified_by_user = $request->headers->get('x-cool-wopi-ismodifiedbyuser') == 'true';
     $autosave = $request->headers->get('x-cool-wopi-isautosave') == 'true';
