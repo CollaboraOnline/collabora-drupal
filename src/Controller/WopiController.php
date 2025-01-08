@@ -185,12 +185,11 @@ class WopiController implements ContainerInjectionInterface {
     $dir = $this->fileSystem->dirname($file->getFileUri());
     $dest = $dir . '/' . $file->getFilename();
 
-    $owner_id = $file->getOwnerId();
     $new_file_uri = $this->fileSystem->saveData($new_file_content, $dest, FileExists::Rename);
 
     /** @var \Drupal\file\FileInterface|null $new_file */
     $new_file = $this->entityTypeManager->getStorage('file')->create(['uri' => $new_file_uri]);
-    $new_file->setOwnerId($owner_id);
+    $new_file->setOwnerId($file->getOwnerId());
     if (is_file($dest)) {
       $new_file->setFilename($this->fileSystem->basename($dest));
     }
