@@ -126,11 +126,18 @@ class WopiControllerTest extends WopiControllerTestBase {
     array $request_headers = [],
     string $reason_message = 'Saved by Collabora Online',
   ): void {
+    $i = $this->getCounterValue();
     // The request time is always the same.
     $file_changed_time = \DateTimeImmutable::createFromFormat('U', (string) $this->file->getChangedTime());
+    $new_file_content = "File content $i.";
     $old_file = $this->loadCurrentMediaFile();
     $this->logger->reset();
-    $request = $this->createRequest('/contents', 'POST', write: TRUE);
+    $request = $this->createRequest(
+      '/contents',
+      'POST',
+      write: TRUE,
+      content: $new_file_content,
+    );
     $request->headers->add($request_headers);
     $this->assertJsonResponseOk(
       [
@@ -145,6 +152,19 @@ class WopiControllerTest extends WopiControllerTestBase {
     $new_file = $this->loadCurrentMediaFile();
     $this->assertGreaterThan((int) $old_file->id(), (int) $new_file->id());
     $this->assertNotEquals($old_file->getFileUri(), $new_file->getFileUri());
+    $actual_file_content = file_get_contents($new_file->getFileUri());
+    $this->assertSame($new_file_content, $actual_file_content);
+  }
+
+  /**
+   * Gets an integer value that is different for each call.
+   *
+   * @return int
+   *   Unique integer value, starting at zero.
+   */
+  protected function getCounterValue(): int {
+    static $i = 0;
+    return $i++;
   }
 
   /**

@@ -134,6 +134,8 @@ abstract class WopiControllerTestBase extends CollaboraKernelTestBase {
    * @param array $token_payload
    *   Explicit token payload values.
    *   This can be used to cause a bad token.
+   * @param string|null $content
+   *   Request content.
    *
    * @return \Symfony\Component\HttpFoundation\Request
    *   The request.
@@ -145,6 +147,7 @@ abstract class WopiControllerTestBase extends CollaboraKernelTestBase {
     ?int $user_id = NULL,
     bool $write = FALSE,
     array $token_payload = [],
+    ?string $content = NULL,
   ): Request {
     $media_id ??= (int) $this->media->id();
     $user_id ??= (int) $this->user->id();
@@ -154,7 +157,7 @@ abstract class WopiControllerTestBase extends CollaboraKernelTestBase {
       'access_token' => $token,
       'access_token_ttl' => '0',
     ];
-    return Request::create($uri, $method, $parameters);
+    return Request::create($uri, $method, $parameters, content: $content);
   }
 
   /**
