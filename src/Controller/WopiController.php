@@ -30,6 +30,7 @@ use Symfony\Component\DependencyInjection\Attribute\Autowire;
 use Symfony\Component\HttpFoundation\BinaryFileResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
+use Symfony\Component\HttpKernel\Exception\AccessDeniedHttpException;
 
 /**
  * Provides WOPI route responses for the Collabora module.
@@ -55,20 +56,6 @@ class WopiController implements ContainerInjectionInterface {
   }
 
   /**
-   * Creates a failure response that is understood by Collabora.
-   *
-   * @return \Symfony\Component\HttpFoundation\Response
-   *   Response object.
-   */
-  public static function permissionDenied(): Response {
-    return new Response(
-      'Authentication failed.',
-      Response::HTTP_FORBIDDEN,
-      ['content-type' => 'text/plain'],
-    );
-  }
-
-  /**
    * Handles the WOPI 'info' request for a media entity.
    *
    * @param string $id
@@ -81,21 +68,21 @@ class WopiController implements ContainerInjectionInterface {
    */
   public function wopiCheckFileInfo(string $id, Request $request): Response {
     $token = $request->query->get('access_token');
+    if ($token === NULL) {
+      throw new AccessDeniedHttpException('Missing access token.');
+    }
 
     $jwt_payload = $this->verifyTokenForMediaId($token, $id);
-    if ($jwt_payload === NULL) {
-      return static::permissionDenied();
-    }
 
     /** @var \Drupal\media\MediaInterface|null $media */
     $media = $this->entityTypeManager->getStorage('media')->load($id);
     if ($media === NULL) {
-      return static::permissionDenied();
+      throw new AccessDeniedHttpException('Media not found.');
     }
 
     $file = $this->mediaHelper->getFileForMedia($media);
     if ($file === NULL) {
-      return static::permissionDenied();
+      throw new AccessDeniedHttpException('No file attached to media.');
     }
 
     $mtime = date_create_immutable_from_format('U', $file->getChangedTime());
@@ -103,13 +90,13 @@ class WopiController implements ContainerInjectionInterface {
     /** @var \Drupal\user\UserInterface|null $user */
     $user = $this->entityTypeManager->getStorage('user')->load($jwt_payload['uid']);
     if ($user === NULL) {
-      return static::permissionDenied();
+      throw new AccessDeniedHttpException('User not found.');
     }
     $can_write = $jwt_payload['wri'];
 
     if ($can_write && !$media->access('edit in collabora', $user)) {
       $this->logger->error('Token and user permissions do not match.');
-      return static::permissionDenied();
+      throw new AccessDeniedHttpException('The user does not have collabora edit access for this media.');
     }
 
     $payload = [
@@ -153,9 +140,6 @@ class WopiController implements ContainerInjectionInterface {
     $token = $request->query->get('access_token');
 
     $jwt_payload = $this->verifyTokenForMediaId($token, $id);
-    if ($jwt_payload === NULL) {
-      return static::permissionDenied();
-    }
 
     /** @var \Drupal\user\UserInterface|null $user */
     $user = $this->entityTypeManager->getStorage('user')->load($jwt_payload['uid']);
@@ -164,12 +148,12 @@ class WopiController implements ContainerInjectionInterface {
     /** @var \Drupal\media\MediaInterface|null $media */
     $media = $this->entityTypeManager->getStorage('media')->load($id);
     if ($media === NULL) {
-      return static::permissionDenied();
+      throw new AccessDeniedHttpException('Media not found.');
     }
 
     $file = $this->mediaHelper->getFileForMedia($media);
     if ($file === NULL) {
-      return static::permissionDenied();
+      throw new AccessDeniedHttpException('No file attached to media.');
     }
     $mimetype = $file->getMimeType();
 
@@ -201,16 +185,20 @@ class WopiController implements ContainerInjectionInterface {
     $exitsave = $request->headers->get('x-cool-wopi-isexitsave') == 'true';
 
     $jwt_payload = $this->verifyTokenForMediaId($token, $id);
-    if ($jwt_payload == NULL || empty($jwt_payload['wri'])) {
-      return static::permissionDenied();
+    if (empty($jwt_payload['wri'])) {
+      throw new AccessDeniedHttpException('The token only grants read access.');
     }
 
     /** @var \Drupal\media\MediaInterface|null $media */
     $media = $this->entityTypeManager->getStorage('media')->load($id);
+    if ($media === NULL) {
+      throw new AccessDeniedHttpException('Media not found.');
+    }
+
     /** @var \Drupal\user\UserInterface|null $user */
     $user = $this->entityTypeManager->getStorage('user')->load($jwt_payload['uid']);
-    if ($media === NULL || $user === NULL) {
-      return static::permissionDenied();
+    if ($user === NULL) {
+      throw new AccessDeniedHttpException('User not found.');
     }
 
     $this->accountSwitcher->switchTo($user);
@@ -333,27 +321,35 @@ class WopiController implements ContainerInjectionInterface {
    *   Media id expected to be in the token payload.
    *   This could be a stringified integer like '123'.
    *
-   * @return array|null
-   *   Data decoded from the token, or NULL on failure or if the token has
-   *   expired.
+   * @return array
+   *   Data decoded from the token.
+   *
+   * @throws \Symfony\Component\HttpKernel\Exception\AccessDeniedHttpException
+   *   The token is malformed, invalid or has expired.
    */
   protected function verifyTokenForMediaId(
     #[\SensitiveParameter]
     string $token,
     int|string $expected_media_id,
-  ): array|null {
+  ): array {
     try {
       $values = $this->jwtTranscoder->decode($token);
     }
     catch (CollaboraNotAvailableException $e) {
       $this->logger->warning('A token cannot be decoded: @message', ['@mesage' => $e->getMessage()]);
-      return NULL;
+      throw new AccessDeniedHttpException('Malformed token');
     }
     if ($values === NULL) {
-      return NULL;
+      throw new AccessDeniedHttpException('Empty token values');
     }
-    if ($values['fid'] !== $expected_media_id) {
-      return NULL;
+    if ((string) $values['fid'] !== (string) $expected_media_id) {
+      throw new AccessDeniedHttpException(sprintf(
+        // The token payload is not encrypted, just encoded.
+        // It is ok to reveal its values in the response for logging.
+        'Found fid %s in request path, but fid %s in token payload',
+        $expected_media_id,
+        $values['fid'],
+      ));
     }
     return $values;
   }

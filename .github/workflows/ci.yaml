@@ -61,6 +61,13 @@ jobs:
         run: |
           docker-compose exec -T web ./vendor/bin/phpcs -s
 
+      - name: Generate proof key
+        run: |
+          set -x
+          docker-compose exec -T collabora coolconfig generate-proof-key
+          # Collabora becomes unavailable after the above command.
+          docker-compose restart collabora
+
       - name: Drupal site install
         run: |
           docker-compose exec -T web ./vendor/bin/run drupal:site-install

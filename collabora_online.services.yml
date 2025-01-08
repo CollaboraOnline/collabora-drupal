@@ -12,3 +12,7 @@ services:
     class: Drupal\collabora_online\Jwt\JwtTranscoder
   Drupal\collabora_online\MediaHelperInterface:
     class: Drupal\collabora_online\MediaHelper
+  Drupal\collabora_online\EventSubscriber\ExceptionWopiSubscriber: { }
+  Drupal\collabora_online\Access\WopiProofAccessCheck:
+    tags:
+      - { name: access_check, applies_to: _collabora_online_wopi_access }

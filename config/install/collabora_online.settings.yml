@@ -10,5 +10,6 @@ cool:
   access_token_ttl: 86400
   # Disable cert checks.
   disable_cert_check: false
+  wopi_proof: true
   # Allow fullscreen - Enabled by default for functionality.
   allowfullscreen: true

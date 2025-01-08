@@ -86,6 +86,12 @@ class ConfigForm extends ConfigFormBase {
       '#default_value' => $cool_settings['disable_cert_check'] ?? FALSE,
     ];
 
+    $form['wopi_proof'] = [
+      '#type' => 'checkbox',
+      '#title' => $this->t('Verify proof header and timestamp in incoming WOPI requests.'),
+      '#default_value' => $cool_settings['wopi_proof'] ?? TRUE,
+    ];
+
     $form['allowfullscreen'] = [
       '#type' => 'checkbox',
       '#title' => $this->t('Allow COOL to use fullscreen mode.'),
@@ -116,6 +122,7 @@ class ConfigForm extends ConfigFormBase {
       ->set('cool.key_id', $form_state->getValue('key_id'))
       ->set('cool.access_token_ttl', $form_state->getValue('access_token_ttl'))
       ->set('cool.disable_cert_check', $form_state->getValue('disable_cert_check'))
+      ->set('cool.wopi_proof', $form_state->getValue('wopi_proof'))
       ->set('cool.allowfullscreen', $form_state->getValue('allowfullscreen'))
       ->save();
 

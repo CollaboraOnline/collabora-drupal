@@ -1,0 +1,14 @@
+<!-- Reduced discovery.xml with different urls per mime type. -->
+<wopi-discovery>
+  <net-zone name="external-http">
+    <app name="text/spreadsheet">
+      <action default="true" ext="" name="edit" urlsrc="http://spreadsheet.collabora.test:9980/browser/61cf2b4/cool.html?"/>
+    </app>
+    <app name="text/csv">
+      <action default="true" ext="" name="edit" urlsrc="http://csv.collabora.test:9980/browser/61cf2b4/cool.html?"/>
+    </app>
+    <app name="text/plain">
+      <action default="true" ext="" name="edit" urlsrc="http://collabora.test:9980/browser/61cf2b4/cool.html?"/>
+    </app>
+  </net-zone>
+</wopi-discovery>
