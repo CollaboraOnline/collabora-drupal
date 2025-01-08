@@ -209,16 +209,13 @@ class WopiController implements ContainerInjectionInterface {
   protected function buildSaveReason(Request $request): string {
     $save_reason = 'Saved by Collabora Online';
     $reasons = [];
-    $modified_by_user = $request->headers->get('x-cool-wopi-ismodifiedbyuser') == 'true';
-    $autosave = $request->headers->get('x-cool-wopi-isautosave') == 'true';
-    $exitsave = $request->headers->get('x-cool-wopi-isexitsave') == 'true';
-    if ($modified_by_user) {
+    if ($request->headers->get('x-cool-wopi-ismodifiedbyuser') == 'true') {
       $reasons[] = 'Modified by user';
     }
-    if ($autosave) {
+    if ($request->headers->get('x-cool-wopi-isautosave') == 'true') {
       $reasons[] = 'Autosaved';
     }
-    if ($exitsave) {
+    if ($request->headers->get('x-cool-wopi-isexitsave') == 'true') {
       $reasons[] = 'Save on Exit';
     }
     if (count($reasons) > 0) {
