@@ -95,6 +95,7 @@ class WopiControllerTest extends WopiControllerTestBase {
       // Assert that a new file was created.
       $new_file = $this->loadCurrentMediaFile();
       $this->assertGreaterThan((int) $file->id(), (int) $new_file->id());
+      $this->assertNotEquals($file->getFileUri(), $new_file->getFileUri());
       $file = $new_file;
     };
 
