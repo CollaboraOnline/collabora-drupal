@@ -127,14 +127,16 @@ class WopiControllerTest extends WopiControllerTestBase {
   ): void {
     // The request time is always the same.
     $file_changed_time = \DateTimeImmutable::createFromFormat('U', (string) $this->file->getChangedTime());
-    $expected_response_data = [
-      'LastModifiedTime' => $file_changed_time->format('c'),
-    ];
     $old_file = $this->loadCurrentMediaFile();
     $this->logger->reset();
     $request = $this->createRequest('/contents', 'POST', write: TRUE);
     $request->headers->add($request_headers);
-    $this->assertJsonResponseOk($expected_response_data, $request);
+    $this->assertJsonResponseOk(
+      [
+        'LastModifiedTime' => $file_changed_time->format('c'),
+      ],
+      $request,
+    );
     $this->assertTrue($this->logger->hasRecord('Save reason: ' . $reason_message));
     // Assert that a new file was created.
     $new_file = $this->loadCurrentMediaFile();
