@@ -147,22 +147,8 @@ class WopiController implements ContainerInjectionInterface {
       return $conflict_response;
     }
 
-    $dir = $this->fileSystem->dirname($file->getFileUri());
-    $dest = $dir . '/' . $file->getFilename();
-
     $new_file_content = $request->getContent();
-    $owner_id = $file->getOwnerId();
-    $new_file_uri = $this->fileSystem->saveData($new_file_content, $dest, FileExists::Rename);
-
-    /** @var \Drupal\file\FileInterface|null $new_file */
-    $new_file = $this->entityTypeManager->getStorage('file')->create(['uri' => $new_file_uri]);
-    $new_file->setOwnerId($owner_id);
-    if (is_file($dest)) {
-      $new_file->setFilename($this->fileSystem->basename($dest));
-    }
-    $new_file->setPermanent();
-    $new_file->setSize(strlen($new_file_content));
-    $new_file->save();
+    $new_file = $this->createNewFileEntity($file, $new_file_content);
     $mtime = date_create_immutable_from_format('U', $new_file->getChangedTime());
 
     $this->mediaHelper->setMediaSource($media, $new_file);
@@ -181,6 +167,38 @@ class WopiController implements ContainerInjectionInterface {
       Response::HTTP_OK,
       ['content-type' => 'application/json'],
     );
+  }
+
+  /**
+   * Creates a new file entity with given file content.
+   *
+   * @param \Drupal\file\FileInterface $file
+   *   Old file entity.
+   * @param string $new_file_content
+   *   New file content to save.
+   *
+   * @return \Drupal\file\FileInterface
+   *   New file entity.
+   *   This may have a different uri, but will have the same filename.
+   */
+  protected function createNewFileEntity(FileInterface $file, string $new_file_content): FileInterface {
+    $dir = $this->fileSystem->dirname($file->getFileUri());
+    $dest = $dir . '/' . $file->getFilename();
+
+    $owner_id = $file->getOwnerId();
+    $new_file_uri = $this->fileSystem->saveData($new_file_content, $dest, FileExists::Rename);
+
+    /** @var \Drupal\file\FileInterface|null $new_file */
+    $new_file = $this->entityTypeManager->getStorage('file')->create(['uri' => $new_file_uri]);
+    $new_file->setOwnerId($owner_id);
+    if (is_file($dest)) {
+      $new_file->setFilename($this->fileSystem->basename($dest));
+    }
+    $new_file->setPermanent();
+    $new_file->setSize(strlen($new_file_content));
+    $new_file->save();
+
+    return $new_file;
   }
 
   /**
