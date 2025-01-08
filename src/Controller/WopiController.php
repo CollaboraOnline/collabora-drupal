@@ -81,7 +81,7 @@ class WopiController implements ContainerInjectionInterface {
       throw new AccessDeniedHttpException('The user does not have collabora edit access for this media.');
     }
 
-    $payload = [
+    $response_data = [
       'BaseFileName' => $file->getFilename(),
       'Size' => $file->getSize(),
       'LastModifiedTime' => $mtime->format('c'),
@@ -94,10 +94,10 @@ class WopiController implements ContainerInjectionInterface {
 
     $user_picture = $user->user_picture?->entity;
     if ($user_picture) {
-      $payload['UserExtraInfo']['avatar'] = $this->fileUrlGenerator->generateAbsoluteString($user_picture->getFileUri());
+      $response_data['UserExtraInfo']['avatar'] = $this->fileUrlGenerator->generateAbsoluteString($user_picture->getFileUri());
     }
 
-    $jsonPayload = json_encode($payload);
+    $jsonPayload = json_encode($response_data);
 
     $response = new Response(
       $jsonPayload,
