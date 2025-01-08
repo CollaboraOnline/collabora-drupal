@@ -182,6 +182,9 @@ class WopiController implements ContainerInjectionInterface {
    *   This may have a different uri, but will have the same filename.
    */
   protected function createNewFileEntity(FileInterface $file, string $new_file_content): FileInterface {
+    // The current file uri may have a number suffix like "_0".
+    // For the new file uri, start with the clean file name, to avoid repeated
+    // suffixes like "_0_0_0".
     $dir = $this->fileSystem->dirname($file->getFileUri());
     $dest = $dir . '/' . $file->getFilename();
 
@@ -190,9 +193,8 @@ class WopiController implements ContainerInjectionInterface {
     /** @var \Drupal\file\FileInterface|null $new_file */
     $new_file = $this->entityTypeManager->getStorage('file')->create(['uri' => $new_file_uri]);
     $new_file->setOwnerId($file->getOwnerId());
-    if (is_file($dest)) {
-      $new_file->setFilename($this->fileSystem->basename($dest));
-    }
+    // Preserve the original file name, no matter the uri was renamed.
+    $new_file->setFilename($file->getFilename());
     $new_file->setPermanent();
     $new_file->setSize(strlen($new_file_content));
     $new_file->save();
