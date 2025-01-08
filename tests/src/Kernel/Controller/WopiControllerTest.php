@@ -14,6 +14,7 @@ declare(strict_types=1);
 
 namespace Drupal\Tests\collabora_online\Kernel\Controller;
 
+use Drupal\Core\Logger\RfcLogLevel;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 
@@ -123,6 +124,7 @@ class WopiControllerTest extends WopiControllerTestBase {
   public function testWopiPutFileConflict(): void {
     $request = $this->createRequest('/contents', 'POST', write: TRUE);
 
+    $file_changed_time = \DateTimeImmutable::createFromFormat('U', (string) ($this->file->getChangedTime()));
     // Set a time in the future to force the error.
     $wopi_changed_time = \DateTimeImmutable::createFromFormat('U', (string) ($this->file->getChangedTime() + 1000));
     $request->headers->set('x-cool-wopi-timestamp', $wopi_changed_time->format(\DateTimeInterface::ATOM));
@@ -133,6 +135,20 @@ class WopiControllerTest extends WopiControllerTestBase {
         'COOLStatusCode' => 1010,
       ],
       $request,
+    );
+    $log_record = end($this->logger->recordsByLevel[RfcLogLevel::ERROR]);
+    $this->assertIsArray($log_record);
+    $this->assertSame(
+      'Conflict saving file for media @media_id: WOPI time @wopi_time differs from file time @file_time.',
+      $log_record['message'],
+    );
+    $this->assertPartialArray(
+      [
+        '@media_id' => $this->media->id(),
+        '@wopi_time' => $wopi_changed_time->format('c'),
+        '@file_time' => $file_changed_time->format('c'),
+      ],
+      $log_record['context'],
     );
   }
 
@@ -210,6 +226,23 @@ class WopiControllerTest extends WopiControllerTestBase {
         $name,
       );
     }
+  }
+
+  /**
+   * Asserts that an array contains a given sub-array.
+   *
+   * @param array $expected
+   *   Expected part of the array.
+   * @param mixed $actual
+   *   Actual value.
+   *   This is expected to be an array.
+   */
+  protected function assertPartialArray(array $expected, mixed $actual): void {
+    $this->assertIsArray($actual);
+    $this->assertSame(
+      $expected,
+      array_intersect_key($actual, $expected),
+    );
   }
 
 }
