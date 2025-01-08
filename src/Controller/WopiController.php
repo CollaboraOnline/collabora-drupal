@@ -161,11 +161,13 @@ class WopiController implements ContainerInjectionInterface {
       if ($wopi_stamp != $file_stamp) {
         $this->logger->error('Conflict saving file ' . $media->id() . ' wopi: ' . $wopi_stamp->format('c') . ' differs from file: ' . $file_stamp->format('c'));
 
-        return new JsonResponse(
+        $response = new JsonResponse(
           ['COOLStatusCode' => 1010],
           Response::HTTP_CONFLICT,
           ['content-type' => 'application/json'],
         );
+        $this->accountSwitcher->switchBack();
+        return $response;
       }
     }
 
