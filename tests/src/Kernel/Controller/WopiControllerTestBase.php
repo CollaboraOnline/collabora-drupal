@@ -213,10 +213,13 @@ abstract class WopiControllerTestBase extends CollaboraKernelTestBase {
    */
   protected function assertJsonResponse(int $expected_code, array $expected_data, Request $request, string $message = ''): void {
     $response = $this->handleRequest($request);
-    $this->assertEquals($expected_code, $response->getStatusCode(), $message);
-    $this->assertEquals('application/json', $response->headers->get('Content-Type'), $message);
     $content = $response->getContent();
+    $this->assertIsString($content);
+    $extended_message = $message . "\n" . substr($content, 0, 3000);
+    $this->assertEquals($expected_code, $response->getStatusCode(), $extended_message);
+    $this->assertEquals('application/json', $response->headers->get('Content-Type'), $extended_message);
     $data = Json::decode($content);
+    $this->assertNotNull($data, $extended_message);
     $this->assertSame($expected_data, $data, $message);
   }
 
