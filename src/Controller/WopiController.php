@@ -61,20 +61,13 @@ class WopiController implements ContainerInjectionInterface {
    *
    * @param \Drupal\media\MediaInterface $media
    *   Media entity.
-   * @param \Symfony\Component\HttpFoundation\Request $request
-   *   Request object with query parameters.
+   * @param array $jwt_payload
+   *   Data from the JWT token.
    *
    * @return \Symfony\Component\HttpFoundation\Response
    *   The response with file contents.
    */
-  public function wopiCheckFileInfo(MediaInterface $media, Request $request): Response {
-    $token = $request->query->get('access_token');
-    if ($token === NULL) {
-      throw new AccessDeniedHttpException('Missing access token.');
-    }
-
-    $jwt_payload = $this->verifyTokenForMedia($token, $media);
-
+  public function wopiCheckFileInfo(MediaInterface $media, array $jwt_payload): Response {
     $file = $this->mediaHelper->getFileForMedia($media);
     if ($file === NULL) {
       throw new AccessDeniedHttpException('No file attached to media.');
@@ -125,20 +118,13 @@ class WopiController implements ContainerInjectionInterface {
    *
    * @param \Drupal\media\MediaInterface $media
    *   Media entity.
-   * @param \Symfony\Component\HttpFoundation\Request $request
-   *   Request object with query parameters.
+   * @param array $jwt_payload
+   *   Data from the JWT token.
    *
    * @return \Symfony\Component\HttpFoundation\Response
    *   The response with file contents.
    */
-  public function wopiGetFile(MediaInterface $media, Request $request): Response {
-    $token = $request->query->get('access_token');
-    if ($token === NULL) {
-      throw new AccessDeniedHttpException('Missing access token.');
-    }
-
-    $jwt_payload = $this->verifyTokenForMedia($token, $media);
-
+  public function wopiGetFile(MediaInterface $media, array $jwt_payload): Response {
     /** @var \Drupal\user\UserInterface|null $user */
     $user = $this->entityTypeManager->getStorage('user')->load($jwt_payload['uid']);
     $this->accountSwitcher->switchTo($user);
@@ -165,21 +151,18 @@ class WopiController implements ContainerInjectionInterface {
    *   Media entity.
    * @param \Symfony\Component\HttpFoundation\Request $request
    *   Request object with headers, query parameters and payload.
+   * @param array $jwt_payload
+   *   Data from the JWT token.
    *
    * @return \Symfony\Component\HttpFoundation\Response
    *   The response.
    */
-  public function wopiPutFile(MediaInterface $media, Request $request): Response {
-    $token = $request->get('access_token');
-    if ($token === NULL) {
-      throw new AccessDeniedHttpException('Missing access token.');
-    }
+  public function wopiPutFile(MediaInterface $media, Request $request, array $jwt_payload): Response {
     $timestamp = $request->headers->get('x-cool-wopi-timestamp');
     $modified_by_user = $request->headers->get('x-cool-wopi-ismodifiedbyuser') == 'true';
     $autosave = $request->headers->get('x-cool-wopi-isautosave') == 'true';
     $exitsave = $request->headers->get('x-cool-wopi-isexitsave') == 'true';
 
-    $jwt_payload = $this->verifyTokenForMedia($token, $media);
     if (empty($jwt_payload['wri'])) {
       throw new AccessDeniedHttpException('The token only grants read access.');
     }
@@ -277,15 +260,21 @@ class WopiController implements ContainerInjectionInterface {
    *   Response to be consumed by Collabora Online.
    */
   public function wopi(string $action, MediaInterface $media, Request $request): Response {
+    $token = $request->get('access_token');
+    if ($token === NULL) {
+      throw new AccessDeniedHttpException('Missing access token.');
+    }
+    $jwt_payload = $this->verifyTokenForMedia($token, $media);
+
     switch ($action) {
       case 'info':
-        return $this->wopiCheckFileInfo($media, $request);
+        return $this->wopiCheckFileInfo($media, $jwt_payload);
 
       case 'content':
-        return $this->wopiGetFile($media, $request);
+        return $this->wopiGetFile($media, $jwt_payload);
 
       case 'save':
-        return $this->wopiPutFile($media, $request);
+        return $this->wopiPutFile($media, $request, $jwt_payload);
     }
 
     $response = new Response(
