@@ -98,12 +98,11 @@ class WopiController implements ContainerInjectionInterface {
       $response_data['UserExtraInfo']['avatar'] = $this->fileUrlGenerator->generateAbsoluteString($user_picture->getFileUri());
     }
 
-    $response = new JsonResponse(
+    return new JsonResponse(
       $response_data,
       Response::HTTP_OK,
       ['content-type' => 'application/json'],
     );
-    return $response;
   }
 
   /**
@@ -285,12 +284,11 @@ class WopiController implements ContainerInjectionInterface {
         return $this->wopiPutFile($media, $file, $user, $can_write, $request);
     }
 
-    $response = new Response(
+    return new Response(
       'Invalid WOPI action ' . $action,
       Response::HTTP_BAD_REQUEST,
       ['content-type' => 'text/plain'],
     );
-    return $response;
   }
 
   /**
