@@ -241,6 +241,30 @@ abstract class WopiControllerTestBase extends CollaboraKernelTestBase {
   }
 
   /**
+   * Asserts a failure response given a request.
+   *
+   * @param string $expected_response_message
+   *   Message expected to be in the response.
+   * @param \Symfony\Component\HttpFoundation\Request $request
+   *   The request to perform.
+   * @param string $assertion_message
+   *   Message to distinguish this from other assertions.
+   */
+  protected function assertNotFoundResponse(
+    string $expected_response_message,
+    Request $request,
+    string $assertion_message = '',
+  ): void {
+    $this->assertResponse(
+      Response::HTTP_NOT_FOUND,
+      $expected_response_message,
+      'text/plain',
+      $request,
+      $assertion_message,
+    );
+  }
+
+  /**
    * Asserts status code and content in a response given a request.
    *
    * @param int $expected_code

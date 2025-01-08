@@ -31,6 +31,7 @@ use Symfony\Component\HttpFoundation\BinaryFileResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpKernel\Exception\AccessDeniedHttpException;
+use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 
 /**
  * Provides WOPI route responses for the Collabora module.
@@ -77,7 +78,7 @@ class WopiController implements ContainerInjectionInterface {
     /** @var \Drupal\media\MediaInterface|null $media */
     $media = $this->entityTypeManager->getStorage('media')->load($id);
     if ($media === NULL) {
-      throw new AccessDeniedHttpException('Media not found.');
+      throw new NotFoundHttpException('Media not found.');
     }
 
     $file = $this->mediaHelper->getFileForMedia($media);
@@ -148,7 +149,7 @@ class WopiController implements ContainerInjectionInterface {
     /** @var \Drupal\media\MediaInterface|null $media */
     $media = $this->entityTypeManager->getStorage('media')->load($id);
     if ($media === NULL) {
-      throw new AccessDeniedHttpException('Media not found.');
+      throw new NotFoundHttpException('Media not found.');
     }
 
     $file = $this->mediaHelper->getFileForMedia($media);
@@ -192,7 +193,7 @@ class WopiController implements ContainerInjectionInterface {
     /** @var \Drupal\media\MediaInterface|null $media */
     $media = $this->entityTypeManager->getStorage('media')->load($id);
     if ($media === NULL) {
-      throw new AccessDeniedHttpException('Media not found.');
+      throw new NotFoundHttpException('Media not found.');
     }
 
     /** @var \Drupal\user\UserInterface|null $user */

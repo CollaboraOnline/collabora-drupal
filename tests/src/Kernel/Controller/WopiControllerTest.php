@@ -185,7 +185,7 @@ class WopiControllerTest extends WopiControllerTestBase {
   public function testMediaNotFound(): void {
     $requests = $this->createRequests(media_id: 555);
     foreach ($requests as $name => $request) {
-      $this->assertAccessDeniedResponse(
+      $this->assertNotFoundResponse(
         'Media not found.',
         $request,
         $name,
