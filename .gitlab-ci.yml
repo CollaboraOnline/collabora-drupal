@@ -23,6 +23,11 @@ phpunit:
           --o:storage.wopi.alias_groups.group[0].host[@allow]=true
           --o:storage.wopi.alias_groups.group[0].alias[0]=http://localhost
 
+variables:
+  DTT_BASE_URL: $SIMPLETEST_BASE_URL
+  DTT_MINK_DRIVER_ARGS: $MINK_DRIVER_ARGS_WEBDRIVER
+  _SHOW_ENVIRONMENT_VARIABLES: '1'
+
 composer:
   variables:
     DRUPAL_CORE: $CORE_PREVIOUS_STABLE
