@@ -15,6 +15,7 @@ namespace Drupal\collabora_online\Controller;
 use Drupal\collabora_online\Exception\CollaboraNotAvailableException;
 use Drupal\collabora_online\Jwt\JwtTranscoderInterface;
 use Drupal\collabora_online\MediaHelperInterface;
+use Drupal\collabora_online\Util\DateTimeHelper;
 use Drupal\Component\Datetime\TimeInterface;
 use Drupal\Core\DependencyInjection\AutowireTrait;
 use Drupal\Core\DependencyInjection\ContainerInjectionInterface;
@@ -73,8 +74,6 @@ class WopiController implements ContainerInjectionInterface {
    *   The response with file contents.
    */
   public function wopiCheckFileInfo(MediaInterface $media, FileInterface $file, UserInterface $user, bool $can_write): Response {
-    $mtime = date_create_immutable_from_format('U', $file->getChangedTime());
-
     if ($can_write && !$media->access('edit in collabora', $user)) {
       $this->logger->error('Token and user permissions do not match.');
       throw new AccessDeniedHttpException('The user does not have collabora edit access for this media.');
@@ -83,7 +82,7 @@ class WopiController implements ContainerInjectionInterface {
     $response_data = [
       'BaseFileName' => $file->getFilename(),
       'Size' => $file->getSize(),
-      'LastModifiedTime' => $mtime->format('c'),
+      'LastModifiedTime' => DateTimeHelper::format($file->getChangedTime()),
       'UserId' => $user->id(),
       'UserFriendlyName' => $user->getDisplayName(),
       'UserCanWrite' => $can_write,
@@ -149,7 +148,6 @@ class WopiController implements ContainerInjectionInterface {
 
     $new_file_content = $request->getContent();
     $new_file = $this->createNewFileEntity($file, $new_file_content);
-    $mtime = date_create_immutable_from_format('U', $new_file->getChangedTime());
 
     $save_reason = $this->buildSaveReason($request);
 
@@ -163,7 +161,7 @@ class WopiController implements ContainerInjectionInterface {
 
     return new JsonResponse(
       [
-        'LastModifiedTime' => $mtime->format('c'),
+        'LastModifiedTime' => DateTimeHelper::format($new_file->getChangedTime()),
       ],
       Response::HTTP_OK,
       ['content-type' => 'application/json'],
