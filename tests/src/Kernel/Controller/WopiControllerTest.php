@@ -157,6 +157,8 @@ class WopiControllerTest extends WopiControllerTestBase {
     $this->assertSame('public://test_' . $i . '.txt', $new_file->getFileUri());
     // The file name is preserved.
     $this->assertSame('test.txt', $new_file->getFilename());
+    // The file owner is preserved.
+    $this->assertSame($this->fileOwner->id(), $new_file->getOwnerId());
     $actual_file_content = file_get_contents($new_file->getFileUri());
     $this->assertSame($new_file_content, $actual_file_content);
   }

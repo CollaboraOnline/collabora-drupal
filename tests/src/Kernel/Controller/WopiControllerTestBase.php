@@ -36,6 +36,13 @@ abstract class WopiControllerTestBase extends CollaboraKernelTestBase {
   protected UserInterface $user;
 
   /**
+   * The user with access to perform operations.
+   *
+   * @var \Drupal\user\UserInterface
+   */
+  protected UserInterface $fileOwner;
+
+  /**
    * The media where to perform operations.
    *
    * @var \Drupal\media\MediaInterface
@@ -74,11 +81,18 @@ abstract class WopiControllerTestBase extends CollaboraKernelTestBase {
     \Drupal::database()->query("ALTER TABLE {media} AUTO_INCREMENT = 1000");
     \Drupal::database()->query("ALTER TABLE {file_managed} AUTO_INCREMENT = 2000");
 
-    $this->media = $this->createMediaEntity('document');
     $this->user = $this->createUser([
       'access content',
       'edit any document in collabora',
     ]);
+    // Create a separate user as file owner, to verify that the file owner id is
+    // set correctly.
+    $this->fileOwner = $this->createUser([]);
+    $this->media = $this->createMediaEntity(
+      'document',
+      ['uid' => $this->user->id()],
+      ['uid' => $this->fileOwner->id()],
+    );
     $fid = $this->media->getSource()->getSourceFieldValue($this->media);
     $this->file = File::load($fid);
 
