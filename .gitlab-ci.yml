@@ -23,3 +23,5 @@ phpunit:
           --o:storage.wopi.alias_groups.group[0].host[@allow]=true
           --o:storage.wopi.alias_groups.group[0].alias[0]=http://localhost
 
+variables:
+  OPT_IN_TEST_PREVIOUS_MAJOR: '1'
