@@ -1,0 +1,25 @@
+include:
+  - project: $_GITLAB_TEMPLATES_REPO
+    ref: $_GITLAB_TEMPLATES_REF
+    file:
+      - '/includes/include.drupalci.main.yml'
+      - '/includes/include.drupalci.variables.yml'
+      - '/includes/include.drupalci.workflows.yml'
+
+phpunit:
+  extends: .phpunit-base
+  services:
+    - !reference [.with-database]
+    - !reference [.with-chrome]
+    - name: collabora/code
+      alias: 'collabora.test'
+      variables:
+        username: admin
+        password: admin
+        extra_params: |
+          --o:ssl.enable=false
+          --o:storage.wopi.alias_groups[@mode]=groups
+          --o:storage.wopi.alias_groups.group[0].host=http://web.test
+          --o:storage.wopi.alias_groups.group[0].host[@allow]=true
+          --o:storage.wopi.alias_groups.group[0].alias[0]=http://localhost
+
