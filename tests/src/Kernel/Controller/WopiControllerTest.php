@@ -155,6 +155,8 @@ class WopiControllerTest extends WopiControllerTestBase {
     // Each new file version gets a new number suffix.
     // There is no repeated suffix like "test_0_0_0_0.txt".
     $this->assertSame('public://test_' . $i . '.txt', $new_file->getFileUri());
+    // The file name is preserved.
+    $this->assertSame('test.txt', $new_file->getFilename());
     $actual_file_content = file_get_contents($new_file->getFileUri());
     $this->assertSame($new_file_content, $actual_file_content);
   }
