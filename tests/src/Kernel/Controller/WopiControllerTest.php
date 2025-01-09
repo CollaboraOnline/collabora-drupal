@@ -151,7 +151,10 @@ class WopiControllerTest extends WopiControllerTestBase {
     // Assert that a new file was created.
     $new_file = $this->loadCurrentMediaFile();
     $this->assertGreaterThan((int) $old_file->id(), (int) $new_file->id());
-    $this->assertNotEquals($old_file->getFileUri(), $new_file->getFileUri());
+    // The file uri is fully predictable in the context of this test.
+    // Each new file version gets a new number suffix.
+    // There is no repeated suffix like "test_0_0_0_0.txt".
+    $this->assertSame('public://test_' . $i . '.txt', $new_file->getFileUri());
     $actual_file_content = file_get_contents($new_file->getFileUri());
     $this->assertSame($new_file_content, $actual_file_content);
   }
