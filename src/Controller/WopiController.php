@@ -224,14 +224,14 @@ class WopiController implements ContainerInjectionInterface {
    *   Failure response, or NULL if no conflict.
    */
   protected function checkSaveTimestampConflict(Request $request, MediaInterface $media, FileInterface $file): ?Response {
-    $timestamp = $request->headers->get('x-cool-wopi-timestamp');
-    if (!$timestamp) {
+    $wopi_time_atom = $request->headers->get('x-cool-wopi-timestamp');
+    if (!$wopi_time_atom) {
       return NULL;
     }
-    $wopi_stamp = \DateTimeImmutable::createFromFormat(\DateTimeInterface::ATOM, $timestamp);
-    $file_stamp = \DateTimeImmutable::createFromFormat('U', $file->getChangedTime());
+    $wopi_datetime = \DateTimeImmutable::createFromFormat(\DateTimeInterface::ATOM, $wopi_time_atom);
+    $file_datetime = \DateTimeImmutable::createFromFormat('U', $file->getChangedTime());
 
-    if ($wopi_stamp == $file_stamp) {
+    if ($wopi_datetime == $file_datetime) {
       return NULL;
     }
 
@@ -239,8 +239,8 @@ class WopiController implements ContainerInjectionInterface {
       'Conflict saving file for media @media_id: WOPI time @wopi_time differs from file time @file_time.',
       [
         '@media_id' => $media->id(),
-        '@wopi_time' => $wopi_stamp->format('c'),
-        '@file_time' => $file_stamp->format('c'),
+        '@wopi_time' => $wopi_datetime->format('c'),
+        '@file_time' => $file_datetime->format('c'),
       ],
     );
 
