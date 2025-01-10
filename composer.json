@@ -19,6 +19,7 @@
     "require-dev": {
         "drupal/groupmedia": "^3 || ^4",
         "drush/drush": "^12.4",
+        "openeuropa/task-runner": "^2@alpha",
         "php-parallel-lint/php-parallel-lint": "^1.2",
         "weitzman/drupal-test-traits": "^2.4"
     },

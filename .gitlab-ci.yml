@@ -11,6 +11,7 @@ phpunit:
   services:
     - !reference [.with-database]
     - !reference [.with-chrome]
+    - !reference [.with-chrome-legacy]
     - name: collabora/code
       alias: 'collabora.test'
       variables:
@@ -22,6 +23,14 @@ phpunit:
           --o:storage.wopi.alias_groups.group[0].host=http://web.test
           --o:storage.wopi.alias_groups.group[0].host[@allow]=true
           --o:storage.wopi.alias_groups.group[0].alias[0]=http://localhost
+  before_script:
+    - !reference [.show-environment-variables]
+    - !reference [.setup-webserver]
+    - !reference [.simpletest-db]
+    - $CI_PROJECT_DIR/vendor/bin/run drupal:settings-setup --skip-permissions-setup
+    - $CI_PROJECT_DIR/vendor/bin/run drupal:site-install --database-scheme=mysql --database-name=mysql --database-host=database --database-user=drupaltestbot --database-password=drupaltestbotpw --database-port=
+    - drush -y config-set collabora_online.settings cool.wopi_base $DTT_BASE_URL
+    - rm /var/www/html/web # Remove symlink to allow .setup-webserver to be re-executed.
 
 variables:
   DTT_BASE_URL: $SIMPLETEST_BASE_URL
