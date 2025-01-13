@@ -79,7 +79,7 @@ class ViewerController implements ContainerInjectionInterface {
     }
 
     $current_request_scheme = $request->getScheme();
-    if (!str_starts_with($wopi_client_url, $current_request_scheme . '://')) {
+    if (parse_url($wopi_client_url, PHP_URL_SCHEME) !== $current_request_scheme) {
       $this->logger->error(
         "The current request uses '@current_request_scheme' url scheme, but the Collabora client url is '@wopi_client_url'.",
         [
