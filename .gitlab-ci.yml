@@ -28,7 +28,7 @@ phpunit:
     - !reference [.setup-webserver]
     - !reference [.simpletest-db]
     - $CI_PROJECT_DIR/vendor/bin/run drupal:settings-setup --skip-permissions-setup
-    - $CI_PROJECT_DIR/vendor/bin/run drupal:site-install --database-scheme=mysql --database-name=mysql --database-host=database --database-user=drupaltestbot --database-password=drupaltestbotpw --database-port=
+    - $CI_PROJECT_DIR/vendor/bin/run drupal:site-install --database-scheme=mysql --database-name=$MYSQL_DATABASE --database-host=database --database-user=$MYSQL_USER --database-password=$MYSQL_PASSWORD --database-port=
     - drush -y config-set collabora_online.settings cool.wopi_base $DTT_BASE_URL
     - rm /var/www/html/web # Remove symlink to allow .setup-webserver to be re-executed.
 
