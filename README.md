@@ -200,6 +200,8 @@ You also must set the viewer for this kind of media.
   _Collabora Online Preview_.
 - Click _Save_.
 
+__The module only supports _file_ fields with a cardinality of 1, allowing only one file per media.__
+
 ### User permissions
 
 The module introduces permissions, which can be managed at
