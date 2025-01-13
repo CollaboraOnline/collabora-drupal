@@ -107,6 +107,29 @@ class ViewerControllerTest extends WopiControllerTestBase {
   }
 
   /**
+   * Tests requests with missing configuration.
+   *
+   * @covers ::editor
+   */
+  public function testEditorMissingConfiguration(): void {
+    // Set empty configuration to force fail.
+    $config = \Drupal::configFactory()->getEditable('collabora_online.settings');
+    $config->set('cool', [])->save();
+
+    foreach ($this->createViewerRequests() as $name => $request) {
+      $this->assertBadRequestResponse(
+        'The Collabora Online editor/viewer is not available.',
+        $request,
+        [
+          'message' => "Collabora Online is not available.",
+          'level' => RfcLogLevel::WARNING,
+        ],
+        $name
+      );
+    }
+  }
+
+  /**
    * Tests requests with a viewer not available.
    *
    * @covers ::editor

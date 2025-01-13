@@ -120,9 +120,12 @@ class ViewerController implements ContainerInjectionInterface {
    */
   protected function getViewerRender(MediaInterface $media, string $wopi_client, bool $can_write): array {
     $cool_settings = $this->configFactory->get('collabora_online.settings')->get('cool');
-    $wopi_base = $cool_settings['wopi_base'];
-    $allowfullscreen = $cool_settings['allowfullscreen'] ?? FALSE;
 
+    if (empty($cool_settings['wopi_base'])) {
+      throw new CollaboraNotAvailableException('The Collabora Online connection is not configured.');
+    }
+
+    $wopi_base = $cool_settings['wopi_base'];
     $expire_timestamp = $this->getExpireTimestamp();
     $access_token = $this->jwtTranscoder->encode(
       [
@@ -140,7 +143,7 @@ class ViewerController implements ContainerInjectionInterface {
       '#accessToken' => $access_token,
       // Convert to milliseconds.
       '#accessTokenTtl' => $expire_timestamp * 1000,
-      '#allowfullscreen' => $allowfullscreen ? 'allowfullscreen' : '',
+      '#allowfullscreen' => empty($cool_settings['allowfullscreen']) ? '' : 'allowfullscreen',
       '#closebutton' => 'true',
       '#attached' => [
         'library' => [
