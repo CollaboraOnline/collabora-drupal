@@ -12,6 +12,7 @@ use Drupal\file\FileInterface;
 use Drupal\media\Entity\Media;
 use Drupal\media\MediaInterface;
 use Drupal\Tests\collabora_online\Kernel\CollaboraKernelTestBase;
+use Drupal\Tests\collabora_online\Traits\KernelTestLoggerTrait;
 use Drupal\user\UserInterface;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
@@ -20,6 +21,8 @@ use Symfony\Component\HttpFoundation\Response;
  * Base class with shared methods to test WOPI requests.
  */
 abstract class WopiControllerTestBase extends CollaboraKernelTestBase {
+
+  use KernelTestLoggerTrait;
 
   /**
    * {@inheritdoc}
@@ -68,8 +71,7 @@ abstract class WopiControllerTestBase extends CollaboraKernelTestBase {
    */
   protected function setUp(): void {
     parent::setUp();
-    $this->logger = new TestLogger();
-    \Drupal::service('logger.factory')->addLogger($this->logger);
+    $this->setUpLogger();
 
     $collabora_settings = \Drupal::configFactory()->getEditable('collabora_online.settings');
     $cool = $collabora_settings->get('cool');

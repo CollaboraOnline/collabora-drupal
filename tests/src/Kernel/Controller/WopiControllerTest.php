@@ -162,7 +162,7 @@ class WopiControllerTest extends WopiControllerTestBase {
     $this->assertSame($new_file_content, $actual_file_content);
     $this->assertSame($i + 17, $new_file->getSize());
     $this->assertTrue($new_file->isPermanent());
-    $this->assertOnlyLogMessage(
+    $this->assertLogMessage(
       RfcLogLevel::INFO,
       'Media entity @media_id was updated with Collabora.<br>
 Save reason: @reason<br>
@@ -210,7 +210,7 @@ New file: @new_file_id / @new_file_uri',
       ],
       $request,
     );
-    $this->assertOnlyLogMessage(
+    $this->assertLogMessage(
       RfcLogLevel::ERROR,
       'Conflict saving file for media @media_id: WOPI time @wopi_time differs from file time @file_time.',
       [
@@ -372,39 +372,6 @@ New file: @new_file_id / @new_file_uri',
         $name,
       );
     }
-  }
-
-  /**
-   * Asserts that the only log message is as expected.
-   *
-   * (Currently this is all we need.)
-   *
-   * @param int $level
-   *   Expected log level.
-   * @param string $message
-   *   Expected log message.
-   * @param array $replacements
-   *   Expected context parameters.
-   */
-  protected function assertOnlyLogMessage(
-    int $level,
-    string $message,
-    array $replacements = [],
-  ): void {
-    // Catch typos in the placeholder keys.
-    // This could go undetected, if the translatable string and the placeholders
-    // are copied from production code into the test code.
-    foreach (array_keys($replacements) as $placeholder) {
-      $this->assertStringContainsString($placeholder, $message);
-    }
-    $record = array_shift($this->logger->records);
-    $this->assertSame($message, $record['message']);
-    $this->assertSame($level, $record['level']);
-    $this->assertSame(
-      $replacements,
-      array_intersect_key($replacements, $record['context']),
-    );
-    $this->assertSame([], $this->logger->records, 'No further log records expected.');
   }
 
 }
