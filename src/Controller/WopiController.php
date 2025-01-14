@@ -371,7 +371,7 @@ New file: @new_file_id / @new_file_uri',
       $values = $this->jwtTranscoder->decode($token);
     }
     catch (CollaboraNotAvailableException $e) {
-      $this->logger->warning('A token cannot be decoded: @message', ['@mesage' => $e->getMessage()]);
+      $this->logger->warning('A token cannot be decoded: @message', ['@message' => $e->getMessage()]);
       throw new AccessDeniedHttpException('Malformed token');
     }
     if ($values === NULL) {
