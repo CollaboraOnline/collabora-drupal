@@ -20,9 +20,8 @@ phpunit:
         extra_params: |
           --o:ssl.enable=false
           --o:storage.wopi.alias_groups[@mode]=groups
-          --o:storage.wopi.alias_groups.group[0].host=http://web.test
+          --o:storage.wopi.alias_groups.group[0].host=$DTT_BASE_URL
           --o:storage.wopi.alias_groups.group[0].host[@allow]=true
-          --o:storage.wopi.alias_groups.group[0].alias[0]=http://localhost
       command:
         - sh
         - -c
