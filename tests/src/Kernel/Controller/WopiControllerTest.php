@@ -129,7 +129,7 @@ class WopiControllerTest extends WopiControllerTestBase {
     $i = $this->getCounterValue();
     // The request time is always the same.
     $file_changed_time = \DateTimeImmutable::createFromFormat('U', (string) $this->file->getChangedTime());
-    $new_file_content = "File content $i.";
+    $new_file_content = "File content $i " . str_repeat('m', $i + 1) . '.';
     $old_file = $this->loadCurrentMediaFile();
     $this->logger->reset();
     $request = $this->createRequest(
@@ -160,6 +160,7 @@ class WopiControllerTest extends WopiControllerTestBase {
     $this->assertSame($this->fileOwner->id(), $new_file->getOwnerId());
     $actual_file_content = file_get_contents($new_file->getFileUri());
     $this->assertSame($new_file_content, $actual_file_content);
+    $this->assertSame($i + 17, $new_file->getSize());
     $this->assertTrue($new_file->isPermanent());
     $this->assertOnlyLogMessage(
       RfcLogLevel::INFO,
