@@ -268,6 +268,60 @@ New file: @new_file_id / @new_file_uri',
   }
 
   /**
+   * Tests different routes using an invalid token.
+   *
+   * @covers ::wopiCheckFileInfo
+   * @covers ::wopiGetFile
+   * @covers ::wopiPutFile
+   */
+  public function testConfigJwtKeyNameEmpty(): void {
+    $requests = $this->createRequests();
+    $this->config('collabora_online.settings')->set('cool.key_id', '')->save();
+    foreach ($requests as $name => $request) {
+      $this->assertAccessDeniedResponse(
+        'Token verification is not possible right now.',
+        $request,
+        $name,
+      );
+      $this->assertLogMessage(
+        RfcLogLevel::WARNING,
+        'A token cannot be decoded: @message',
+        [
+          '@message' => 'No key was chosen for use in Collabora.',
+        ],
+        assertion_message: $name,
+      );
+    }
+  }
+
+  /**
+   * Tests different routes using an invalid token.
+   *
+   * @covers ::wopiCheckFileInfo
+   * @covers ::wopiGetFile
+   * @covers ::wopiPutFile
+   */
+  public function testConfigJwtKeyMissing(): void {
+    $requests = $this->createRequests();
+    $this->config('collabora_online.settings')->set('cool.key_id', '_unknown_key_')->save();
+    foreach ($requests as $name => $request) {
+      $this->assertAccessDeniedResponse(
+        'Token verification is not possible right now.',
+        $request,
+        $name,
+      );
+      $this->assertLogMessage(
+        RfcLogLevel::WARNING,
+        'A token cannot be decoded: @message',
+        [
+          '@message' => 'No key was chosen for use in Collabora.',
+        ],
+        assertion_message: $name,
+      );
+    }
+  }
+
+  /**
    * Tests different routes using the wrong token payload values.
    *
    * @covers ::wopiCheckFileInfo
