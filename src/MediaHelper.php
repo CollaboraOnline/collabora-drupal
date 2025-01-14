@@ -32,6 +32,10 @@ class MediaHelper implements MediaHelperInterface {
    */
   public function getFileForMedia(MediaInterface $media): ?FileInterface {
     $fid = $media->getSource()->getSourceFieldValue($media);
+    if ($fid === NULL) {
+      // The media entity does not have a file attached.
+      return NULL;
+    }
     /** @var \Drupal\file\FileInterface|null $file */
     $file = $this->entityTypeManager->getStorage('file')->load($fid);
 

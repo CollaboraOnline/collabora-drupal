@@ -298,6 +298,25 @@ New file: @new_file_id / @new_file_uri',
   }
 
   /**
+   * Tests different routes when the file entity is missing.
+   *
+   * @covers ::wopiCheckFileInfo
+   * @covers ::wopiGetFile
+   * @covers ::wopiPutFile
+   */
+  public function testMissingFileEntity(): void {
+    $this->file->delete();
+    $requests = $this->createRequests();
+    foreach ($requests as $name => $request) {
+      $this->assertAccessDeniedResponse(
+        'No file attached to media.',
+        $request,
+        $name,
+      );
+    }
+  }
+
+  /**
    * Tests different routes using a non-existing user id.
    *
    * @covers ::wopiCheckFileInfo

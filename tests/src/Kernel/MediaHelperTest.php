@@ -93,6 +93,11 @@ class MediaHelperTest extends CollaboraKernelTestBase {
       $other_file->id(),
       $helper->getFileForMedia(Media::load($media->id()))->id(),
     );
+
+    // Test media without a file attached.
+    $media->set('field_media_file', []);
+    $media->save();
+    $this->assertNull($helper->getFileForMedia($media));
   }
 
 }
