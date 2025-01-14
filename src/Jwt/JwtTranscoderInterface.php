@@ -33,7 +33,7 @@ interface JwtTranscoderInterface {
    *   Data decoded from the token, or NULL on failure or if the token has
    *   expired.
    *
-   * @throws \Drupal\collabora_online\Exception\CollaboraNotAvailableException
+   * @throws \Drupal\collabora_online\Exception\CollaboraJwtKeyException
    *   The key to use by Collabora is empty or not configured.
    */
   public function decode(string $token): array|null;
@@ -49,7 +49,7 @@ interface JwtTranscoderInterface {
    * @return string
    *   The access token.
    *
-   * @throws \Drupal\collabora_online\Exception\CollaboraNotAvailableException
+   * @throws \Drupal\collabora_online\Exception\CollaboraJwtKeyException
    *   The key to use by Collabora is empty or not configured.
    */
   public function encode(array $payload, int|float $expire_timestamp): string;

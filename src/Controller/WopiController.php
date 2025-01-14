@@ -12,7 +12,7 @@
 
 namespace Drupal\collabora_online\Controller;
 
-use Drupal\collabora_online\Exception\CollaboraNotAvailableException;
+use Drupal\collabora_online\Exception\CollaboraJwtKeyException;
 use Drupal\collabora_online\Jwt\JwtTranscoderInterface;
 use Drupal\collabora_online\MediaHelperInterface;
 use Drupal\collabora_online\Util\DateTimeHelper;
@@ -375,12 +375,12 @@ New file: @new_file_id / @new_file_uri',
     try {
       $values = $this->jwtTranscoder->decode($token);
     }
-    catch (CollaboraNotAvailableException $e) {
+    catch (CollaboraJwtKeyException $e) {
       $this->logger->warning('A token cannot be decoded: @message', ['@message' => $e->getMessage()]);
-      throw new AccessDeniedHttpException('Malformed token');
+      throw new AccessDeniedHttpException('Token verification is not possible right now.');
     }
     if ($values === NULL) {
-      throw new AccessDeniedHttpException('Empty token values');
+      throw new AccessDeniedHttpException('Bad token');
     }
     if ((string) $values['fid'] !== (string) $media->id()) {
       throw new AccessDeniedHttpException(sprintf(

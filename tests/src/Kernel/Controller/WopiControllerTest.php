@@ -254,7 +254,7 @@ New file: @new_file_id / @new_file_uri',
       // Replace the token with a value that is not in the JWT format.
       $request->query->set('access_token', 'bad_token');
       $this->assertAccessDeniedResponse(
-        'Empty token values',
+        'Bad token',
         $request,
         $name,
       );

@@ -20,5 +20,8 @@ namespace Drupal\collabora_online\Exception;
  * The reason could be:
  *   - The configuration for this module is empty or invalid.
  *   - The Collabora service is not responding, or is not behaving as expected.
+ *
+ * This generally points to a problem that will occur for all Collabora
+ * operations, independent of specific user input or specific content.
  */
 class CollaboraNotAvailableException extends \Exception {}

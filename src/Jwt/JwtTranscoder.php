@@ -14,7 +14,7 @@ declare(strict_types=1);
 
 namespace Drupal\collabora_online\Jwt;
 
-use Drupal\collabora_online\Exception\CollaboraNotAvailableException;
+use Drupal\collabora_online\Exception\CollaboraJwtKeyException;
 use Drupal\Core\Config\ConfigFactoryInterface;
 use Drupal\key\KeyRepositoryInterface;
 use Psr\Log\LoggerInterface;
@@ -36,23 +36,17 @@ class JwtTranscoder extends JwtTranscoderBase {
   }
 
   /**
-   * Obtains the signing key from the key storage.
-   *
-   * @return string
-   *   The key value.
-   *
-   * @throws \Drupal\collabora_online\Exception\CollaboraNotAvailableException
-   *   The key to use by Collabora is empty or not configured.
+   * {@inheritdoc}
    */
   protected function getKey(): string {
     $cool_settings = $this->configFactory->get('collabora_online.settings')->get('cool');
     $key_id = $cool_settings['key_id'] ?? '';
     if (!$key_id) {
-      throw new CollaboraNotAvailableException('No key was chosen for use in Collabora.');
+      throw new CollaboraJwtKeyException('No key was chosen for use in Collabora.');
     }
     $key = $this->keyRepository->getKey($key_id)?->getKeyValue();
     if (!$key) {
-      throw new CollaboraNotAvailableException(sprintf("The key with id '%s' is empty or does not exist.", $key_id));
+      throw new CollaboraJwtKeyException(sprintf("The key with id '%s' is empty or does not exist.", $key_id));
     }
     return $key;
   }
