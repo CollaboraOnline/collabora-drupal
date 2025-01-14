@@ -35,6 +35,7 @@ use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpKernel\Exception\AccessDeniedHttpException;
+use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 
 /**
  * Provides WOPI route responses for the Collabora module.
@@ -110,8 +111,13 @@ class WopiController implements ContainerInjectionInterface {
    *
    * @return \Symfony\Component\HttpFoundation\Response
    *   The response with file contents.
+   *
+   * @see \Drupal\system\FileDownloadController::download()
    */
   public function wopiGetFile(FileInterface $file): Response {
+    if (!is_file($file->getFileUri())) {
+      throw new NotFoundHttpException('The file is missing in the file system.');
+    }
     return new BinaryFileResponse(
       $file->getFileUri(),
       Response::HTTP_OK,

@@ -317,6 +317,44 @@ New file: @new_file_id / @new_file_uri',
   }
 
   /**
+   * Tests different routes when the file is missing in the filesystem.
+   *
+   * @covers ::wopiCheckFileInfo
+   * @covers ::wopiGetFile
+   * @covers ::wopiPutFile
+   */
+  public function testFileMissingInFilesystem(): void {
+    $uri = $this->file->getFileUri();
+    $this->assertFileExists($uri);
+    unlink($this->file->getFileUri());
+    $this->assertFileDoesNotExist($uri);
+    $requests = $this->createRequests();
+    foreach ($requests as $name => $request) {
+      if ($name === 'file') {
+        $this->assertNotFoundResponse(
+          'The file is missing in the file system.',
+          $request,
+          $name,
+        );
+      }
+      else {
+        // Currently, the info and save routes still work if the original file
+        // is missing in the file system.
+        $response = $this->handleRequest($request);
+        $this->assertSame(200, $response->getStatusCode(), $name);
+        if ($name === 'save') {
+          // The save reason is sufficient to identify the log message.
+          $this->assertLogMessage(
+            replacements: [
+              '@reason' => 'Saved by Collabora Online',
+            ],
+          );
+        }
+      }
+    }
+  }
+
+  /**
    * Tests different routes using a non-existing user id.
    *
    * @covers ::wopiCheckFileInfo
