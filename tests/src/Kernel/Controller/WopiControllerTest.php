@@ -145,10 +145,10 @@ class WopiControllerTest extends WopiControllerTestBase {
       ],
       $request,
     );
-    $this->assertTrue($this->logger->hasRecord(
-      'Save reason: ' . $reason_message,
+    $this->assertOnlyLogMessage(
       RfcLogLevel::INFO,
-    ));
+      'Save reason: ' . $reason_message,
+    );
     $media = Media::load($this->media->id());
     $this->assertSame($reason_message, $media->getRevisionLogMessage());
     // Assert that a new file was created.
@@ -197,19 +197,14 @@ class WopiControllerTest extends WopiControllerTestBase {
       ],
       $request,
     );
-    $log_record = end($this->logger->recordsByLevel[RfcLogLevel::ERROR]);
-    $this->assertIsArray($log_record);
-    $this->assertSame(
+    $this->assertOnlyLogMessage(
+      RfcLogLevel::ERROR,
       'Conflict saving file for media @media_id: WOPI time @wopi_time differs from file time @file_time.',
-      $log_record['message'],
-    );
-    $this->assertPartialArray(
       [
         '@media_id' => $this->media->id(),
         '@wopi_time' => $wopi_changed_time->format('c'),
         '@file_time' => $file_changed_time->format('c'),
       ],
-      $log_record['context'],
     );
   }
 
@@ -290,20 +285,36 @@ class WopiControllerTest extends WopiControllerTestBase {
   }
 
   /**
-   * Asserts that an array contains a given sub-array.
+   * Asserts that the only log message is as expected.
    *
-   * @param array $expected
-   *   Expected part of the array.
-   * @param mixed $actual
-   *   Actual value.
-   *   This is expected to be an array.
+   * (Currently this is all we need.)
+   *
+   * @param int $level
+   *   Expected log level.
+   * @param string $message
+   *   Expected log message.
+   * @param array $replacements
+   *   Expected context parameters.
    */
-  protected function assertPartialArray(array $expected, mixed $actual): void {
-    $this->assertIsArray($actual);
+  protected function assertOnlyLogMessage(
+    int $level,
+    string $message,
+    array $replacements = [],
+  ): void {
+    // Catch typos in the placeholder keys.
+    // This could go undetected, if the translatable string and the placeholders
+    // are copied from production code into the test code.
+    foreach (array_keys($replacements) as $placeholder) {
+      $this->assertStringContainsString($placeholder, $message);
+    }
+    $record = array_shift($this->logger->records);
+    $this->assertSame($message, $record['message']);
+    $this->assertSame($level, $record['level']);
     $this->assertSame(
-      $expected,
-      array_intersect_key($actual, $expected),
+      $replacements,
+      array_intersect_key($replacements, $record['context']),
     );
+    $this->assertSame([], $this->logger->records, 'No further log records expected.');
   }
 
 }
