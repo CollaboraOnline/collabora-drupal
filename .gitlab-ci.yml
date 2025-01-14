@@ -23,7 +23,15 @@ phpunit:
           --o:storage.wopi.alias_groups.group[0].host=http://web.test
           --o:storage.wopi.alias_groups.group[0].host[@allow]=true
           --o:storage.wopi.alias_groups.group[0].alias[0]=http://localhost
-      command: ["sh", "-c", "openssl genpkey -algorithm RSA -out /etc/coolwsd/proof_key -pkeyopt rsa_keygen_bits:2048 && openssl rsa -in /etc/coolwsd/proof_key -outform PEM -pubout -out /etc/coolwsd/proof_key.pub && /start-collabora-online.sh"]
+      command:
+        - sh
+        - -c
+        # Manually generate the proof key, replicating the behavior of "coolconfig generate-proof-key".
+        # The coolconfig command can produce inconsistent results, as the service occasionally interrupts execution.
+        - |
+          openssl genpkey -algorithm RSA -out /etc/coolwsd/proof_key -pkeyopt rsa_keygen_bits:2048 &&
+          openssl rsa -in /etc/coolwsd/proof_key -outform PEM -pubout -out /etc/coolwsd/proof_key.pub &&
+          /start-collabora-online.sh
   before_script:
     - !reference [.setup-webserver]
     - !reference [.simpletest-db]
