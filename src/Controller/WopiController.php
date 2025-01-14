@@ -157,7 +157,7 @@ class WopiController implements ContainerInjectionInterface {
     $media->setRevisionLogMessage($save_reason);
     $media->save();
 
-    $this->logger->error('Save reason: ' . $save_reason);
+    $this->logger->info('Save reason: ' . $save_reason);
 
     return new JsonResponse(
       [

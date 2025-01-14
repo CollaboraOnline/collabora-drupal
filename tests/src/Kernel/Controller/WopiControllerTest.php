@@ -145,7 +145,10 @@ class WopiControllerTest extends WopiControllerTestBase {
       ],
       $request,
     );
-    $this->assertTrue($this->logger->hasRecord('Save reason: ' . $reason_message));
+    $this->assertTrue($this->logger->hasRecord(
+      'Save reason: ' . $reason_message,
+      RfcLogLevel::INFO,
+    ));
     $media = Media::load($this->media->id());
     $this->assertSame($reason_message, $media->getRevisionLogMessage());
     // Assert that a new file was created.
