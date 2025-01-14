@@ -221,6 +221,26 @@ New file: @new_file_id / @new_file_uri',
   }
 
   /**
+   * Tests different routes without the token.
+   *
+   * @covers ::wopiCheckFileInfo
+   * @covers ::wopiGetFile
+   * @covers ::wopiPutFile
+   */
+  public function testMissingToken(): void {
+    $requests = $this->createRequests();
+    foreach ($requests as $name => $request) {
+      $request->request->remove('access_token');
+      $request->query->remove('access_token');
+      $this->assertAccessDeniedResponse(
+        'Missing access token.',
+        $request,
+        $name,
+      );
+    }
+  }
+
+  /**
    * Tests different routes using an invalid token.
    *
    * @covers ::wopiCheckFileInfo
