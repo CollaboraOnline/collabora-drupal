@@ -160,6 +160,7 @@ class WopiControllerTest extends WopiControllerTestBase {
     $this->assertSame($this->fileOwner->id(), $new_file->getOwnerId());
     $actual_file_content = file_get_contents($new_file->getFileUri());
     $this->assertSame($new_file_content, $actual_file_content);
+    $this->assertTrue($new_file->isPermanent());
     $this->assertOnlyLogMessage(
       RfcLogLevel::INFO,
       'Media entity @media_id was updated with Collabora.<br>
