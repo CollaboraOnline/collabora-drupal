@@ -220,7 +220,6 @@ New file: @new_file_id / @new_file_uri',
     // Preserve the original file name, no matter the uri was renamed.
     $new_file->setFilename($file->getFilename());
     $new_file->setPermanent();
-    $new_file->setSize(strlen($new_file_content));
     $new_file->save();
 
     return $new_file;
