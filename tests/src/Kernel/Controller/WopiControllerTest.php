@@ -145,10 +145,6 @@ class WopiControllerTest extends WopiControllerTestBase {
       ],
       $request,
     );
-    $this->assertOnlyLogMessage(
-      RfcLogLevel::INFO,
-      'Save reason: ' . $reason_message,
-    );
     $media = Media::load($this->media->id());
     $this->assertSame($reason_message, $media->getRevisionLogMessage());
     // Assert that a new file was created.
@@ -164,6 +160,21 @@ class WopiControllerTest extends WopiControllerTestBase {
     $this->assertSame($this->fileOwner->id(), $new_file->getOwnerId());
     $actual_file_content = file_get_contents($new_file->getFileUri());
     $this->assertSame($new_file_content, $actual_file_content);
+    $this->assertOnlyLogMessage(
+      RfcLogLevel::INFO,
+      'Media entity @media_id was updated with Collabora.<br>
+Save reason: @reason<br>
+Old file: @old_file_id / @old_file_uri<br>
+New file: @new_file_id / @new_file_uri',
+      [
+        '@media_id' => $this->media->id(),
+        '@reason' => $reason_message,
+        '@old_file_id' => $old_file->id(),
+        '@old_file_uri' => $old_file->getFileUri(),
+        '@new_file_id' => $new_file->id(),
+        '@new_file_uri' => $new_file->getFileUri(),
+      ],
+    );
   }
 
   /**

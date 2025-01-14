@@ -157,7 +157,20 @@ class WopiController implements ContainerInjectionInterface {
     $media->setRevisionLogMessage($save_reason);
     $media->save();
 
-    $this->logger->info('Save reason: ' . $save_reason);
+    $this->logger->info(
+      'Media entity @media_id was updated with Collabora.<br>
+Save reason: @reason<br>
+Old file: @old_file_id / @old_file_uri<br>
+New file: @new_file_id / @new_file_uri',
+      [
+        '@media_id' => $media->id(),
+        '@reason' => $save_reason,
+        '@old_file_id' => $file->id(),
+        '@old_file_uri' => $file->getFileUri(),
+        '@new_file_id' => $new_file->id(),
+        '@new_file_uri' => $new_file->getFileUri(),
+      ],
+    );
 
     return new JsonResponse(
       [
