@@ -470,6 +470,34 @@ New file: @new_file_id / @new_file_uri',
   }
 
   /**
+   * Tests routes with 'wri' in the token but the user has no write permission.
+   *
+   * @covers ::wopiCheckFileInfo
+   * @covers ::wopiGetFile
+   * @covers ::wopiPutFile
+   */
+  public function testNoWritePermission(): void {
+    $this->user = $this->createUser(['access content']);
+    $this->setCurrentUser($this->user);
+    $requests = [
+      'info' => $this->createRequest(write: TRUE),
+      'save' => $this->createRequest(
+        '/contents',
+        'POST',
+        write: TRUE,
+        content: 'xyz',
+      ),
+    ];
+    foreach ($requests as $name => $request) {
+      $this->assertAccessDeniedResponse(
+        'The user does not have collabora edit access for this media.',
+        $request,
+        $name,
+      );
+    }
+  }
+
+  /**
    * {@inheritdoc}
    */
   protected function tearDown(): void {
