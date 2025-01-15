@@ -74,7 +74,7 @@ class WopiController implements ContainerInjectionInterface {
    * @return \Symfony\Component\HttpFoundation\Response
    *   The response with file contents.
    */
-  public function wopiCheckFileInfo(MediaInterface $media, FileInterface $file, UserInterface $user, bool $can_write): Response {
+  protected function wopiCheckFileInfo(MediaInterface $media, FileInterface $file, UserInterface $user, bool $can_write): Response {
     if ($can_write && !$media->access('edit in collabora', $user)) {
       $this->logger->error('Token and user permissions do not match.');
       throw new AccessDeniedHttpException('The user does not have collabora edit access for this media.');
@@ -114,7 +114,7 @@ class WopiController implements ContainerInjectionInterface {
    *
    * @see \Drupal\system\FileDownloadController::download()
    */
-  public function wopiGetFile(FileInterface $file): Response {
+  protected function wopiGetFile(FileInterface $file): Response {
     if (!is_file($file->getFileUri())) {
       throw new NotFoundHttpException('The file is missing in the file system.');
     }
@@ -142,7 +142,7 @@ class WopiController implements ContainerInjectionInterface {
    * @return \Symfony\Component\HttpFoundation\Response
    *   The response.
    */
-  public function wopiPutFile(MediaInterface $media, FileInterface $file, UserInterface $user, bool $can_write, Request $request): Response {
+  protected function wopiPutFile(MediaInterface $media, FileInterface $file, UserInterface $user, bool $can_write, Request $request): Response {
     if (!$can_write) {
       throw new AccessDeniedHttpException('The token only grants read access.');
     }
