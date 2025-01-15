@@ -213,6 +213,19 @@ New file: @new_file_id / @new_file_uri',
   }
 
   /**
+   * Tests the 'collabora-online.wopi.save' route without write access.
+   *
+   * @covers ::wopiPutFile
+   */
+  public function testWopiPutFileReadOnly(): void {
+    $request = $this->createRequest('/contents', 'POST', write: FALSE);
+    $this->assertAccessDeniedResponse(
+      'The token only grants read access.',
+      $request,
+    );
+  }
+
+  /**
    * Tests the 'collabora-online.wopi.save' route with a conflicting timestamp.
    *
    * @covers ::wopiPutFile
