@@ -261,6 +261,7 @@ abstract class WopiControllerTestBase extends CollaboraKernelTestBase {
       $request,
       $assertion_message,
     );
+    $this->assertLogMessage(channel: 'access denied', position: -1);
   }
 
   /**
@@ -285,6 +286,7 @@ abstract class WopiControllerTestBase extends CollaboraKernelTestBase {
       $request,
       $assertion_message,
     );
+    $this->assertLogMessage(channel: 'page not found', position: -1);
   }
 
   /**
