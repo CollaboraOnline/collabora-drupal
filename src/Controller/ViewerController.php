@@ -24,12 +24,12 @@ use Drupal\Core\Render\RendererInterface;
 use Drupal\Core\Session\AccountInterface;
 use Drupal\Core\StringTranslation\StringTranslationTrait;
 use Drupal\Core\StringTranslation\TranslationInterface;
-use Drupal\Core\Utility\Error;
 use Drupal\media\MediaInterface;
 use Psr\Log\LoggerInterface;
 use Symfony\Component\DependencyInjection\Attribute\Autowire;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
+use Symfony\Component\HttpKernel\Exception\BadRequestHttpException;
 
 /**
  * Provides route responses for the Collabora module.
@@ -63,63 +63,42 @@ class ViewerController implements ContainerInjectionInterface {
    *   TRUE to open Collabora Online in edit mode.
    *   FALSE to open Collabora Online in readonly mode.
    *
+   * @throws \Symfony\Component\HttpKernel\Exception\BadRequestHttpException
+   *   The Collabora server or editor is not available, or mismatching scheme.
+   *
    * @return \Symfony\Component\HttpFoundation\Response
    *   Response suitable for iframe, without the usual page decorations.
    */
-  public function editor(MediaInterface $media, Request $request, $edit = FALSE) {
+  public function editor(MediaInterface $media, Request $request, $edit = FALSE): Response {
     try {
       $wopi_client_url = $this->discovery->getWopiClientURL();
     }
     catch (CollaboraNotAvailableException $e) {
-      $this->logger->warning(
-        "Collabora Online is not available.<br>\n" . Error::DEFAULT_ERROR_MESSAGE,
-        Error::decodeException($e) + [],
-      );
-      return new Response(
-        (string) $this->t('The Collabora Online editor/viewer is not available.'),
-        Response::HTTP_BAD_REQUEST,
-        ['content-type' => 'text/plain'],
-      );
+      $this->logger->warning('Collabora Online is not available.');
+      throw new BadRequestHttpException('The Collabora Online editor/viewer is not available.');
     }
 
     $current_request_scheme = $request->getScheme();
     if (!str_starts_with($wopi_client_url, $current_request_scheme . '://')) {
-      $this->logger->error($this->t(
+      $this->logger->error(
         "The current request uses '@current_request_scheme' url scheme, but the Collabora client url is '@wopi_client_url'.",
         [
           '@current_request_scheme' => $current_request_scheme,
           '@wopi_client_url' => $wopi_client_url,
         ],
-      ));
-      return new Response(
-        (string) $this->t('Viewer error: Protocol mismatch.'),
-        Response::HTTP_BAD_REQUEST,
-        ['content-type' => 'text/plain'],
       );
+      throw new BadRequestHttpException('Viewer error: Protocol mismatch.');
     }
 
     try {
       $render_array = $this->getViewerRender($media, $wopi_client_url, $edit);
     }
     catch (CollaboraNotAvailableException $e) {
-      $this->logger->warning(
-        "Cannot show the viewer/editor.<br>\n" . Error::DEFAULT_ERROR_MESSAGE,
-        Error::decodeException($e) + [],
-      );
-      return new Response(
-        (string) $this->t('The Collabora Online editor/viewer is not available.'),
-        Response::HTTP_BAD_REQUEST,
-        ['content-type' => 'text/plain'],
-      );
+      $this->logger->warning('Cannot show the viewer/editor.');
+      throw new BadRequestHttpException('The Collabora Online editor/viewer is not available.');
     }
 
-    $render_array['#theme'] = 'collabora_online_full';
-    $render_array['#attached']['library'][] = 'collabora_online/cool.frame';
-
-    $response = new Response();
-    $response->setContent((string) $this->renderer->renderRoot($render_array));
-
-    return $response;
+    return new Response((string) $this->renderer->renderRoot($render_array));
   }
 
   /**
@@ -139,7 +118,7 @@ class ViewerController implements ContainerInjectionInterface {
    * @throws \Drupal\collabora_online\Exception\CollaboraNotAvailableException
    *   The key to use by Collabora is empty or not configured.
    */
-  protected function getViewerRender(MediaInterface $media, string $wopi_client, bool $can_write) {
+  protected function getViewerRender(MediaInterface $media, string $wopi_client, bool $can_write): array {
     $cool_settings = $this->configFactory->get('collabora_online.settings')->get('cool');
     $wopi_base = $cool_settings['wopi_base'];
     $allowfullscreen = $cool_settings['allowfullscreen'] ?? FALSE;
@@ -155,6 +134,7 @@ class ViewerController implements ContainerInjectionInterface {
     );
 
     $render_array = [
+      '#theme' => 'collabora_online_full',
       '#wopiClient' => $wopi_client,
       '#wopiSrc' => urlencode($wopi_base . '/cool/wopi/files/' . $media->id()),
       '#accessToken' => $access_token,
@@ -162,6 +142,11 @@ class ViewerController implements ContainerInjectionInterface {
       '#accessTokenTtl' => $expire_timestamp * 1000,
       '#allowfullscreen' => $allowfullscreen ? 'allowfullscreen' : '',
       '#closebutton' => 'true',
+      '#attached' => [
+        'library' => [
+          'collabora_online/cool.frame',
+        ],
+      ],
     ];
 
     return $render_array;

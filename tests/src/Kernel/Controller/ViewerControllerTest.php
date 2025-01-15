@@ -20,9 +20,9 @@ use Drupal\collabora_online\Exception\CollaboraNotAvailableException;
 use Drupal\collabora_online\Jwt\JwtTranscoderInterface;
 use Drupal\Core\Logger\RfcLogLevel;
 use Drupal\Core\Url;
-use Drupal\Core\Utility\Error;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
+use Symfony\Component\HttpKernel\Exception\BadRequestHttpException;
 
 /**
  * @coversDefaultClass \Drupal\collabora_online\Controller\ViewerController
@@ -77,7 +77,7 @@ class ViewerControllerTest extends WopiControllerTestBase {
         'The Collabora Online editor/viewer is not available.',
         $request,
         [
-          'message' => "Collabora Online is not available.<br>\n" . Error::DEFAULT_ERROR_MESSAGE,
+          'message' => "Collabora Online is not available.",
           'level' => RfcLogLevel::WARNING,
         ],
         $name
@@ -122,7 +122,7 @@ class ViewerControllerTest extends WopiControllerTestBase {
         'The Collabora Online editor/viewer is not available.',
         $request,
         [
-          'message' => "Cannot show the viewer/editor.<br>\n" . Error::DEFAULT_ERROR_MESSAGE,
+          'message' => 'Cannot show the viewer/editor.',
           'level' => RfcLogLevel::WARNING,
         ],
         $name
@@ -201,6 +201,8 @@ class ViewerControllerTest extends WopiControllerTestBase {
    *   Message to distinguish this from other assertions.
    */
   protected function assertBadRequestResponse(string $expected_content, Request $request, array $expected_log = [], string $message = ''): void {
+    $this->expectException(BadRequestHttpException::class);
+
     $this->assertResponse(
       Response::HTTP_BAD_REQUEST,
       $expected_content,
