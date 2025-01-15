@@ -14,8 +14,11 @@ declare(strict_types=1);
 
 namespace Drupal\Tests\collabora_online\Kernel\Controller;
 
+use Drupal\Core\File\FileSystemInterface;
 use Drupal\Core\Logger\RfcLogLevel;
 use Drupal\media\Entity\Media;
+use Drupal\Tests\collabora_online\Traits\UserPictureTrait;
+use Drupal\user\Entity\User;
 use Symfony\Component\HttpFoundation\Response;
 
 /**
@@ -23,11 +26,16 @@ use Symfony\Component\HttpFoundation\Response;
  */
 class WopiControllerTest extends WopiControllerTestBase {
 
+  use UserPictureTrait;
+
   /**
    * {@inheritdoc}
    */
   protected function setUp(): void {
     parent::setUp();
+    $this->createUserPictureField();
+    // Reload the user after the new field is created.
+    $this->user = User::load($this->user->id());
 
     // Disable the WOPI proof for this test.
     $this->config('collabora_online.settings')
@@ -58,6 +66,20 @@ class WopiControllerTest extends WopiControllerTestBase {
 
     $request = $this->createRequest(write: TRUE);
     $expected_response_data['UserCanWrite'] = TRUE;
+    $this->assertJsonResponseOk($expected_response_data, $request);
+
+    // Create a user picture, and attach it to the user.
+    $user_picture_file = $this->createUserPicture($this->user);
+
+    $expected_response_data['UserCanWrite'] = FALSE;
+    /** @var \Drupal\Core\File\FileSystemInterface $filesystem */
+    $filesystem = \Drupal::service(FileSystemInterface::class);
+    $user_picture_realpath = $filesystem->realpath($user_picture_file->getFileUri());
+    // The user picture url looks a bit odd in a kernel test.
+    $this->assertMatchesRegularExpression('#^vfs\://root/sites/simpletest/\d+/files/user\-picture\.png$#', $user_picture_realpath);
+    $expected_response_data['UserExtraInfo']['avatar'] = 'http://localhost/' . $user_picture_realpath;
+
+    $request = $this->createRequest();
     $this->assertJsonResponseOk($expected_response_data, $request);
   }
 
