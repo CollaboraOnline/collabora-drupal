@@ -75,11 +75,6 @@ class WopiController implements ContainerInjectionInterface {
    *   The response with file contents.
    */
   protected function wopiCheckFileInfo(MediaInterface $media, FileInterface $file, UserInterface $user, bool $can_write): Response {
-    if ($can_write && !$media->access('edit in collabora', $user)) {
-      $this->logger->error('Token and user permissions do not match.');
-      throw new AccessDeniedHttpException('The user does not have collabora edit access for this media.');
-    }
-
     $response_data = [
       'BaseFileName' => $file->getFilename(),
       'Size' => $file->getSize(),
@@ -330,6 +325,14 @@ New file: @new_file_id / @new_file_uri',
     }
 
     $can_write = !empty($jwt_payload['wri']);
+
+    if ($can_write &&
+      $action !== 'content' &&
+      !$media->access('edit in collabora', $user)
+    ) {
+      // The edit permission has been revoked since the token was created.
+      throw new AccessDeniedHttpException('The user does not have collabora edit access for this media.');
+    }
 
     switch ($action) {
       case 'info':
