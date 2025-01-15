@@ -374,4 +374,12 @@ New file: @new_file_id / @new_file_uri',
     }
   }
 
+  /**
+   * {@inheritdoc}
+   */
+  protected function tearDown(): void {
+    $this->assertNoFurtherLogMessages();
+    parent::tearDown();
+  }
+
 }
