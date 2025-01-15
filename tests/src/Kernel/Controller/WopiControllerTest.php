@@ -258,6 +258,12 @@ New file: @new_file_id / @new_file_uri',
         $request,
         $name,
       );
+      $this->assertLogMessage(
+        RfcLogLevel::ERROR,
+        'Wrong number of segments',
+        assertion_message: $name,
+      );
+      $this->assertNoFurtherLogMessages($name);
     }
   }
 
