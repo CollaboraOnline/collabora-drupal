@@ -10,47 +10,58 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
+declare(strict_types=1);
+
 namespace Drupal\collabora_online\Plugin\Field\FieldFormatter;
 
 use Drupal\collabora_online\CollaboraUrl;
 use Drupal\Core\Cache\CacheableMetadata;
+use Drupal\Core\Field\Attribute\FieldFormatter;
+use Drupal\Core\Field\FieldDefinitionInterface;
 use Drupal\Core\Field\FieldItemListInterface;
 use Drupal\Core\Field\Plugin\Field\FieldFormatter\EntityReferenceFormatterBase;
-use Drupal\media\MediaInterface;
+use Drupal\Core\StringTranslation\TranslatableMarkup;
 
 /**
  * Plugin implementation of the 'collabora_preview' formatter.
- *
- * @FieldFormatter(
- *   id = "collabora_preview",
- *   label = @Translation("Collabora Online preview"),
- *   field_types = {
- *     "file"
- *   }
- * )
  */
+#[FieldFormatter(
+  id: 'collabora_preview',
+  label: new TranslatableMarkup('Collabora Online preview'),
+  field_types: [
+    'file',
+  ],
+)]
 class CoolPreview extends EntityReferenceFormatterBase {
 
   /**
    * {@inheritdoc}
    */
-  public function settingsSummary() {
-    $summary = [];
-    $summary[] = $this->t('Preview Collabora Online documents.');
-    return $summary;
+  public function settingsSummary(): array {
+    return [
+      $this->t('Preview Collabora Online documents.'),
+    ];
   }
 
   /**
    * {@inheritdoc}
    */
-  public function viewElements(FieldItemListInterface $items, $langcode) {
-    /** @var \Drupal\Core\Field\EntityReferenceFieldItemListInterface $items */
-    $elements = [];
-    $media = $items->getEntity();
-    if (!$media instanceof MediaInterface) {
-      // Entity types other than 'media' are not supported.
-      return [];
+  public static function isApplicable(FieldDefinitionInterface $field_definition): bool {
+    // Entity types other than 'media' are not supported.
+    if ($field_definition->getTargetEntityTypeId() !== 'media') {
+      return FALSE;
     }
+    // Collabora online only supports one file per media.
+    return !$field_definition->getFieldStorageDefinition()->isMultiple();
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function viewElements(FieldItemListInterface $items, $langcode): array {
+    $elements = [];
+    /** @var \Drupal\media\MediaInterface $media */
+    $media = $items->getEntity();
 
     $access_result = $media->access('preview in collabora', NULL, TRUE);
     (new CacheableMetadata())
@@ -73,6 +84,7 @@ class CoolPreview extends EntityReferenceFormatterBase {
       // Render each element as markup.
       $elements[$delta] = $render_array;
     }
+
     return $elements;
   }
 
