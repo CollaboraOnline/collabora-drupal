@@ -185,21 +185,19 @@ class CoolPreviewFormatterTest extends CollaboraKernelTestBase {
     // Library is present after rendering the array.
     $this->assertEquals(['library' => ['collabora_online/cool.previewer']], $build['#attached']);
 
+    $expected_html = <<<END
+<div class="cool-preview__wrapper">
+  <p>$expected_media_name <button onclick="previewField('/cool/view/1');">View</button></p>
+  <dialog id="cool-editor__dialog" class="cool-editor__dialog">
+    <iframe class="cool-frame__preview"></iframe>
+  </dialog>
+</div>
+END;
+
     // Only one preview element is present.
     $elements = $crawler->filter('div.cool-preview__wrapper');
     $this->assertCount(1, $elements);
-    // Check the file from the media.
-    $button_wrapper = $elements->eq(0)->filter('p');
-    $this->assertCount(1, $button_wrapper);
-    $this->assertEquals($expected_media_name . ' View', $button_wrapper->text());
-    // The button to preview.
-    $button = $button_wrapper->filter('button');
-    $this->assertCount(1, $button_wrapper);
-    $this->assertEquals('View', $button->text());
-    // The iframe is present.
-    $dialog = $elements->eq(0)->filter('dialog#cool-editor__dialog.cool-editor__dialog');
-    $this->assertCount(1, $dialog);
-    $this->assertCount(1, $dialog->filter('iframe.cool-frame__preview'));
+    $this->assertEquals($expected_html, $elements->outerHtml());
   }
 
 }
