@@ -76,11 +76,11 @@ class ViewerControllerTest extends WopiControllerTestBase {
       $this->assertBadRequestResponse(
         'The Collabora Online editor/viewer is not available.',
         $request,
-        [
-          'message' => "Collabora Online is not available.",
-          'level' => RfcLogLevel::WARNING,
-        ],
         $name
+      );
+      $this->assertLogMessage(
+        RfcLogLevel::WARNING,
+        'Collabora Online is not available.'
       );
     }
   }
@@ -91,17 +91,21 @@ class ViewerControllerTest extends WopiControllerTestBase {
    * @covers ::editor
    */
   public function testEditorMismatchScheme(): void {
-    $wopi_url = \Drupal::service(CollaboraDiscoveryInterface::class)->getWopiClientURL();
+    $wopi_client_url = \Drupal::service(CollaboraDiscoveryInterface::class)->getWopiClientURL();
 
     foreach ($this->createViewerRequests(TRUE) as $name => $request) {
       $this->assertBadRequestResponse(
         'Viewer error: Protocol mismatch.',
         $request,
-        [
-          'message' => "The current request uses 'https' url scheme, but the Collabora client url is '$wopi_url'.",
-          'level' => RfcLogLevel::ERROR,
-        ],
         $name
+      );
+      $this->assertLogMessage(
+        RfcLogLevel::ERROR,
+        'The current request uses \'@current_request_scheme\' url scheme, but the Collabora client url is \'@wopi_client_url\'.',
+        [
+          '@current_request_scheme' => 'https',
+          '@wopi_client_url' => $wopi_client_url,
+        ]
       );
     }
   }
@@ -120,11 +124,11 @@ class ViewerControllerTest extends WopiControllerTestBase {
       $this->assertBadRequestResponse(
         'The Collabora Online editor/viewer is not available.',
         $request,
-        [
-          'message' => "Collabora Online is not available.",
-          'level' => RfcLogLevel::WARNING,
-        ],
         $name
+      );
+      $this->assertLogMessage(
+        RfcLogLevel::WARNING,
+        'Cannot show the viewer/editor.'
       );
     }
   }
@@ -144,11 +148,11 @@ class ViewerControllerTest extends WopiControllerTestBase {
       $this->assertBadRequestResponse(
         'The Collabora Online editor/viewer is not available.',
         $request,
-        [
-          'message' => 'Cannot show the viewer/editor.',
-          'level' => RfcLogLevel::WARNING,
-        ],
         $name
+      );
+      $this->assertLogMessage(
+        RfcLogLevel::WARNING,
+        'Cannot show the viewer/editor.'
       );
     }
   }
@@ -218,12 +222,10 @@ class ViewerControllerTest extends WopiControllerTestBase {
    *   The expected content.
    * @param \Symfony\Component\HttpFoundation\Request $request
    *   The request to perform.
-   * @param array $expected_log
-   *   The expected log entry.
    * @param string $message
    *   Message to distinguish this from other assertions.
    */
-  protected function assertBadRequestResponse(string $expected_content, Request $request, array $expected_log = [], string $message = ''): void {
+  protected function assertBadRequestResponse(string $expected_content, Request $request, string $message = ''): void {
     $this->expectException(BadRequestHttpException::class);
 
     $this->assertResponse(
@@ -233,14 +235,14 @@ class ViewerControllerTest extends WopiControllerTestBase {
       $request,
       $message,
     );
+  }
 
-    if ($expected_log) {
-      $this->assertTrue(
-        $this->logger->hasRecord($expected_log['message'], $expected_log['level'] ?? NULL),
-        sprintf('The logger does not contain a record like: "%s".', $expected_log['message'])
-      );
-      $this->logger->reset();
-    }
+  /**
+   * {@inheritdoc}
+   */
+  protected function tearDown(): void {
+    $this->assertNoFurtherLogMessages();
+    parent::tearDown();
   }
 
 }
