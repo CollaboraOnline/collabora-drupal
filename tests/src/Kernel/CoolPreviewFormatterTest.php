@@ -57,11 +57,11 @@ class CoolPreviewFormatterTest extends CollaboraKernelTestBase {
   public function testViewElements(): void {
     // Create field configuration and content.
     $field_name = $this->randomMachineName();
-    $media_display = $this->createCoolPreviewField($field_name, 'media', 'document');
+    $media_display = $this->prepareFieldAndDisplay($field_name, 'media', 'document');
 
     $media = Media::create([
       'bundle' => 'document',
-      $field_name => '1',
+      $field_name => 1,
     ]);
     $media->save();
 
@@ -72,42 +72,43 @@ class CoolPreviewFormatterTest extends CollaboraKernelTestBase {
     $this->setCurrentUser($user);
 
     // Field is rendered correctly.
-    $this->assertCoolPreviewField(
-      [
-        $media->getName(),
-      ],
+    $build = $media_display->build($media)[$field_name];
+    $this->assertSame(
       [
         'contexts' => ['user.permissions'],
         'tags' => ['media:1'],
         'max-age' => Cache::PERMANENT,
       ],
-      $media_display->build($media)[$field_name]
+      $build['#cache'],
     );
+    $this->assertCoolPreviewField($media->getName(), $build);
 
     // Iframe is not displayed for other entities than media.
-    $test_display = $this->createCoolPreviewField($field_name, 'entity_test', 'entity_test');
+    $test_display = $this->prepareFieldAndDisplay($field_name, 'entity_test', 'entity_test');
     $entity = EntityTest::create([
-      $field_name => '1',
+      $field_name => 1,
     ]);
     $entity->save();
-    $this->assertCoolPreviewField(
-      [],
+    $this->assertSame(
       [
-        'contexts' => [],
-        'tags' => [],
-        'max-age' => Cache::PERMANENT,
+        '#cache' => [
+          'contexts' => [],
+          'tags' => [],
+          'max-age' => Cache::PERMANENT,
+        ],
       ],
       $test_display->build($entity)[$field_name]
     );
 
     // Iframe is not displayed for users without permission.
     $this->setCurrentUser($this->createUser(['access content']));
-    $this->assertCoolPreviewField(
-      [],
+    $this->assertSame(
       [
-        'contexts' => ['user.permissions'],
-        'tags' => ['media:1'],
-        'max-age' => Cache::PERMANENT,
+        '#cache' => [
+          'contexts' => ['user.permissions'],
+          'tags' => ['media:1'],
+          'max-age' => Cache::PERMANENT,
+        ],
       ],
       $media_display->build($media)[$field_name]
     );
@@ -118,13 +119,14 @@ class CoolPreviewFormatterTest extends CollaboraKernelTestBase {
       'access content',
       'preview document in collabora',
     ]));
-    File::load('1')->delete();
-    $this->assertCoolPreviewField(
-      [],
+    File::load(1)->delete();
+    $this->assertSame(
       [
-        'contexts' => ['user.permissions'],
-        'tags' => ['media:1'],
-        'max-age' => Cache::PERMANENT,
+        '#cache' => [
+          'contexts' => ['user.permissions'],
+          'tags' => ['media:1'],
+          'max-age' => Cache::PERMANENT,
+        ],
       ],
       $media_display->build($media)[$field_name]
     );
@@ -143,7 +145,7 @@ class CoolPreviewFormatterTest extends CollaboraKernelTestBase {
    * @return \Drupal\Core\Entity\Display\EntityDisplayInterface
    *   The display where the field is set.
    */
-  protected function createCoolPreviewField(string $field_name, string $entity_type, string $bundle): EntityDisplayInterface {
+  protected function prepareFieldAndDisplay(string $field_name, string $entity_type, string $bundle): EntityDisplayInterface {
     $field_storage = FieldStorageConfig::create([
       'field_name' => $field_name,
       'entity_type' => $entity_type,
@@ -157,6 +159,7 @@ class CoolPreviewFormatterTest extends CollaboraKernelTestBase {
     ]);
     $instance->save();
 
+    /** @var \Drupal\Core\Entity\Display\EntityDisplayInterface $display */
     $display = \Drupal::service('entity_display.repository')
       ->getViewDisplay($entity_type, $bundle)
       ->setComponent($field_name, [
@@ -169,42 +172,34 @@ class CoolPreviewFormatterTest extends CollaboraKernelTestBase {
   }
 
   /**
-   * Asserts 'collabora_preview' HTML output and render array cache and library.
+   * Asserts HTML output from the field formatter.
    *
-   * @param array $expected_medias
-   *   List of media names.
-   * @param array $expected_cache
-   *   The expected cache.
+   * @param string $expected_media_name
+   *   The media entity label.
    * @param array $build
-   *   The render array.
+   *   The field render array.
    */
-  protected function assertCoolPreviewField(array $expected_medias, array $expected_cache, array $build): void {
-    // Check cache in render array.
-    $this->assertEqualsCanonicalizing($expected_cache, $build['#cache']);
-
+  protected function assertCoolPreviewField(string $expected_media_name, array $build): void {
     $crawler = new Crawler((string) \Drupal::service('renderer')->renderRoot($build));
 
-    // Library is present in case we have medias to render.
-    $expected_libraries = $expected_medias ? ['library' => ['collabora_online/cool.previewer']] : [];
-    $this->assertEquals($expected_libraries, $build['#attached']);
+    // Library is present after rendering the array.
+    $this->assertEquals(['library' => ['collabora_online/cool.previewer']], $build['#attached']);
 
+    // Only one preview element is present.
     $elements = $crawler->filter('div.cool-preview__wrapper');
-    $this->assertSameSize($expected_medias, $elements);
-
-    // Check each of the files from the media.
-    foreach ($expected_medias as $i => $media) {
-      $button_wrapper = $elements->eq($i)->filter('p');
-      $this->assertCount(1, $button_wrapper);
-      $this->assertEquals($media . ' View', $button_wrapper->text());
-      // The button to preview.
-      $button = $button_wrapper->filter('button');
-      $this->assertCount(1, $button_wrapper);
-      $this->assertEquals('View', $button->text());
-      // The iframe is present.
-      $dialog = $elements->eq($i)->filter('dialog#cool-editor__dialog.cool-editor__dialog');
-      $this->assertCount(1, $dialog);
-      $this->assertCount(1, $dialog->filter('iframe.cool-frame__preview'));
-    }
+    $this->assertCount(1, $elements);
+    // Check the file from the media.
+    $button_wrapper = $elements->eq(0)->filter('p');
+    $this->assertCount(1, $button_wrapper);
+    $this->assertEquals($expected_media_name . ' View', $button_wrapper->text());
+    // The button to preview.
+    $button = $button_wrapper->filter('button');
+    $this->assertCount(1, $button_wrapper);
+    $this->assertEquals('View', $button->text());
+    // The iframe is present.
+    $dialog = $elements->eq(0)->filter('dialog#cool-editor__dialog.cool-editor__dialog');
+    $this->assertCount(1, $dialog);
+    $this->assertCount(1, $dialog->filter('iframe.cool-frame__preview'));
   }
 
 }
