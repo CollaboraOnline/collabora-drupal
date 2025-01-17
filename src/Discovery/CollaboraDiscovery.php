@@ -15,6 +15,7 @@ declare(strict_types=1);
 namespace Drupal\collabora_online\Discovery;
 
 use Drupal\collabora_online\Exception\CollaboraNotAvailableException;
+use Drupal\Core\Cache\CacheableMetadata;
 use Symfony\Component\ErrorHandler\ErrorHandler;
 
 /**
@@ -74,7 +75,8 @@ class CollaboraDiscovery implements CollaboraDiscoveryInterface {
    *   Fetching the discovery.xml failed, or the result is not valid xml.
    */
   protected function getParsedXml(): \SimpleXMLElement {
-    $xml = $this->discoveryFetcher->getDiscoveryXml();
+    $cacheability = new CacheableMetadata();
+    $xml = $this->discoveryFetcher->getDiscoveryXml($cacheability);
     return $this->parseXml($xml);
   }
 
