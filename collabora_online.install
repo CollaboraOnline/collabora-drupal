@@ -12,8 +12,8 @@
 
 declare(strict_types=1);
 
-use Drupal\collabora_online\Cool\CollaboraDiscoveryFetcherInterface;
-use Drupal\collabora_online\Cool\CollaboraDiscoveryInterface;
+use Drupal\collabora_online\Discovery\CollaboraDiscoveryFetcherInterface;
+use Drupal\collabora_online\Discovery\CollaboraDiscoveryInterface;
 use Drupal\collabora_online\Exception\CollaboraNotAvailableException;
 
 /**
@@ -53,7 +53,7 @@ function collabora_online_requirements(string $phase): array {
     return $requirements;
   }
 
-  /** @var \Drupal\collabora_online\Cool\CollaboraDiscoveryInterface $discovery */
+  /** @var \Drupal\collabora_online\Discovery\CollaboraDiscoveryInterface $discovery */
   $discovery = \Drupal::service(CollaboraDiscoveryInterface::class);
   if (
     ($cool_settings['wopi_proof'] ?? TRUE) === TRUE &&
