@@ -9,8 +9,8 @@ services:
     class: Drupal\collabora_online\Discovery\CollaboraDiscoveryFetcher
   Drupal\collabora_online\Discovery\CachingDiscoveryFetcher:
     decorates: Drupal\collabora_online\Discovery\CollaboraDiscoveryFetcherInterface
-  Drupal\collabora_online\Discovery\CollaboraDiscoveryInterface:
-    class: Drupal\collabora_online\Discovery\CollaboraDiscovery
+  Drupal\collabora_online\Discovery\DiscoveryLoaderInterface:
+    class: Drupal\collabora_online\Discovery\DiscoveryLoader
   Drupal\collabora_online\Jwt\JwtTranscoderInterface:
     class: Drupal\collabora_online\Jwt\JwtTranscoder
   Drupal\collabora_online\MediaHelperInterface:

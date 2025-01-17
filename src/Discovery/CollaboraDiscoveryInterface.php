@@ -14,10 +14,12 @@ declare(strict_types=1);
 
 namespace Drupal\collabora_online\Discovery;
 
+use Drupal\Core\Cache\CacheableDependencyInterface;
+
 /**
  * Service to get a WOPI client URL for a given MIME type.
  */
-interface CollaboraDiscoveryInterface {
+interface CollaboraDiscoveryInterface extends CacheableDependencyInterface {
 
   /**
    * Gets the URL for the WOPI client.
