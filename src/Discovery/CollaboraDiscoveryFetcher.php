@@ -15,6 +15,7 @@ declare(strict_types=1);
 namespace Drupal\collabora_online\Discovery;
 
 use Drupal\collabora_online\Exception\CollaboraNotAvailableException;
+use Drupal\Core\Cache\RefinableCacheableDependencyInterface;
 use Drupal\Core\Config\ConfigFactoryInterface;
 use Drupal\Core\Logger\LoggerChannelInterface;
 use GuzzleHttp\ClientInterface;
@@ -37,13 +38,14 @@ class CollaboraDiscoveryFetcher implements CollaboraDiscoveryFetcherInterface {
   /**
    * {@inheritdoc}
    */
-  public function getDiscoveryXml(): string {
-    $discovery_url = $this->getDiscoveryUrl();
+  public function getDiscoveryXml(RefinableCacheableDependencyInterface $cacheability): string {
+    $discovery_url = $this->getDiscoveryUrl($cacheability);
 
-    $cool_settings = $this->loadSettings();
+    $cool_settings = $this->loadSettings($cacheability);
     $disable_checks = !empty($cool_settings['disable_cert_check']);
 
     try {
+      $cacheability->mergeCacheMaxAge(60 * 60 * 12);
       $response = $this->httpClient->get($discovery_url, [
         RequestOptions::VERIFY => !$disable_checks,
       ]);
@@ -67,14 +69,17 @@ class CollaboraDiscoveryFetcher implements CollaboraDiscoveryFetcherInterface {
   /**
    * Gets the URL to fetch the discovery.
    *
+   * @param \Drupal\Core\Cache\RefinableCacheableDependencyInterface $cacheability
+   *   Mutable object to collect cache metadata.
+   *
    * @return string
    *   URL to fetch the discovery XML.
    *
    * @throws \Drupal\collabora_online\Exception\CollaboraNotAvailableException
    *   The WOPI server url is misconfigured.
    */
-  protected function getDiscoveryUrl(): string {
-    $cool_settings = $this->loadSettings();
+  protected function getDiscoveryUrl(RefinableCacheableDependencyInterface $cacheability): string {
+    $cool_settings = $this->loadSettings($cacheability);
     $wopi_client_server = $cool_settings['server'] ?? NULL;
     if (!$wopi_client_server) {
       throw new CollaboraNotAvailableException('The configured Collabora Online server address is empty.');
@@ -96,14 +101,19 @@ class CollaboraDiscoveryFetcher implements CollaboraDiscoveryFetcherInterface {
   /**
    * Loads the relevant configuration.
    *
+   * @param \Drupal\Core\Cache\RefinableCacheableDependencyInterface $cacheability
+   *   Mutable object to collect cache metadata.
+   *
    * @return array
    *   Configuration.
    *
    * @throws \Drupal\collabora_online\Exception\CollaboraNotAvailableException
    *   The module is not configured.
    */
-  protected function loadSettings(): array {
-    $cool_settings = $this->configFactory->get('collabora_online.settings')->get('cool');
+  protected function loadSettings(RefinableCacheableDependencyInterface $cacheability): array {
+    $config = $this->configFactory->get('collabora_online.settings');
+    $cool_settings = $config->get('cool');
+    $cacheability->addCacheableDependency($config);
     if (!$cool_settings) {
       throw new CollaboraNotAvailableException('The Collabora Online connection is not configured.');
     }
