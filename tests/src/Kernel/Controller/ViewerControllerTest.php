@@ -14,6 +14,7 @@ declare(strict_types=1);
 
 namespace Drupal\Tests\collabora_online\Kernel\Controller;
 
+use Drupal\collabora_online\Discovery\CachingDiscoveryFetcher;
 use Drupal\collabora_online\Discovery\CollaboraDiscoveryFetcherInterface;
 use Drupal\collabora_online\Discovery\CollaboraDiscoveryInterface;
 use Drupal\collabora_online\Exception\CollaboraNotAvailableException;
@@ -40,7 +41,7 @@ class ViewerControllerTest extends WopiControllerTestBase {
     $file = dirname(__DIR__, 3) . '/fixtures/discovery.mimetypes.xml';
     $xml = file_get_contents($file);
     $fetcher->method('getDiscoveryXml')->willReturn($xml);
-    $this->container->set(CollaboraDiscoveryFetcherInterface::class, $fetcher);
+    $this->container->set(CachingDiscoveryFetcher::class, $fetcher);
 
     $this->user = $this->createUser([
       'access content',
@@ -70,7 +71,7 @@ class ViewerControllerTest extends WopiControllerTestBase {
   public function testEditorCollaboraUnavailable(): void {
     // Restore service to force fail.
     $fetcher = $this->createMock(CollaboraDiscoveryFetcherInterface::class);
-    $this->container->set(CollaboraDiscoveryFetcherInterface::class, $fetcher);
+    $this->container->set(CachingDiscoveryFetcher::class, $fetcher);
 
     foreach ($this->createViewerRequests() as $name => $request) {
       $this->assertBadRequestResponse(
