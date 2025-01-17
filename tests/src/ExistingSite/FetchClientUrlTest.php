@@ -16,12 +16,23 @@ namespace Drupal\Tests\collabora_online\ExistingSite;
 
 use Drupal\collabora_online\Discovery\CollaboraDiscoveryInterface;
 use Drupal\collabora_online\Exception\CollaboraNotAvailableException;
+use Drupal\Tests\collabora_online\Traits\ConfigurationBackupTrait;
 use weitzman\DrupalTestTraits\ExistingSiteBase;
 
 /**
  * Tests requests to Collabora from PHP.
  */
 class FetchClientUrlTest extends ExistingSiteBase {
+
+  use ConfigurationBackupTrait;
+
+  /**
+   * {@inheritdoc}
+   */
+  public function setUp(): void {
+    parent::setUp();
+    $this->backupSimpleConfig('collabora_online.settings');
+  }
 
   /**
    * Tests fetching the client url.
@@ -41,12 +52,9 @@ class FetchClientUrlTest extends ExistingSiteBase {
    */
   public function testFetchClientUrlWithMisconfiguration(): void {
     \Drupal::configFactory()
-      ->get('collabora_online.settings')
-      ->setSettingsOverride([
-        'cool' => [
-          'server' => 'httx://example.com',
-        ],
-      ]);
+      ->getEditable('collabora_online.settings')
+      ->set('cool.server', 'httx://example.com')
+      ->save();
     /** @var \Drupal\collabora_online\Discovery\CollaboraDiscoveryInterface $discovery */
     $discovery = \Drupal::service(CollaboraDiscoveryInterface::class);
 
