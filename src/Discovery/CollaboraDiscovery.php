@@ -14,34 +14,32 @@ declare(strict_types=1);
 
 namespace Drupal\collabora_online\Discovery;
 
-use Drupal\collabora_online\Exception\CollaboraNotAvailableException;
-use Drupal\Component\Datetime\TimeInterface;
-use Drupal\Core\Cache\Cache;
-use Drupal\Core\Cache\CacheableMetadata;
-use Drupal\Core\Cache\MemoryCache\MemoryCacheInterface;
-use Symfony\Component\ErrorHandler\ErrorHandler;
-
 /**
- * Service to get values from the discovery.xml.
+ * Value object to get values from the discovery.xml.
  */
 class CollaboraDiscovery implements CollaboraDiscoveryInterface {
 
-  protected const DEFAULT_CID = 'collabora_online.discovery.parsed';
-
+  /**
+   * Constructor.
+   *
+   * @param \SimpleXMLElement $parsedXml
+   *   Parsed XML content.
+   * @param list<string> $cacheTags
+   *   Cache tags.
+   * @param int $cacheMaxAge
+   *   Cache max age in seconds.
+   */
   public function __construct(
-    protected readonly CollaboraDiscoveryFetcherInterface $discoveryFetcher,
-    protected readonly MemoryCacheInterface $cache,
-    protected readonly TimeInterface $time,
-    protected readonly string $cid = self::DEFAULT_CID,
+    protected readonly \SimpleXMLElement $parsedXml,
+    protected readonly array $cacheTags,
+    protected readonly int $cacheMaxAge,
   ) {}
 
   /**
    * {@inheritdoc}
    */
   public function getWopiClientURL(string $mimetype = 'text/plain'): ?string {
-    $discovery_parsed = $this->getParsedXml();
-
-    $result = $discovery_parsed->xpath(sprintf('/wopi-discovery/net-zone/app[@name=\'%s\']/action', $mimetype));
+    $result = $this->parsedXml->xpath(sprintf('/wopi-discovery/net-zone/app[@name=\'%s\']/action', $mimetype));
     if (empty($result[0]['urlsrc'][0])) {
       return NULL;
     }
@@ -53,8 +51,7 @@ class CollaboraDiscovery implements CollaboraDiscoveryInterface {
    * {@inheritdoc}
    */
   public function getProofKey(): ?string {
-    $discovery_parsed = $this->getParsedXml();
-    $attribute = $discovery_parsed->xpath('/wopi-discovery/proof-key/@value')[0] ?? NULL;
+    $attribute = $this->parsedXml->xpath('/wopi-discovery/proof-key/@value')[0] ?? NULL;
     return $attribute?->__toString();
   }
 
@@ -62,75 +59,29 @@ class CollaboraDiscovery implements CollaboraDiscoveryInterface {
    * {@inheritdoc}
    */
   public function getProofKeyOld(): ?string {
-    $discovery_parsed = $this->getParsedXml();
-    $attribute = $discovery_parsed->xpath('/wopi-discovery/proof-key/@oldvalue')[0] ?? NULL;
+    $attribute = $this->parsedXml->xpath('/wopi-discovery/proof-key/@oldvalue')[0] ?? NULL;
     return $attribute?->__toString();
   }
 
   /**
-   * Fetches the discovery.xml, and gets the parsed contents.
-   *
-   * @return \SimpleXMLElement
-   *   Parsed xml from the discovery.xml.
-   *
-   * @throws \Drupal\collabora_online\Exception\CollaboraNotAvailableException
-   *   Fetching the discovery.xml failed, or the result is not valid xml.
+   * {@inheritdoc}
    */
-  protected function getParsedXml(): \SimpleXMLElement {
-    $cached = $this->cache->get($this->cid);
-    if ($cached) {
-      return $cached->data;
-    }
-    $cacheability = new CacheableMetadata();
-    $xml = $this->discoveryFetcher->getDiscoveryXml($cacheability);
-    $parsed_xml = $this->parseXml($xml);
-
-    $max_age = $cacheability->getCacheMaxAge();
-    /* @see \Drupal\Core\Cache\VariationCache::maxAgeToExpire() */
-    $expire = ($max_age === Cache::PERMANENT)
-      ? Cache::PERMANENT
-      : $max_age + $this->time->getRequestTime();
-    $this->cache->set(
-      $this->cid,
-      $parsed_xml,
-      $expire,
-      $cacheability->getCacheTags(),
-    );
-    return $parsed_xml;
+  public function getCacheContexts(): array {
+    return [];
   }
 
   /**
-   * Parses an XML string.
-   *
-   * @param string $xml
-   *   XML string.
-   *
-   * @return \SimpleXMLElement
-   *   Parsed XML.
-   *
-   * @throws \Drupal\collabora_online\Exception\CollaboraNotAvailableException
-   *   The XML is invalid or empty.
+   * {@inheritdoc}
    */
-  protected function parseXml(string $xml): \SimpleXMLElement {
-    try {
-      // Avoid errors from XML parsing hitting the regular error handler.
-      // An alternative would be libxml_use_internal_errors(), but then we would
-      // have to deal with the results from libxml_get_errors().
-      $parsed_xml = ErrorHandler::call(
-        fn () => simplexml_load_string($xml),
-      );
-    }
-    catch (\ErrorException $e) {
-      throw new CollaboraNotAvailableException('Error in the retrieved discovery.xml file: ' . $e->getMessage(), previous: $e);
-    }
-    if ($parsed_xml === FALSE) {
-      // The parser returned FALSE, but no error was raised.
-      // This is known to happen when $xml is an empty string.
-      // Instead we could check for $xml === '' earlier, but we don't know for
-      // sure if this is, and always will be, the only such case.
-      throw new CollaboraNotAvailableException('The discovery.xml file is empty.');
-    }
-    return $parsed_xml;
+  public function getCacheTags(): array {
+    return $this->cacheTags;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getCacheMaxAge() {
+    return $this->cacheMaxAge;
   }
 
 }
