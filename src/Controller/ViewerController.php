@@ -63,11 +63,11 @@ class ViewerController implements ContainerInjectionInterface {
    *   TRUE to open Collabora Online in edit mode.
    *   FALSE to open Collabora Online in readonly mode.
    *
-   * @throws \Symfony\Component\HttpKernel\Exception\BadRequestHttpException
-   *   The Collabora server or editor is not available, or mismatching scheme.
-   *
    * @return \Symfony\Component\HttpFoundation\Response
    *   Response suitable for iframe, without the usual page decorations.
+   *
+   * @throws \Symfony\Component\HttpKernel\Exception\BadRequestHttpException
+   *   The Collabora server or editor is not available, or mismatching scheme.
    */
   public function editor(MediaInterface $media, Request $request, $edit = FALSE): Response {
     try {
