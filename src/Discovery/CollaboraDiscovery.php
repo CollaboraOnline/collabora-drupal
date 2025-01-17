@@ -15,7 +15,10 @@ declare(strict_types=1);
 namespace Drupal\collabora_online\Discovery;
 
 use Drupal\collabora_online\Exception\CollaboraNotAvailableException;
+use Drupal\Component\Datetime\TimeInterface;
+use Drupal\Core\Cache\Cache;
 use Drupal\Core\Cache\CacheableMetadata;
+use Drupal\Core\Cache\MemoryCache\MemoryCacheInterface;
 use Symfony\Component\ErrorHandler\ErrorHandler;
 
 /**
@@ -23,14 +26,13 @@ use Symfony\Component\ErrorHandler\ErrorHandler;
  */
 class CollaboraDiscovery implements CollaboraDiscoveryInterface {
 
-  /**
-   * Constructor.
-   *
-   * @param \Drupal\collabora_online\Discovery\CollaboraDiscoveryFetcherInterface $discoveryFetcher
-   *   Service to load the discovery.xml from the Collabora server.
-   */
+  protected const DEFAULT_CID = 'collabora_online.discovery.parsed';
+
   public function __construct(
     protected readonly CollaboraDiscoveryFetcherInterface $discoveryFetcher,
+    protected readonly MemoryCacheInterface $cache,
+    protected readonly TimeInterface $time,
+    protected readonly string $cid = self::DEFAULT_CID,
   ) {}
 
   /**
@@ -75,9 +77,26 @@ class CollaboraDiscovery implements CollaboraDiscoveryInterface {
    *   Fetching the discovery.xml failed, or the result is not valid xml.
    */
   protected function getParsedXml(): \SimpleXMLElement {
+    $cached = $this->cache->get($this->cid);
+    if ($cached) {
+      return $cached->data;
+    }
     $cacheability = new CacheableMetadata();
     $xml = $this->discoveryFetcher->getDiscoveryXml($cacheability);
-    return $this->parseXml($xml);
+    $parsed_xml = $this->parseXml($xml);
+
+    $max_age = $cacheability->getCacheMaxAge();
+    /* @see \Drupal\Core\Cache\VariationCache::maxAgeToExpire() */
+    $expire = ($max_age === Cache::PERMANENT)
+      ? Cache::PERMANENT
+      : $max_age + $this->time->getRequestTime();
+    $this->cache->set(
+      $this->cid,
+      $parsed_xml,
+      $expire,
+      $cacheability->getCacheTags(),
+    );
+    return $parsed_xml;
   }
 
   /**
