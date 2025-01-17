@@ -14,7 +14,7 @@ declare(strict_types=1);
 
 namespace Drupal\Tests\collabora_online\Kernel\Controller;
 
-use Drupal\collabora_online\Cool\CollaboraDiscoveryInterface;
+use Drupal\collabora_online\Discovery\CollaboraDiscoveryInterface;
 use Drupal\collabora_online\Util\DotNetTime;
 use Firebase\JWT\JWT;
 use Symfony\Component\HttpFoundation\Request;

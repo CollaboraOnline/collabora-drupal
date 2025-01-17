@@ -4,14 +4,14 @@ declare(strict_types=1);
 
 namespace Drupal\Tests\collabora_online\Unit;
 
-use Drupal\collabora_online\Cool\CollaboraDiscovery;
-use Drupal\collabora_online\Cool\CollaboraDiscoveryFetcherInterface;
-use Drupal\collabora_online\Cool\CollaboraDiscoveryInterface;
+use Drupal\collabora_online\Discovery\CollaboraDiscovery;
+use Drupal\collabora_online\Discovery\CollaboraDiscoveryFetcherInterface;
+use Drupal\collabora_online\Discovery\CollaboraDiscoveryInterface;
 use Drupal\collabora_online\Exception\CollaboraNotAvailableException;
 use Drupal\Tests\UnitTestCase;
 
 /**
- * @coversDefaultClass \Drupal\collabora_online\Cool\CollaboraDiscovery
+ * @coversDefaultClass \Drupal\collabora_online\Discovery\CollaboraDiscovery
  */
 class CollaboraDiscoveryTest extends UnitTestCase {
 
@@ -126,7 +126,7 @@ class CollaboraDiscoveryTest extends UnitTestCase {
    * @param string $file
    *   A test xml file.
    *
-   * @return \Drupal\collabora_online\Cool\CollaboraDiscoveryInterface
+   * @return \Drupal\collabora_online\Discovery\CollaboraDiscoveryInterface
    *   Discovery instance.
    */
   protected function getDiscoveryFromFile(string $file): CollaboraDiscoveryInterface {
@@ -140,7 +140,7 @@ class CollaboraDiscoveryTest extends UnitTestCase {
    * @param string $xml
    *   Explicit XML content.
    *
-   * @return \Drupal\collabora_online\Cool\CollaboraDiscoveryInterface
+   * @return \Drupal\collabora_online\Discovery\CollaboraDiscoveryInterface
    *   Discovery instance.
    */
   protected function getDiscoveryFromXml(string $xml): CollaboraDiscoveryInterface {

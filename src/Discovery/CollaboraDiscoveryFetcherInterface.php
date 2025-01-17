@@ -12,7 +12,7 @@
 
 declare(strict_types=1);
 
-namespace Drupal\collabora_online\Cool;
+namespace Drupal\collabora_online\Discovery;
 
 /**
  * Service to load the discovery.xml from the Collabora server.
