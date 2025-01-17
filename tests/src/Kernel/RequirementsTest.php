@@ -14,7 +14,7 @@ declare(strict_types=1);
 
 namespace Drupal\Tests\collabora_online\Kernel;
 
-use Drupal\collabora_online\Cool\CollaboraDiscoveryFetcherInterface;
+use Drupal\collabora_online\Discovery\CollaboraDiscoveryFetcherInterface;
 use Drupal\key\Entity\Key;
 
 /**
