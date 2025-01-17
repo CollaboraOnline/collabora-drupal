@@ -7,6 +7,8 @@ services:
     arguments: ['cool']
   Drupal\collabora_online\Discovery\CollaboraDiscoveryFetcherInterface:
     class: Drupal\collabora_online\Discovery\CollaboraDiscoveryFetcher
+  Drupal\collabora_online\Discovery\CachingDiscoveryFetcher:
+    decorates: Drupal\collabora_online\Discovery\CollaboraDiscoveryFetcherInterface
   Drupal\collabora_online\Discovery\CollaboraDiscoveryInterface:
     class: Drupal\collabora_online\Discovery\CollaboraDiscovery
   Drupal\collabora_online\Jwt\JwtTranscoderInterface:
