@@ -14,8 +14,8 @@ declare(strict_types=1);
 
 namespace Drupal\Tests\collabora_online\Kernel\Controller;
 
-use Drupal\collabora_online\Cool\CollaboraDiscoveryFetcherInterface;
-use Drupal\collabora_online\Cool\CollaboraDiscoveryInterface;
+use Drupal\collabora_online\Discovery\CollaboraDiscoveryFetcherInterface;
+use Drupal\collabora_online\Discovery\CollaboraDiscoveryInterface;
 use Drupal\collabora_online\Exception\CollaboraNotAvailableException;
 use Drupal\collabora_online\Jwt\JwtTranscoderInterface;
 use Drupal\Core\Logger\RfcLogLevel;

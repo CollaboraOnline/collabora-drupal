@@ -14,7 +14,7 @@ declare(strict_types=1);
 
 namespace Drupal\collabora_online\Controller;
 
-use Drupal\collabora_online\Cool\CollaboraDiscoveryInterface;
+use Drupal\collabora_online\Discovery\CollaboraDiscoveryInterface;
 use Drupal\collabora_online\Exception\CollaboraNotAvailableException;
 use Drupal\collabora_online\Jwt\JwtTranscoderInterface;
 use Drupal\Core\Config\ConfigFactoryInterface;

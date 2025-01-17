@@ -14,7 +14,7 @@ declare(strict_types=1);
 
 namespace Drupal\collabora_online\Access;
 
-use Drupal\collabora_online\Cool\CollaboraDiscoveryInterface;
+use Drupal\collabora_online\Discovery\CollaboraDiscoveryInterface;
 use Drupal\collabora_online\Util\DotNetTime;
 use Drupal\Component\Datetime\TimeInterface;
 use Drupal\Core\Access\AccessResult;

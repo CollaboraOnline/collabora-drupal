@@ -12,7 +12,7 @@
 
 declare(strict_types=1);
 
-namespace Drupal\collabora_online\Cool;
+namespace Drupal\collabora_online\Discovery;
 
 use Drupal\collabora_online\Exception\CollaboraNotAvailableException;
 use Symfony\Component\ErrorHandler\ErrorHandler;
@@ -25,7 +25,7 @@ class CollaboraDiscovery implements CollaboraDiscoveryInterface {
   /**
    * Constructor.
    *
-   * @param \Drupal\collabora_online\Cool\CollaboraDiscoveryFetcherInterface $discoveryFetcher
+   * @param \Drupal\collabora_online\Discovery\CollaboraDiscoveryFetcherInterface $discoveryFetcher
    *   Service to load the discovery.xml from the Collabora server.
    */
   public function __construct(

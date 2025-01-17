@@ -14,7 +14,7 @@ declare(strict_types=1);
 
 namespace Drupal\Tests\collabora_online\ExistingSite;
 
-use Drupal\collabora_online\Cool\CollaboraDiscoveryInterface;
+use Drupal\collabora_online\Discovery\CollaboraDiscoveryInterface;
 use Drupal\collabora_online\Exception\CollaboraNotAvailableException;
 use weitzman\DrupalTestTraits\ExistingSiteBase;
 
@@ -27,7 +27,7 @@ class FetchClientUrlTest extends ExistingSiteBase {
    * Tests fetching the client url.
    */
   public function testFetchClientUrl(): void {
-    /** @var \Drupal\collabora_online\Cool\CollaboraDiscoveryInterface $discovery */
+    /** @var \Drupal\collabora_online\Discovery\CollaboraDiscoveryInterface $discovery */
     $discovery = \Drupal::service(CollaboraDiscoveryInterface::class);
     $client_url = $discovery->getWopiClientURL();
     // The protocol, domain and port are known when this test runs in the
@@ -46,7 +46,7 @@ class FetchClientUrlTest extends ExistingSiteBase {
           'server' => 'httx://example.com',
         ],
       ]);
-    /** @var \Drupal\collabora_online\Cool\CollaboraDiscoveryInterface $discovery */
+    /** @var \Drupal\collabora_online\Discovery\CollaboraDiscoveryInterface $discovery */
     $discovery = \Drupal::service(CollaboraDiscoveryInterface::class);
 
     $this->expectException(CollaboraNotAvailableException::class);

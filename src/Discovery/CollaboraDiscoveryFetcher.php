@@ -12,7 +12,7 @@
 
 declare(strict_types=1);
 
-namespace Drupal\collabora_online\Cool;
+namespace Drupal\collabora_online\Discovery;
 
 use Drupal\collabora_online\Exception\CollaboraNotAvailableException;
 use Drupal\Core\Config\ConfigFactoryInterface;
