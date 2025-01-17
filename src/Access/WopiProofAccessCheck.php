@@ -15,6 +15,7 @@ declare(strict_types=1);
 namespace Drupal\collabora_online\Access;
 
 use Drupal\collabora_online\Discovery\CollaboraDiscoveryInterface;
+use Drupal\collabora_online\Exception\CollaboraNotAvailableException;
 use Drupal\collabora_online\Util\DotNetTime;
 use Drupal\Component\Datetime\TimeInterface;
 use Drupal\Core\Access\AccessResult;
@@ -127,7 +128,13 @@ class WopiProofAccessCheck implements AccessInterface {
    *   An access result without cache metadata.
    */
   protected function checkProof(Request $request): AccessResult {
-    $keys = $this->getKeys();
+    try {
+      $keys = $this->getKeys();
+    }
+    catch (CollaboraNotAvailableException $e) {
+      Error::logException($this->logger, $e);
+      return AccessResult::forbidden('Cannot get discovery for proof keys.');
+    }
     if (!isset($keys['current'])) {
       return AccessResult::forbidden('Missing or incomplete WOPI proof keys.');
     }
@@ -189,6 +196,9 @@ class WopiProofAccessCheck implements AccessInterface {
    * @return array<'current'|'old', \phpseclib3\Crypt\RSA\PublicKey>
    *   Current and old public key, or just the current if they are the same, or
    *   empty array if none found.
+   *
+   * @throws \Drupal\collabora_online\Exception\CollaboraNotAvailableException
+   *   The discovery cannot be loaded.
    */
   protected function getKeys(): array {
     // Get current and old key.

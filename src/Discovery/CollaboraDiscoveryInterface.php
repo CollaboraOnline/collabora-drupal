@@ -39,6 +39,9 @@ interface CollaboraDiscoveryInterface {
    *
    * @return string|null
    *   The recent key, or NULL if none found.
+   *
+   * @throws \Drupal\collabora_online\Exception\CollaboraNotAvailableException
+   *   The discovery data cannot be fetched, or is incomplete.
    */
   public function getProofKey(): ?string;
 
@@ -50,6 +53,9 @@ interface CollaboraDiscoveryInterface {
    *
    * @return string|null
    *   The old key, or NULL if none found.
+   *
+   * @throws \Drupal\collabora_online\Exception\CollaboraNotAvailableException
+   *   The discovery data cannot be fetched, or is incomplete.
    */
   public function getProofKeyOld(): ?string;
 
