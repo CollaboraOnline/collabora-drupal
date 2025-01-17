@@ -15,6 +15,7 @@ declare(strict_types=1);
 namespace Drupal\Tests\collabora_online\Kernel\Controller;
 
 use Drupal\collabora_online\Discovery\CollaboraDiscoveryInterface;
+use Drupal\collabora_online\Discovery\DiscoveryLoaderInterface;
 use Drupal\collabora_online\Util\DotNetTime;
 use Firebase\JWT\JWT;
 use Symfony\Component\HttpFoundation\Request;
@@ -62,7 +63,9 @@ class WopiControllerProofTest extends WopiControllerTestBase {
 
     // Set a mock discovery with custom proof keys.
     $mock_discovery = $this->createMock(CollaboraDiscoveryInterface::class);
-    $this->container->set(CollaboraDiscoveryInterface::class, $mock_discovery);
+    $mock_discovery_loader = $this->createMock(DiscoveryLoaderInterface::class);
+    $mock_discovery_loader->method('getDiscovery')->willReturn($mock_discovery);
+    $this->container->set(DiscoveryLoaderInterface::class, $mock_discovery_loader);
     $mock_discovery->method('getProofKey')->willReturnReference($this->wopiProofKey);
     $mock_discovery->method('getProofKeyOld')->willReturnReference($this->wopiProofKeyOld);
   }

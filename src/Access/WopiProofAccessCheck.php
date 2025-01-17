@@ -14,7 +14,7 @@ declare(strict_types=1);
 
 namespace Drupal\collabora_online\Access;
 
-use Drupal\collabora_online\Discovery\CollaboraDiscoveryInterface;
+use Drupal\collabora_online\Discovery\DiscoveryLoaderInterface;
 use Drupal\collabora_online\Exception\CollaboraNotAvailableException;
 use Drupal\collabora_online\Util\DotNetTime;
 use Drupal\Component\Datetime\TimeInterface;
@@ -41,7 +41,7 @@ use Symfony\Component\HttpFoundation\Request;
 class WopiProofAccessCheck implements AccessInterface {
 
   public function __construct(
-    protected readonly CollaboraDiscoveryInterface $discovery,
+    protected readonly DiscoveryLoaderInterface $discoveryLoader,
     #[Autowire(service: 'logger.channel.collabora_online')]
     protected readonly LoggerInterface $logger,
     protected readonly ConfigFactoryInterface $configFactory,
@@ -201,12 +201,13 @@ class WopiProofAccessCheck implements AccessInterface {
    *   The discovery cannot be loaded.
    */
   protected function getKeys(): array {
+    $discovery = $this->discoveryLoader->getDiscovery();
     // Get current and old key.
     // Remove empty values.
     // If both are the same, keep only the current one.
     $public_keys = array_unique(array_filter([
-      'current' => $this->discovery->getProofKey(),
-      'old' => $this->discovery->getProofKeyOld(),
+      'current' => $discovery->getProofKey(),
+      'old' => $discovery->getProofKeyOld(),
     ]));
     $key_objects = [];
     foreach ($public_keys as $key_name => $key_str) {
