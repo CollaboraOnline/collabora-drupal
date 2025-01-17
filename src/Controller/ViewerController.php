@@ -68,6 +68,7 @@ class ViewerController implements ContainerInjectionInterface {
    */
   public function editor(MediaInterface $media, Request $request, $edit = FALSE): Response {
     try {
+      // @todo Get client url for the correct MIME type.
       $wopi_client_url = $this->discovery->getWopiClientURL();
     }
     catch (CollaboraNotAvailableException $e) {
@@ -77,6 +78,13 @@ class ViewerController implements ContainerInjectionInterface {
       );
       return new Response(
         (string) $this->t('The Collabora Online editor/viewer is not available.'),
+        Response::HTTP_BAD_REQUEST,
+        ['content-type' => 'text/plain'],
+      );
+    }
+    if ($wopi_client_url === NULL) {
+      return new Response(
+        (string) $this->t('The Collabora Online editor/viewer is not available for this file type.'),
         Response::HTTP_BAD_REQUEST,
         ['content-type' => 'text/plain'],
       );

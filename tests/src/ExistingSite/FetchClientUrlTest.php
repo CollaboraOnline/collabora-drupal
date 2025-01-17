@@ -30,6 +30,7 @@ class FetchClientUrlTest extends ExistingSiteBase {
     /** @var \Drupal\collabora_online\Discovery\CollaboraDiscoveryInterface $discovery */
     $discovery = \Drupal::service(CollaboraDiscoveryInterface::class);
     $client_url = $discovery->getWopiClientURL();
+    $this->assertNotNull($client_url);
     // The protocol, domain and port are known when this test runs in the
     // docker-compose setup.
     $this->assertMatchesRegularExpression('@^http://collabora\.test:9980/browser/[0-9a-f]+/cool\.html\?$@', $client_url);

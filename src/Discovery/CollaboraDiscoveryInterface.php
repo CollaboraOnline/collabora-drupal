@@ -26,13 +26,13 @@ interface CollaboraDiscoveryInterface {
    *   Mime type for which to get the WOPI client URL.
    *   This refers to config entries in the discovery.xml file.
    *
-   * @return string
-   *   The WOPI client URL.
+   * @return string|null
+   *   The WOPI client URL, or NULL if none provided for the MIME type.
    *
    * @throws \Drupal\collabora_online\Exception\CollaboraNotAvailableException
-   *   The client URL cannot be retrieved.
+   *   The discovery data cannot be fetched, or is incomplete.
    */
-  public function getWopiClientURL(string $mimetype = 'text/plain'): string;
+  public function getWopiClientURL(string $mimetype = 'text/plain'): ?string;
 
   /**
    * Gets the public key used for proofing.

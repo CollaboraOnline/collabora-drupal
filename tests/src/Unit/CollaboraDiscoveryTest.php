@@ -32,9 +32,9 @@ class CollaboraDiscoveryTest extends UnitTestCase {
       $discovery->getWopiClientURL('text/spreadsheet'),
     );
     // Test unknown mime type.
-    $this->expectException(CollaboraNotAvailableException::class);
-    $this->expectExceptionMessage('The requested mime type is not handled.');
-    $discovery->getWopiClientURL('text/unknown');
+    $this->assertNull(
+      $discovery->getWopiClientURL('text/unknown'),
+    );
   }
 
   /**
