@@ -14,8 +14,8 @@ declare(strict_types=1);
 
 namespace Drupal\collabora_online\Discovery;
 
+use Drupal\collabora_online\Util\ExpireTimeHelper;
 use Drupal\Component\Datetime\TimeInterface;
-use Drupal\Core\Cache\Cache;
 use Drupal\Core\Cache\CacheableMetadata;
 use Drupal\Core\Cache\CacheBackendInterface;
 use Drupal\Core\Cache\RefinableCacheableDependencyInterface;
@@ -45,11 +45,7 @@ class CachingDiscoveryFetcher implements CollaboraDiscoveryFetcherInterface {
     $cached = $this->cache->get($this->cid);
     if ($cached) {
       $cacheability->addCacheTags($cached->tags);
-      $expire = $cached->expire;
-      $max_age = ($expire === Cache::PERMANENT)
-        ? Cache::PERMANENT
-        : $expire - $this->time->getRequestTime();
-      $cacheability->mergeCacheMaxAge($max_age);
+      ExpireTimeHelper::mergeExpireTimestamp($cacheability, (int) $cached->expire, $this->time);
       return $cached->data;
     }
     // In theory, the $cacheability could already contain unrelated cache
@@ -57,18 +53,13 @@ class CachingDiscoveryFetcher implements CollaboraDiscoveryFetcherInterface {
     // not leak into the cache.
     $local_cacheability = new CacheableMetadata();
     $xml = $this->decorated->getDiscoveryXml($local_cacheability);
-    $max_age = $local_cacheability->getCacheMaxAge();
 
     $cacheability->addCacheableDependency($local_cacheability);
 
-    /* @see \Drupal\Core\Cache\VariationCache::maxAgeToExpire() */
-    $expire = ($max_age === Cache::PERMANENT)
-      ? Cache::PERMANENT
-      : $max_age + $this->time->getRequestTime();
     $this->cache->set(
       $this->cid,
       $xml,
-      $expire,
+      ExpireTimeHelper::getExpireTimestamp($local_cacheability, $this->time),
       $local_cacheability->getCacheTags(),
     );
     return $xml;
