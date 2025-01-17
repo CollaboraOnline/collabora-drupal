@@ -8,6 +8,8 @@ use Drupal\collabora_online\Discovery\CollaboraDiscovery;
 use Drupal\collabora_online\Discovery\CollaboraDiscoveryFetcherInterface;
 use Drupal\collabora_online\Discovery\CollaboraDiscoveryInterface;
 use Drupal\collabora_online\Exception\CollaboraNotAvailableException;
+use Drupal\Component\Datetime\Time;
+use Drupal\Core\Cache\MemoryCache\MemoryCache;
 use Drupal\Tests\UnitTestCase;
 
 /**
@@ -146,7 +148,12 @@ class CollaboraDiscoveryTest extends UnitTestCase {
   protected function getDiscoveryFromXml(string $xml): CollaboraDiscoveryInterface {
     $fetcher = $this->createMock(CollaboraDiscoveryFetcherInterface::class);
     $fetcher->method('getDiscoveryXml')->willReturn($xml);
-    return new CollaboraDiscovery($fetcher);
+    $time = new Time();
+    return new CollaboraDiscovery(
+      $fetcher,
+      new MemoryCache($time),
+      $time,
+    );
   }
 
 }
