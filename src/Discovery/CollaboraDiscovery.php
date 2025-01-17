@@ -35,12 +35,12 @@ class CollaboraDiscovery implements CollaboraDiscoveryInterface {
   /**
    * {@inheritdoc}
    */
-  public function getWopiClientURL(string $mimetype = 'text/plain'): string {
+  public function getWopiClientURL(string $mimetype = 'text/plain'): ?string {
     $discovery_parsed = $this->getParsedXml();
 
     $result = $discovery_parsed->xpath(sprintf('/wopi-discovery/net-zone/app[@name=\'%s\']/action', $mimetype));
     if (empty($result[0]['urlsrc'][0])) {
-      throw new CollaboraNotAvailableException('The requested mime type is not handled.');
+      return NULL;
     }
 
     return (string) $result[0]['urlsrc'][0];
