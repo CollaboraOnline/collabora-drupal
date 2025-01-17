@@ -20,6 +20,7 @@ use Drupal\collabora_online\Exception\CollaboraNotAvailableException;
 use Drupal\collabora_online\Jwt\JwtTranscoderInterface;
 use Drupal\Core\Logger\RfcLogLevel;
 use Drupal\Core\Url;
+use Drupal\Core\Utility\Error;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpKernel\Exception\BadRequestHttpException;
@@ -78,9 +79,14 @@ class ViewerControllerTest extends WopiControllerTestBase {
         $request,
         $name
       );
+
       $this->assertLogMessage(
         RfcLogLevel::WARNING,
-        'Collabora Online is not available.'
+        Error::DEFAULT_ERROR_MESSAGE,
+        [
+          '@message' => 'The Collabora Online editor/viewer is not available.',
+        ],
+        'client error'
       );
     }
   }
@@ -100,12 +106,12 @@ class ViewerControllerTest extends WopiControllerTestBase {
         $name
       );
       $this->assertLogMessage(
-        RfcLogLevel::ERROR,
-        'The current request uses \'@current_request_scheme\' url scheme, but the Collabora client url is \'@wopi_client_url\'.',
+        RfcLogLevel::WARNING,
+        Error::DEFAULT_ERROR_MESSAGE,
         [
-          '@current_request_scheme' => 'https',
-          '@wopi_client_url' => $wopi_client_url,
-        ]
+          '@message' => "The current request uses 'https' url scheme, but the Collabora client url is '$wopi_client_url'.",
+        ],
+        'client error'
       );
     }
   }
@@ -128,7 +134,11 @@ class ViewerControllerTest extends WopiControllerTestBase {
       );
       $this->assertLogMessage(
         RfcLogLevel::WARNING,
-        'Cannot show the viewer/editor.'
+        Error::DEFAULT_ERROR_MESSAGE,
+        [
+          '@message' => 'The Collabora Online editor/viewer is not available.',
+        ],
+        'client error'
       );
     }
   }
@@ -152,7 +162,11 @@ class ViewerControllerTest extends WopiControllerTestBase {
       );
       $this->assertLogMessage(
         RfcLogLevel::WARNING,
-        'Cannot show the viewer/editor.'
+        Error::DEFAULT_ERROR_MESSAGE,
+        [
+          '@message' => 'The Collabora Online editor/viewer is not available.',
+        ],
+        'client error'
       );
     }
   }

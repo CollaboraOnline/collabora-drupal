@@ -74,19 +74,14 @@ class ViewerController implements ContainerInjectionInterface {
       $wopi_client_url = $this->discovery->getWopiClientURL();
     }
     catch (CollaboraNotAvailableException $e) {
-      $this->logger->warning('Collabora Online is not available.');
-      throw new BadRequestHttpException('The Collabora Online editor/viewer is not available.');
+      throw new BadRequestHttpException(
+        message: 'The Collabora Online editor/viewer is not available.',
+        previous: $e,
+      );
     }
 
     $current_request_scheme = $request->getScheme();
     if (parse_url($wopi_client_url, PHP_URL_SCHEME) !== $current_request_scheme) {
-      $this->logger->error(
-        "The current request uses '@current_request_scheme' url scheme, but the Collabora client url is '@wopi_client_url'.",
-        [
-          '@current_request_scheme' => $current_request_scheme,
-          '@wopi_client_url' => $wopi_client_url,
-        ],
-      );
       throw new BadRequestHttpException('Viewer error: Protocol mismatch.');
     }
 
@@ -94,8 +89,10 @@ class ViewerController implements ContainerInjectionInterface {
       $render_array = $this->getViewerRender($media, $wopi_client_url, $edit);
     }
     catch (CollaboraNotAvailableException $e) {
-      $this->logger->warning('Cannot show the viewer/editor.');
-      throw new BadRequestHttpException('The Collabora Online editor/viewer is not available.');
+      throw new BadRequestHttpException(
+        message: 'The Collabora Online editor/viewer is not available.',
+        previous: $e
+      );
     }
 
     return new Response((string) $this->renderer->renderRoot($render_array));
