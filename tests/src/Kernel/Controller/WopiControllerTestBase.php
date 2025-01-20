@@ -9,8 +9,10 @@ use Drupal\collabora_online\Jwt\JwtTranscoderInterface;
 use Drupal\Component\Serialization\Json;
 use Drupal\file\Entity\File;
 use Drupal\file\FileInterface;
+use Drupal\media\Entity\Media;
 use Drupal\media\MediaInterface;
 use Drupal\Tests\collabora_online\Kernel\CollaboraKernelTestBase;
+use Drupal\Tests\collabora_online\Traits\KernelTestLoggerTrait;
 use Drupal\user\UserInterface;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
@@ -19,6 +21,8 @@ use Symfony\Component\HttpFoundation\Response;
  * Base class with shared methods to test WOPI requests.
  */
 abstract class WopiControllerTestBase extends CollaboraKernelTestBase {
+
+  use KernelTestLoggerTrait;
 
   /**
    * {@inheritdoc}
@@ -33,6 +37,13 @@ abstract class WopiControllerTestBase extends CollaboraKernelTestBase {
    * @var \Drupal\user\UserInterface
    */
   protected UserInterface $user;
+
+  /**
+   * The user with access to perform operations.
+   *
+   * @var \Drupal\user\UserInterface
+   */
+  protected UserInterface $fileOwner;
 
   /**
    * The media where to perform operations.
@@ -60,8 +71,7 @@ abstract class WopiControllerTestBase extends CollaboraKernelTestBase {
    */
   protected function setUp(): void {
     parent::setUp();
-    $this->logger = new TestLogger();
-    \Drupal::service('logger.factory')->addLogger($this->logger);
+    $this->setUpLogger();
 
     $collabora_settings = \Drupal::configFactory()->getEditable('collabora_online.settings');
     $cool = $collabora_settings->get('cool');
@@ -73,11 +83,18 @@ abstract class WopiControllerTestBase extends CollaboraKernelTestBase {
     \Drupal::database()->query("ALTER TABLE {media} AUTO_INCREMENT = 1000");
     \Drupal::database()->query("ALTER TABLE {file_managed} AUTO_INCREMENT = 2000");
 
-    $this->media = $this->createMediaEntity('document');
     $this->user = $this->createUser([
       'access content',
       'edit any document in collabora',
     ]);
+    // Create a separate user as file owner, to verify that the file owner id is
+    // set correctly.
+    $this->fileOwner = $this->createUser([]);
+    $this->media = $this->createMediaEntity(
+      'document',
+      ['uid' => $this->user->id()],
+      ['uid' => $this->fileOwner->id()],
+    );
     $fid = $this->media->getSource()->getSourceFieldValue($this->media);
     $this->file = File::load($fid);
 
@@ -133,6 +150,8 @@ abstract class WopiControllerTestBase extends CollaboraKernelTestBase {
    * @param array $token_payload
    *   Explicit token payload values.
    *   This can be used to cause a bad token.
+   * @param string|null $content
+   *   Request content.
    *
    * @return \Symfony\Component\HttpFoundation\Request
    *   The request.
@@ -144,6 +163,7 @@ abstract class WopiControllerTestBase extends CollaboraKernelTestBase {
     ?int $user_id = NULL,
     bool $write = FALSE,
     array $token_payload = [],
+    ?string $content = NULL,
   ): Request {
     $media_id ??= (int) $this->media->id();
     $user_id ??= (int) $this->user->id();
@@ -153,7 +173,7 @@ abstract class WopiControllerTestBase extends CollaboraKernelTestBase {
       'access_token' => $token,
       'access_token_ttl' => '0',
     ];
-    return Request::create($uri, $method, $parameters);
+    return Request::create($uri, $method, $parameters, content: $content);
   }
 
   /**
@@ -213,10 +233,13 @@ abstract class WopiControllerTestBase extends CollaboraKernelTestBase {
    */
   protected function assertJsonResponse(int $expected_code, array $expected_data, Request $request, string $message = ''): void {
     $response = $this->handleRequest($request);
-    $this->assertEquals($expected_code, $response->getStatusCode(), $message);
-    $this->assertEquals('application/json', $response->headers->get('Content-Type'), $message);
     $content = $response->getContent();
+    $this->assertIsString($content);
+    $extended_message = $message . "\n" . substr($content, 0, 3000);
+    $this->assertEquals($expected_code, $response->getStatusCode(), $extended_message);
+    $this->assertEquals('application/json', $response->headers->get('Content-Type'), $extended_message);
     $data = Json::decode($content);
+    $this->assertNotNull($data, $extended_message);
     $this->assertSame($expected_data, $data, $message);
   }
 
@@ -238,6 +261,32 @@ abstract class WopiControllerTestBase extends CollaboraKernelTestBase {
       $request,
       $assertion_message,
     );
+    $this->assertLogMessage(channel: 'access denied', position: -1);
+  }
+
+  /**
+   * Asserts a failure response given a request.
+   *
+   * @param string $expected_response_message
+   *   Message expected to be in the response.
+   * @param \Symfony\Component\HttpFoundation\Request $request
+   *   The request to perform.
+   * @param string $assertion_message
+   *   Message to distinguish this from other assertions.
+   */
+  protected function assertNotFoundResponse(
+    string $expected_response_message,
+    Request $request,
+    string $assertion_message = '',
+  ): void {
+    $this->assertResponse(
+      Response::HTTP_NOT_FOUND,
+      $expected_response_message,
+      'text/plain',
+      $request,
+      $assertion_message,
+    );
+    $this->assertLogMessage(channel: 'page not found', position: -1);
   }
 
   /**
@@ -275,6 +324,21 @@ abstract class WopiControllerTestBase extends CollaboraKernelTestBase {
     /** @var \Symfony\Component\HttpKernel\HttpKernelInterface $kernel */
     $kernel = \Drupal::service('http_kernel');
     return $kernel->handle($request);
+  }
+
+  /**
+   * Loads the file currently attached to the media.
+   *
+   * This can be different from $this->file, if the media has been updated.
+   *
+   * @return \Drupal\file\FileInterface|null
+   *   File entity.
+   */
+  protected function loadCurrentMediaFile(): ?FileInterface {
+    $media = Media::load($this->media->id());
+    $fid = $media->getSource()->getSourceFieldValue($media);
+    $this->assertNotNull($fid);
+    return File::load($fid);
   }
 
 }

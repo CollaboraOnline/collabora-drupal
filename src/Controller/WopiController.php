@@ -12,9 +12,10 @@
 
 namespace Drupal\collabora_online\Controller;
 
-use Drupal\collabora_online\Exception\CollaboraNotAvailableException;
+use Drupal\collabora_online\Exception\CollaboraJwtKeyException;
 use Drupal\collabora_online\Jwt\JwtTranscoderInterface;
 use Drupal\collabora_online\MediaHelperInterface;
+use Drupal\collabora_online\Util\DateTimeHelper;
 use Drupal\Component\Datetime\TimeInterface;
 use Drupal\Core\DependencyInjection\AutowireTrait;
 use Drupal\Core\DependencyInjection\ContainerInjectionInterface;
@@ -22,15 +23,19 @@ use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\File\FileExists;
 use Drupal\Core\File\FileSystemInterface;
 use Drupal\Core\File\FileUrlGeneratorInterface;
-use Drupal\Core\Session\AccountSwitcherInterface;
 use Drupal\Core\StringTranslation\StringTranslationTrait;
 use Drupal\Core\StringTranslation\TranslationInterface;
+use Drupal\file\FileInterface;
+use Drupal\media\MediaInterface;
+use Drupal\user\UserInterface;
 use Psr\Log\LoggerInterface;
 use Symfony\Component\DependencyInjection\Attribute\Autowire;
 use Symfony\Component\HttpFoundation\BinaryFileResponse;
+use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpKernel\Exception\AccessDeniedHttpException;
+use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 
 /**
  * Provides WOPI route responses for the Collabora module.
@@ -43,7 +48,6 @@ class WopiController implements ContainerInjectionInterface {
   public function __construct(
     protected readonly EntityTypeManagerInterface $entityTypeManager,
     protected readonly JwtTranscoderInterface $jwtTranscoder,
-    protected readonly AccountSwitcherInterface $accountSwitcher,
     protected readonly FileSystemInterface $fileSystem,
     protected readonly TimeInterface $time,
     protected readonly FileUrlGeneratorInterface $fileUrlGenerator,
@@ -58,52 +62,24 @@ class WopiController implements ContainerInjectionInterface {
   /**
    * Handles the WOPI 'info' request for a media entity.
    *
-   * @param string $id
-   *   Media id from url.
-   * @param \Symfony\Component\HttpFoundation\Request $request
-   *   Request object with query parameters.
+   * @param \Drupal\media\MediaInterface $media
+   *   Media entity.
+   * @param \Drupal\file\FileInterface $file
+   *   File attached to the media entity.
+   * @param \Drupal\user\UserInterface $user
+   *   User entity from the uid in the JWT payload.
+   * @param bool $can_write
+   *   TRUE if the user has write access to the media.
    *
    * @return \Symfony\Component\HttpFoundation\Response
    *   The response with file contents.
    */
-  public function wopiCheckFileInfo(string $id, Request $request): Response {
-    $token = $request->query->get('access_token');
-    if ($token === NULL) {
-      throw new AccessDeniedHttpException('Missing access token.');
-    }
-
-    $jwt_payload = $this->verifyTokenForMediaId($token, $id);
-
-    /** @var \Drupal\media\MediaInterface|null $media */
-    $media = $this->entityTypeManager->getStorage('media')->load($id);
-    if ($media === NULL) {
-      throw new AccessDeniedHttpException('Media not found.');
-    }
-
-    $file = $this->mediaHelper->getFileForMedia($media);
-    if ($file === NULL) {
-      throw new AccessDeniedHttpException('No file attached to media.');
-    }
-
-    $mtime = date_create_immutable_from_format('U', $file->getChangedTime());
-    // @todo What if the uid in the payload is not set?
-    /** @var \Drupal\user\UserInterface|null $user */
-    $user = $this->entityTypeManager->getStorage('user')->load($jwt_payload['uid']);
-    if ($user === NULL) {
-      throw new AccessDeniedHttpException('User not found.');
-    }
-    $can_write = $jwt_payload['wri'];
-
-    if ($can_write && !$media->access('edit in collabora', $user)) {
-      $this->logger->error('Token and user permissions do not match.');
-      throw new AccessDeniedHttpException('The user does not have collabora edit access for this media.');
-    }
-
-    $payload = [
+  protected function wopiCheckFileInfo(MediaInterface $media, FileInterface $file, UserInterface $user, bool $can_write): Response {
+    $response_data = [
       'BaseFileName' => $file->getFilename(),
       'Size' => $file->getSize(),
-      'LastModifiedTime' => $mtime->format('c'),
-      'UserId' => $jwt_payload['uid'],
+      'LastModifiedTime' => DateTimeHelper::format($file->getChangedTime()),
+      'UserId' => $user->id(),
       'UserFriendlyName' => $user->getDisplayName(),
       'UserCanWrite' => $can_write,
       'IsAdminUser' => $user->hasPermission('administer collabora instance'),
@@ -112,166 +88,209 @@ class WopiController implements ContainerInjectionInterface {
 
     $user_picture = $user->user_picture?->entity;
     if ($user_picture) {
-      $payload['UserExtraInfo']['avatar'] = $this->fileUrlGenerator->generateAbsoluteString($user_picture->getFileUri());
+      $response_data['UserExtraInfo']['avatar'] = $this->fileUrlGenerator->generateAbsoluteString($user_picture->getFileUri());
     }
 
-    $jsonPayload = json_encode($payload);
-
-    $response = new Response(
-      $jsonPayload,
+    return new JsonResponse(
+      $response_data,
       Response::HTTP_OK,
-      ['content-type' => 'application/json']
+      ['content-type' => 'application/json'],
     );
-    return $response;
   }
 
   /**
    * Handles the wopi "content" request for a media entity.
    *
-   * @param string $id
-   *   Media id from url.
-   * @param \Symfony\Component\HttpFoundation\Request $request
-   *   Request object with query parameters.
+   * @param \Drupal\file\FileInterface $file
+   *   File attached to the media entity.
    *
    * @return \Symfony\Component\HttpFoundation\Response
    *   The response with file contents.
+   *
+   * @see \Drupal\system\FileDownloadController::download()
    */
-  public function wopiGetFile(string $id, Request $request): Response {
-    $token = $request->query->get('access_token');
-
-    $jwt_payload = $this->verifyTokenForMediaId($token, $id);
-
-    /** @var \Drupal\user\UserInterface|null $user */
-    $user = $this->entityTypeManager->getStorage('user')->load($jwt_payload['uid']);
-    $this->accountSwitcher->switchTo($user);
-
-    /** @var \Drupal\media\MediaInterface|null $media */
-    $media = $this->entityTypeManager->getStorage('media')->load($id);
-    if ($media === NULL) {
-      throw new AccessDeniedHttpException('Media not found.');
+  protected function wopiGetFile(FileInterface $file): Response {
+    if (!is_file($file->getFileUri())) {
+      throw new NotFoundHttpException('The file is missing in the file system.');
     }
-
-    $file = $this->mediaHelper->getFileForMedia($media);
-    if ($file === NULL) {
-      throw new AccessDeniedHttpException('No file attached to media.');
-    }
-    $mimetype = $file->getMimeType();
-
-    $response = new BinaryFileResponse(
+    return new BinaryFileResponse(
       $file->getFileUri(),
       Response::HTTP_OK,
-      ['content-type' => $mimetype]
+      ['content-type' => $file->getMimeType()],
     );
-    $this->accountSwitcher->switchBack();
-    return $response;
   }
 
   /**
    * Handles the wopi "save" request for a media entity.
    *
-   * @param string $id
-   *   Media id from url.
+   * @param \Drupal\media\MediaInterface $media
+   *   Media entity.
+   * @param \Drupal\file\FileInterface $file
+   *   File attached to the media entity.
+   * @param \Drupal\user\UserInterface $user
+   *   User entity from the uid in the JWT payload.
+   * @param bool $can_write
+   *   TRUE if the user has write access to the media.
    * @param \Symfony\Component\HttpFoundation\Request $request
    *   Request object with headers, query parameters and payload.
    *
    * @return \Symfony\Component\HttpFoundation\Response
    *   The response.
    */
-  public function wopiPutFile(string $id, Request $request): Response {
-    $token = $request->get('access_token');
-    $timestamp = $request->headers->get('x-cool-wopi-timestamp');
-    $modified_by_user = $request->headers->get('x-cool-wopi-ismodifiedbyuser') == 'true';
-    $autosave = $request->headers->get('x-cool-wopi-isautosave') == 'true';
-    $exitsave = $request->headers->get('x-cool-wopi-isexitsave') == 'true';
-
-    $jwt_payload = $this->verifyTokenForMediaId($token, $id);
-    if (empty($jwt_payload['wri'])) {
+  protected function wopiPutFile(MediaInterface $media, FileInterface $file, UserInterface $user, bool $can_write, Request $request): Response {
+    if (!$can_write) {
       throw new AccessDeniedHttpException('The token only grants read access.');
     }
 
-    /** @var \Drupal\media\MediaInterface|null $media */
-    $media = $this->entityTypeManager->getStorage('media')->load($id);
-    if ($media === NULL) {
-      throw new AccessDeniedHttpException('Media not found.');
+    $conflict_response = $this->checkSaveTimestampConflict($request, $media, $file);
+    if ($conflict_response) {
+      return $conflict_response;
     }
 
-    /** @var \Drupal\user\UserInterface|null $user */
-    $user = $this->entityTypeManager->getStorage('user')->load($jwt_payload['uid']);
-    if ($user === NULL) {
-      throw new AccessDeniedHttpException('User not found.');
-    }
+    $new_file_content = $request->getContent();
+    $new_file = $this->createNewFileEntity($file, $new_file_content);
 
-    $this->accountSwitcher->switchTo($user);
+    $save_reason = $this->buildSaveReason($request);
 
-    $file = $this->mediaHelper->getFileForMedia($media);
+    $this->mediaHelper->setMediaSource($media, $new_file);
+    $media->setRevisionUser($user);
+    $media->setRevisionCreationTime($this->time->getRequestTime());
+    $media->setRevisionLogMessage($save_reason);
+    $media->save();
 
-    if ($timestamp) {
-      $wopi_stamp = \DateTimeImmutable::createFromFormat(\DateTimeInterface::ATOM, $timestamp);
-      $file_stamp = \DateTimeImmutable::createFromFormat('U', $file->getChangedTime());
+    $this->logger->info(
+      'Media entity @media_id was updated with Collabora.<br>
+Save reason: @reason<br>
+Old file: @old_file_id / @old_file_uri<br>
+New file: @new_file_id / @new_file_uri',
+      [
+        '@media_id' => $media->id(),
+        '@reason' => $save_reason,
+        '@old_file_id' => $file->id(),
+        '@old_file_uri' => $file->getFileUri(),
+        '@new_file_id' => $new_file->id(),
+        '@new_file_uri' => $new_file->getFileUri(),
+      ],
+    );
 
-      if ($wopi_stamp != $file_stamp) {
-        $this->logger->error('Conflict saving file ' . $id . ' wopi: ' . $wopi_stamp->format('c') . ' differs from file: ' . $file_stamp->format('c'));
+    return new JsonResponse(
+      [
+        'LastModifiedTime' => DateTimeHelper::format($new_file->getChangedTime()),
+      ],
+      Response::HTTP_OK,
+      ['content-type' => 'application/json'],
+    );
+  }
 
-        return new Response(
-          json_encode(['COOLStatusCode' => 1010]),
-          Response::HTTP_CONFLICT,
-          ['content-type' => 'application/json'],
-        );
-      }
-    }
-
+  /**
+   * Creates a new file entity with given file content.
+   *
+   * @param \Drupal\file\FileInterface $file
+   *   Old file entity.
+   * @param string $new_file_content
+   *   New file content to save.
+   *
+   * @return \Drupal\file\FileInterface
+   *   New file entity.
+   *   This may have a different uri, but will have the same filename.
+   */
+  protected function createNewFileEntity(FileInterface $file, string $new_file_content): FileInterface {
+    // The current file uri may have a number suffix like "_0".
+    // For the new file uri, start with the clean file name, to avoid repeated
+    // suffixes like "_0_0_0".
     $dir = $this->fileSystem->dirname($file->getFileUri());
     $dest = $dir . '/' . $file->getFilename();
 
-    $content = $request->getContent();
-    $owner_id = $file->getOwnerId();
-    $uri = $this->fileSystem->saveData($content, $dest, FileExists::Rename);
+    $new_file_uri = $this->fileSystem->saveData(
+      $new_file_content,
+      $dest,
+      FileExists::Rename,
+    );
 
-    /** @var \Drupal\file\FileInterface|null $file */
-    $file = $this->entityTypeManager->getStorage('file')->create(['uri' => $uri]);
-    $file->setOwnerId($owner_id);
-    if (is_file($dest)) {
-      $file->setFilename($this->fileSystem->basename($dest));
+    /** @var \Drupal\file\FileInterface|null $new_file */
+    $new_file = $this->entityTypeManager->getStorage('file')->create([
+      'uri' => $new_file_uri,
+    ]);
+    $new_file->setOwnerId($file->getOwnerId());
+    // Preserve the original file name, no matter the uri was renamed.
+    $new_file->setFilename($file->getFilename());
+    $new_file->setPermanent();
+    $new_file->save();
+
+    return $new_file;
+  }
+
+  /**
+   * Checks for a timestamp conflict on save.
+   *
+   * A conflicting timestamp indicates that the file was updated outside of the
+   * Collabora editing session.
+   *
+   * @param \Symfony\Component\HttpFoundation\Request $request
+   *   Incoming WOPI save request.
+   * @param \Drupal\media\MediaInterface $media
+   *   Media entity, only used for logging.
+   * @param \Drupal\file\FileInterface $file
+   *   File entity attached to the media entity.
+   *
+   * @return \Symfony\Component\HttpFoundation\Response|null
+   *   Failure response, or NULL if no conflict.
+   */
+  protected function checkSaveTimestampConflict(Request $request, MediaInterface $media, FileInterface $file): ?Response {
+    $wopi_time_atom = $request->headers->get('x-cool-wopi-timestamp');
+    if (!$wopi_time_atom) {
+      return NULL;
     }
-    $file->setPermanent();
-    $file->setSize(strlen($content));
-    $file->save();
-    $mtime = date_create_immutable_from_format('U', $file->getChangedTime());
+    $wopi_datetime = \DateTimeImmutable::createFromFormat(\DateTimeInterface::ATOM, $wopi_time_atom);
+    $file_datetime = \DateTimeImmutable::createFromFormat('U', $file->getChangedTime());
 
-    $this->mediaHelper->setMediaSource($media, $file);
-    $media->setRevisionUser($user);
-    $media->setRevisionCreationTime($this->time->getRequestTime());
+    if ($wopi_datetime == $file_datetime) {
+      return NULL;
+    }
 
+    $this->logger->error(
+      'Conflict saving file for media @media_id: WOPI time @wopi_time differs from file time @file_time.',
+      [
+        '@media_id' => $media->id(),
+        '@wopi_time' => $wopi_datetime->format('c'),
+        '@file_time' => $file_datetime->format('c'),
+      ],
+    );
+
+    return new JsonResponse(
+      ['COOLStatusCode' => 1010],
+      Response::HTTP_CONFLICT,
+      ['content-type' => 'application/json'],
+    );
+  }
+
+  /**
+   * Builds a reason string why the file is being saved.
+   *
+   * This is used for a log message an for the revision log message.
+   *
+   * @param \Symfony\Component\HttpFoundation\Request $request
+   *   Incoming request.
+   *
+   * @return string
+   *   Reason string.
+   */
+  protected function buildSaveReason(Request $request): string {
     $save_reason = 'Saved by Collabora Online';
     $reasons = [];
-    if ($modified_by_user) {
+    if ($request->headers->get('x-cool-wopi-ismodifiedbyuser') == 'true') {
       $reasons[] = 'Modified by user';
     }
-    if ($autosave) {
+    if ($request->headers->get('x-cool-wopi-isautosave') == 'true') {
       $reasons[] = 'Autosaved';
     }
-    if ($exitsave) {
+    if ($request->headers->get('x-cool-wopi-isexitsave') == 'true') {
       $reasons[] = 'Save on Exit';
     }
     if (count($reasons) > 0) {
       $save_reason .= ' (' . implode(', ', $reasons) . ')';
     }
-    $this->logger->error('Save reason: ' . $save_reason);
-    $media->setRevisionLogMessage($save_reason);
-    $media->save();
-
-    $payload = json_encode([
-      'LastModifiedTime' => $mtime->format('c'),
-    ]);
-
-    $response = new Response(
-      $payload,
-      Response::HTTP_OK,
-      ['content-type' => 'application/json']
-    );
-
-    $this->accountSwitcher->switchBack();
-    return $response;
+    return $save_reason;
   }
 
   /**
@@ -279,33 +298,58 @@ class WopiController implements ContainerInjectionInterface {
    *
    * @param string $action
    *   One of 'info', 'content' or 'save', depending with path is visited.
-   * @param string $id
-   *   Media id from url.
+   * @param \Drupal\media\MediaInterface $media
+   *   Media entity from the media id in the URL.
    * @param \Symfony\Component\HttpFoundation\Request $request
    *   Request object for headers and query parameters.
    *
    * @return \Symfony\Component\HttpFoundation\Response
    *   Response to be consumed by Collabora Online.
    */
-  public function wopi(string $action, string $id, Request $request): Response {
-    $returnCode = Response::HTTP_BAD_REQUEST;
-    switch ($action) {
-      case 'info':
-        return $this->wopiCheckFileInfo($id, $request);
+  public function wopi(string $action, MediaInterface $media, Request $request): Response {
+    $token = $request->get('access_token');
+    if ($token === NULL) {
+      throw new AccessDeniedHttpException('Missing access token.');
+    }
+    $jwt_payload = $this->verifyTokenForMedia($token, $media);
 
-      case 'content':
-        return $this->wopiGetFile($id, $request);
-
-      case 'save':
-        return $this->wopiPutFile($id, $request);
+    /** @var \Drupal\user\UserInterface|null $user */
+    $user = $this->entityTypeManager->getStorage('user')->load($jwt_payload['uid']);
+    if ($user === NULL) {
+      throw new AccessDeniedHttpException('User not found.');
     }
 
-    $response = new Response(
+    $file = $this->mediaHelper->getFileForMedia($media);
+    if ($file === NULL) {
+      throw new AccessDeniedHttpException('No file attached to media.');
+    }
+
+    $can_write = !empty($jwt_payload['wri']);
+
+    if ($can_write &&
+      $action !== 'content' &&
+      !$media->access('edit in collabora', $user)
+    ) {
+      // The edit permission has been revoked since the token was created.
+      throw new AccessDeniedHttpException('The user does not have collabora edit access for this media.');
+    }
+
+    switch ($action) {
+      case 'info':
+        return $this->wopiCheckFileInfo($media, $file, $user, $can_write);
+
+      case 'content':
+        return $this->wopiGetFile($file);
+
+      case 'save':
+        return $this->wopiPutFile($media, $file, $user, $can_write, $request);
+    }
+
+    return new Response(
       'Invalid WOPI action ' . $action,
-      $returnCode,
-      ['content-type' => 'text/plain']
+      Response::HTTP_BAD_REQUEST,
+      ['content-type' => 'text/plain'],
     );
-    return $response;
   }
 
   /**
@@ -317,9 +361,8 @@ class WopiController implements ContainerInjectionInterface {
    *
    * @param string $token
    *   The token to verify.
-   * @param int|string $expected_media_id
-   *   Media id expected to be in the token payload.
-   *   This could be a stringified integer like '123'.
+   * @param \Drupal\media\MediaInterface $media
+   *   Media entity.
    *
    * @return array
    *   Data decoded from the token.
@@ -327,27 +370,27 @@ class WopiController implements ContainerInjectionInterface {
    * @throws \Symfony\Component\HttpKernel\Exception\AccessDeniedHttpException
    *   The token is malformed, invalid or has expired.
    */
-  protected function verifyTokenForMediaId(
+  protected function verifyTokenForMedia(
     #[\SensitiveParameter]
     string $token,
-    int|string $expected_media_id,
+    MediaInterface $media,
   ): array {
     try {
       $values = $this->jwtTranscoder->decode($token);
     }
-    catch (CollaboraNotAvailableException $e) {
-      $this->logger->warning('A token cannot be decoded: @message', ['@mesage' => $e->getMessage()]);
-      throw new AccessDeniedHttpException('Malformed token');
+    catch (CollaboraJwtKeyException $e) {
+      $this->logger->warning('A token cannot be decoded: @message', ['@message' => $e->getMessage()]);
+      throw new AccessDeniedHttpException('Token verification is not possible right now.');
     }
     if ($values === NULL) {
-      throw new AccessDeniedHttpException('Empty token values');
+      throw new AccessDeniedHttpException('Bad token');
     }
-    if ((string) $values['fid'] !== (string) $expected_media_id) {
+    if ((string) $values['fid'] !== (string) $media->id()) {
       throw new AccessDeniedHttpException(sprintf(
         // The token payload is not encrypted, just encoded.
         // It is ok to reveal its values in the response for logging.
         'Found fid %s in request path, but fid %s in token payload',
-        $expected_media_id,
+        $media->id(),
         $values['fid'],
       ));
     }

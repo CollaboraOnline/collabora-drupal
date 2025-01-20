@@ -69,7 +69,7 @@ abstract class JwtTranscoderBase implements JwtTranscoderInterface {
    * @return string
    *   The key value.
    *
-   * @throws \Drupal\collabora_online\Exception\CollaboraNotAvailableException
+   * @throws \Drupal\collabora_online\Exception\CollaboraJwtKeyException
    *   The key to use by Collabora is empty or not configured.
    */
   abstract protected function getKey(): string;

@@ -1,6 +1,7 @@
 services:
   _defaults:
     autowire: true
+    autoconfigure: true
   logger.channel.collabora_online:
     parent: logger.channel_base
     arguments: ['cool']

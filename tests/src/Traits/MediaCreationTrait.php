@@ -28,23 +28,28 @@ trait MediaCreationTrait {
    *
    * @param string $type
    *   Media type.
-   * @param array $values
+   * @param array $media_values
    *   Values for the media entity.
+   * @param array $file_values
+   *   Values for the file entity.
+   *   This should not contain 'uri'.
    *
    * @return \Drupal\media\MediaInterface
    *   New media entity.
    */
-  protected function createMediaEntity(string $type, array $values = []): MediaInterface {
+  protected function createMediaEntity(string $type, array $media_values = [], array $file_values = []): MediaInterface {
     file_put_contents('public://test.txt', 'Hello test');
-    $file = File::create([
+    $this->assertArrayNotHasKey('uri', $file_values);
+    $file_values += [
       'uri' => 'public://test.txt',
-    ]);
+    ];
+    $file = File::create($file_values);
     $file->save();
-    $values += [
+    $media_values += [
       'bundle' => $type,
       'field_media_file' => $file->id(),
     ];
-    $media = Media::create($values);
+    $media = Media::create($media_values);
     $media->save();
 
     return $media;
