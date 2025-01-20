@@ -89,15 +89,12 @@ trait KernelTestLoggerTrait {
     // This could go undetected, if the translatable string and the placeholders
     // are copied from production code into the test code.
     if ($message !== NULL) {
-      foreach (array_keys($replacements) as $placeholder) {
-        $this->assertStringContainsString($placeholder, $message, $assertion_message);
+      foreach ($replacements as $key => $value) {
+        $this->assertStringContainsString($key, $message, $assertion_message);
+        $this->assertArrayHasKey($key, $record['context'], $assertion_message);
+        $this->assertEquals($value, $record['context'][$key], $assertion_message);
       }
     }
-    $this->assertSame(
-      $replacements,
-      array_intersect_key($replacements, $record['context']),
-      $assertion_message,
-    );
   }
 
   /**
