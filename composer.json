@@ -23,14 +23,14 @@
         "drupal/core-recommended": "^10.3.6",
         "drupal/groupmedia": "^3 || ^4",
         "drush/drush": "^12.4",
-        "openeuropa/task-runner": "^2@dev",
         "openeuropa/task-runner-drupal-project-symlink": "^1.0.0-beta6",
+        "openeuropa/task-runner": "^2@alpha",
         "php-parallel-lint/php-parallel-lint": "^1.2",
         "weitzman/drupal-test-traits": "^2.4"
     },
     "scripts": {
-        "post-install-cmd": "./vendor/bin/run drupal:site-setup",
-        "post-update-cmd": "./vendor/bin/run drupal:site-setup"
+        "post-install-cmd": "if [ -z \"${DRUPALCI}\" ]; then ./vendor/bin/run drupal:site-setup; fi",
+        "post-update-cmd": "if [ -z \"${DRUPALCI}\" ]; then ./vendor/bin/run drupal:site-setup; fi"
     },
     "repositories": [
         {

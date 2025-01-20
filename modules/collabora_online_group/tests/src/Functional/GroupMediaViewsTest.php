@@ -128,7 +128,9 @@ class GroupMediaViewsTest extends BrowserTestBase {
           ],
           [
             'query' => [
-              'destination' => "/group/{$group->id()}/media",
+              'destination' => Url::fromRoute('view.group_media.page_1', [
+                'group' => $group->id(),
+              ])->toString(),
             ],
           ]
         )->toString(),
@@ -143,7 +145,9 @@ class GroupMediaViewsTest extends BrowserTestBase {
           ],
           [
             'query' => [
-              'destination' => "/group/{$group->id()}/media",
+              'destination' => Url::fromRoute('view.group_media.page_1', [
+                'group' => $group->id(),
+              ])->toString(),
             ],
           ]
         )->toString(),

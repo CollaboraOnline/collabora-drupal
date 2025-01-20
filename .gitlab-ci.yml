@@ -1,0 +1,52 @@
+include:
+  - project: $_GITLAB_TEMPLATES_REPO
+    ref: $_GITLAB_TEMPLATES_REF
+    file:
+      - '/includes/include.drupalci.main.yml'
+      - '/includes/include.drupalci.variables.yml'
+      - '/includes/include.drupalci.workflows.yml'
+
+phpunit:
+  extends: .phpunit-base
+  services:
+    - !reference [.with-database]
+    - !reference [.with-chrome]
+    - !reference [.with-chrome-legacy]
+    - name: collabora/code
+      alias: 'collabora.test'
+      variables:
+        username: admin
+        password: admin
+        extra_params: |
+          --o:ssl.enable=false
+          --o:storage.wopi.alias_groups[@mode]=groups
+          --o:storage.wopi.alias_groups.group[0].host=$DTT_BASE_URL
+          --o:storage.wopi.alias_groups.group[0].host[@allow]=true
+      command:
+        - sh
+        - -c
+        # Manually generate the proof key, replicating the behavior of "coolconfig generate-proof-key".
+        # The coolconfig command can produce inconsistent results, as the service occasionally interrupts execution.
+        - |
+          openssl genpkey -algorithm RSA -out /etc/coolwsd/proof_key -pkeyopt rsa_keygen_bits:2048 &&
+          openssl rsa -in /etc/coolwsd/proof_key -outform PEM -pubout -out /etc/coolwsd/proof_key.pub &&
+          /start-collabora-online.sh
+  before_script:
+    - !reference [.setup-webserver]
+    - !reference [.simpletest-db]
+    - $CI_PROJECT_DIR/vendor/bin/run drupal:settings-setup --skip-permissions-setup
+    - $CI_PROJECT_DIR/vendor/bin/run drupal:site-install --database-scheme=mysql --database-name=$MYSQL_DATABASE --database-host=database --database-user=$MYSQL_USER --database-password=$MYSQL_PASSWORD --database-port=
+    - drush -y config-set collabora_online.settings cool.wopi_base $DTT_BASE_URL
+    - rm /var/www/html/web # Remove symlink to allow .setup-webserver to be re-executed.
+
+variables:
+  DTT_BASE_URL: $SIMPLETEST_BASE_URL
+  DTT_MINK_DRIVER_ARGS: $MINK_DRIVER_ARGS_WEBDRIVER
+  _SHOW_ENVIRONMENT_VARIABLES: '1'
+  SKIP_ESLINT: 1
+  SKIP_STYLELINT: 1
+  SKIP_CSPELL: 1
+
+composer:
+  variables:
+    DRUPAL_CORE: $CORE_PREVIOUS_STABLE
