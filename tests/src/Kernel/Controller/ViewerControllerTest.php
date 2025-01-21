@@ -15,6 +15,7 @@ declare(strict_types=1);
 namespace Drupal\Tests\collabora_online\Kernel\Controller;
 
 use Drupal\collabora_online\Cool\CollaboraDiscoveryFetcherInterface;
+use Drupal\collabora_online\Cool\CollaboraDiscoveryInterface;
 use Drupal\collabora_online\Exception\CollaboraNotAvailableException;
 use Drupal\collabora_online\Jwt\JwtTranscoderInterface;
 use Drupal\Core\Logger\RfcLogLevel;
@@ -75,7 +76,16 @@ class ViewerControllerTest extends WopiControllerTestBase {
       $this->assertBadRequestResponse(
         'The Collabora Online editor/viewer is not available.',
         $request,
-        $name
+        $name,
+      );
+      $this->assertLogMessage(
+        RfcLogLevel::WARNING,
+        "Collabora Online is not available.<br>\n" . Error::DEFAULT_ERROR_MESSAGE,
+        [
+          '%type' => CollaboraNotAvailableException::class,
+          '@message' => 'The discovery.xml file is empty.',
+        ],
+        assertion_message: $name,
       );
     }
   }
@@ -86,11 +96,22 @@ class ViewerControllerTest extends WopiControllerTestBase {
    * @covers ::editor
    */
   public function testEditorMismatchScheme(): void {
+    $wopi_url = \Drupal::service(CollaboraDiscoveryInterface::class)->getWopiClientURL();
+
     foreach ($this->createViewerRequests(TRUE) as $name => $request) {
       $this->assertBadRequestResponse(
         'Viewer error: Protocol mismatch.',
         $request,
-        $name
+        $name,
+      );
+      $this->assertLogMessage(
+        RfcLogLevel::ERROR,
+        "The current request uses '@current_request_scheme' url scheme, but the Collabora client url is '@wopi_client_url'.",
+        [
+          '@current_request_scheme' => 'https',
+          '@wopi_client_url' => $wopi_url,
+        ],
+        assertion_message: $name,
       );
     }
   }
@@ -109,7 +130,16 @@ class ViewerControllerTest extends WopiControllerTestBase {
       $this->assertBadRequestResponse(
         'The Collabora Online editor/viewer is not available.',
         $request,
-        $name
+        $name,
+      );
+      $this->assertLogMessage(
+        RfcLogLevel::WARNING,
+        "Cannot show the viewer/editor.<br>\n" . Error::DEFAULT_ERROR_MESSAGE,
+        [
+          '%type' => CollaboraNotAvailableException::class,
+          '@message' => 'The Collabora Online connection is not configured.',
+        ],
+        assertion_message: $name,
       );
     }
   }
@@ -129,7 +159,16 @@ class ViewerControllerTest extends WopiControllerTestBase {
       $this->assertBadRequestResponse(
         'The Collabora Online editor/viewer is not available.',
         $request,
-        $name
+        $name,
+      );
+      $this->assertLogMessage(
+        RfcLogLevel::WARNING,
+        "Cannot show the viewer/editor.<br>\n" . Error::DEFAULT_ERROR_MESSAGE,
+        [
+          '%type' => CollaboraNotAvailableException::class,
+          '@message' => '',
+        ],
+        assertion_message: $name,
       );
     }
   }
@@ -170,7 +209,7 @@ class ViewerControllerTest extends WopiControllerTestBase {
       [
         'https' => $https,
         'absolute' => TRUE,
-      ]
+      ],
     );
 
     return Request::create($url->toString());
@@ -189,7 +228,7 @@ class ViewerControllerTest extends WopiControllerTestBase {
 
     $this->assertEquals(Response::HTTP_OK, $response->getStatusCode(), $message);
     $this->assertStringContainsString('iframe', $response->getContent(), $message);
-    $this->assertEquals('text/html; charset=UTF-8', $response->headers->get('Content-Type'), $message);
+    $this->assertEquals('', $response->headers->get('Content-Type'), $message);
   }
 
   /**
@@ -206,18 +245,9 @@ class ViewerControllerTest extends WopiControllerTestBase {
     $this->assertResponse(
       Response::HTTP_BAD_REQUEST,
       $expected_content,
-      'text/html',
+      'text/plain',
       $request,
       $message,
-    );
-    $this->assertLogMessage(
-      RfcLogLevel::WARNING,
-      Error::DEFAULT_ERROR_MESSAGE,
-      [
-        '@message' => $expected_content,
-      ],
-      'client error',
-      assertion_message: $message
     );
   }
 

@@ -24,12 +24,12 @@ use Drupal\Core\Render\RendererInterface;
 use Drupal\Core\Session\AccountInterface;
 use Drupal\Core\StringTranslation\StringTranslationTrait;
 use Drupal\Core\StringTranslation\TranslationInterface;
+use Drupal\Core\Utility\Error;
 use Drupal\media\MediaInterface;
 use Psr\Log\LoggerInterface;
 use Symfony\Component\DependencyInjection\Attribute\Autowire;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
-use Symfony\Component\HttpKernel\Exception\BadRequestHttpException;
 
 /**
  * Provides route responses for the Collabora module.
@@ -65,33 +65,51 @@ class ViewerController implements ContainerInjectionInterface {
    *
    * @return \Symfony\Component\HttpFoundation\Response
    *   Response suitable for iframe, without the usual page decorations.
-   *
-   * @throws \Symfony\Component\HttpKernel\Exception\BadRequestHttpException
-   *   The Collabora server or editor is not available, or mismatching scheme.
    */
   public function editor(MediaInterface $media, Request $request, $edit = FALSE): Response {
     try {
       $wopi_client_url = $this->discovery->getWopiClientURL();
     }
     catch (CollaboraNotAvailableException $e) {
-      throw new BadRequestHttpException(
-        'The Collabora Online editor/viewer is not available.',
-        $e,
+      $this->logger->warning(
+        "Collabora Online is not available.<br>\n" . Error::DEFAULT_ERROR_MESSAGE,
+        Error::decodeException($e) + [],
+      );
+      return new Response(
+        (string) $this->t('The Collabora Online editor/viewer is not available.'),
+        Response::HTTP_BAD_REQUEST,
+        ['content-type' => 'text/plain'],
       );
     }
 
     $current_request_scheme = $request->getScheme();
     if (parse_url($wopi_client_url, PHP_URL_SCHEME) !== $current_request_scheme) {
-      throw new BadRequestHttpException('Viewer error: Protocol mismatch.');
+      $this->logger->error(
+        "The current request uses '@current_request_scheme' url scheme, but the Collabora client url is '@wopi_client_url'.",
+        [
+          '@current_request_scheme' => $current_request_scheme,
+          '@wopi_client_url' => $wopi_client_url,
+        ],
+      );
+      return new Response(
+        (string) $this->t('Viewer error: Protocol mismatch.'),
+        Response::HTTP_BAD_REQUEST,
+        ['content-type' => 'text/plain'],
+      );
     }
 
     try {
       $render_array = $this->getViewerRender($media, $wopi_client_url, $edit);
     }
     catch (CollaboraNotAvailableException $e) {
-      throw new BadRequestHttpException(
-        'The Collabora Online editor/viewer is not available.',
-        $e
+      $this->logger->warning(
+        "Cannot show the viewer/editor.<br>\n" . Error::DEFAULT_ERROR_MESSAGE,
+        Error::decodeException($e) + [],
+      );
+      return new Response(
+        (string) $this->t('The Collabora Online editor/viewer is not available.'),
+        Response::HTTP_BAD_REQUEST,
+        ['content-type' => 'text/plain'],
       );
     }
 

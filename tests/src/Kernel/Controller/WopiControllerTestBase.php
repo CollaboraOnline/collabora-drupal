@@ -308,11 +308,7 @@ abstract class WopiControllerTestBase extends CollaboraKernelTestBase {
 
     $this->assertEquals($expected_code, $response->getStatusCode(), $message);
     $this->assertEquals($expected_content, $response->getContent(), $message);
-    $this->assertEquals(
-      $expected_content_type . '; charset=UTF-8',
-      $response->headers->get('Content-Type'),
-      $message
-    );
+    $this->assertEquals($expected_content_type, $response->headers->get('Content-Type'), $message);
   }
 
   /**
@@ -325,8 +321,8 @@ abstract class WopiControllerTestBase extends CollaboraKernelTestBase {
    *   The response.
    */
   protected function handleRequest(Request $request): Response {
-    /** @var \Drupal\Core\DrupalKernelInterface $kernel */
-    $kernel = \Drupal::service('kernel');
+    /** @var \Symfony\Component\HttpKernel\HttpKernelInterface $kernel */
+    $kernel = \Drupal::service('http_kernel');
     return $kernel->handle($request);
   }
 
