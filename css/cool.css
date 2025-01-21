@@ -9,10 +9,6 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
-.cool-frame {
-
-}
-
 .cool-frame__preview {
   width: 100%;
   height: 100%;
@@ -20,22 +16,22 @@
 }
 
 .cool-frame__iframe {
-  border: 1px solid;
-  width: 100%;
-  height: 100%;
   position: absolute;
   box-sizing: border-box;
+  width: 100%;
+  height: 100%;
+  border: 1px solid;
 }
 
 .cool-editor__dialog {
-  resize: both;
   position: fixed;
-  top: 250px;
-  width: 100%;
-  height: calc(100% - 250px);
   /* seems to be a reasonable value to be above of it all */
   z-index: 501;
+  top: 250px;
   box-sizing: border-box;
+  width: 100%;
+  height: calc(100% - 250px);
+  resize: both;
 }
 
 .cool-editor__body {
