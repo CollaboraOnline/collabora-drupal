@@ -190,7 +190,7 @@ abstract class WopiControllerTestBase extends CollaboraKernelTestBase {
    *   This can be used to cause a bad token.
    *
    * @return string
-   *   The enconded token.
+   *   The encoded token.
    */
   protected function createAccessToken(?int $fid = NULL, ?int $uid = NULL, bool $write = FALSE, array $payload = []): string {
     /** @var \Drupal\collabora_online\Jwt\JwtTranscoderInterface $transcoder */

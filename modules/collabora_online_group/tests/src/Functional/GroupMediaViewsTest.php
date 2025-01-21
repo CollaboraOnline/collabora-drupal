@@ -25,7 +25,7 @@ use Drupal\Tests\media\Traits\MediaTypeCreationTrait;
 use Drupal\user\RoleInterface;
 
 /**
- * Test the modifications performend in groupmedia view by the module.
+ * Test the modifications performed in groupmedia view by the module.
  */
 class GroupMediaViewsTest extends BrowserTestBase {
 
