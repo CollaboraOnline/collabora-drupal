@@ -75,8 +75,8 @@ class ViewerController implements ContainerInjectionInterface {
     }
     catch (CollaboraNotAvailableException $e) {
       throw new BadRequestHttpException(
-        message: 'The Collabora Online editor/viewer is not available.',
-        previous: $e,
+        'The Collabora Online editor/viewer is not available.',
+        $e,
       );
     }
 
@@ -90,8 +90,8 @@ class ViewerController implements ContainerInjectionInterface {
     }
     catch (CollaboraNotAvailableException $e) {
       throw new BadRequestHttpException(
-        message: 'The Collabora Online editor/viewer is not available.',
-        previous: $e
+        'The Collabora Online editor/viewer is not available.',
+        $e
       );
     }
 
