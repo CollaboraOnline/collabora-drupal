@@ -500,9 +500,9 @@ New file: @new_file_id / @new_file_uri',
   /**
    * {@inheritdoc}
    */
-  protected function tearDown(): void {
+  protected function assertPostConditions(): void {
+    parent::assertPostConditions();
     $this->assertNoFurtherLogMessages();
-    parent::tearDown();
   }
 
 }

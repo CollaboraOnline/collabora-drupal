@@ -22,19 +22,11 @@ use Drupal\Core\Url;
 use Drupal\Core\Utility\Error;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
-use Symfony\Component\HttpKernel\Exception\BadRequestHttpException;
 
 /**
  * @coversDefaultClass \Drupal\collabora_online\Controller\ViewerController
  */
 class ViewerControllerTest extends WopiControllerTestBase {
-
-  /**
-   * Expected logs after test execution.
-   *
-   * @var array
-   */
-  protected $expected_logs = [];
 
   /**
    * {@inheritdoc}
@@ -64,11 +56,8 @@ class ViewerControllerTest extends WopiControllerTestBase {
    * @covers ::editor
    */
   public function testEditorSuccess(): void {
-    foreach (self::actionsDataProvider()[0] as $action) {
-      $request = $this->createViewerRequest($action);
-      $this->assertResponseOk(
-        $request,
-        sprintf('Failed asserting the request to %s the media', $action));
+    foreach ($this->createViewerRequests() as $name => $request) {
+      $this->assertResponseOk($request, $name);
     }
   }
 
@@ -76,85 +65,88 @@ class ViewerControllerTest extends WopiControllerTestBase {
    * Tests requests with Collabora unavailable.
    *
    * @covers ::editor
-   * @dataProvider actionsDataProvider
    */
-  public function testEditorCollaboraUnavailable(string $action): void {
+  public function testEditorCollaboraUnavailable(): void {
     // Restore service to force fail.
     $fetcher = $this->createMock(CollaboraDiscoveryFetcherInterface::class);
     $this->container->set(CollaboraDiscoveryFetcherInterface::class, $fetcher);
 
-    $request = $this->createViewerRequest($action);
-
-    $this->assertBadRequestResponse(
-      'The Collabora Online editor/viewer is not available.',
-      $request,
-    );
+    foreach ($this->createViewerRequests() as $name => $request) {
+      $this->assertBadRequestResponse(
+        'The Collabora Online editor/viewer is not available.',
+        $request,
+        $name
+      );
+    }
   }
 
   /**
    * Tests requests with a scheme that does not match the Collabora client URL.
    *
    * @covers ::editor
-   * @dataProvider actionsDataProvider
    */
-  public function testEditorMismatchScheme(string $action): void {
-    $request = $this->createViewerRequest($action, TRUE);
-
-    $this->assertBadRequestResponse(
-      'Viewer error: Protocol mismatch.',
-      $request,
-    );
+  public function testEditorMismatchScheme(): void {
+    foreach ($this->createViewerRequests(TRUE) as $name => $request) {
+      $this->assertBadRequestResponse(
+        'Viewer error: Protocol mismatch.',
+        $request,
+        $name
+      );
+    }
   }
 
   /**
    * Tests requests with missing configuration.
    *
    * @covers ::editor
-   * @dataProvider actionsDataProvider
    */
-  public function testEditorMissingConfiguration(string $action): void {
+  public function testEditorMissingConfiguration(): void {
     // Set empty configuration to force fail.
     $config = \Drupal::configFactory()->getEditable('collabora_online.settings');
     $config->set('cool', [])->save();
 
-    $request = $this->createViewerRequest($action);
-
-    $this->assertBadRequestResponse(
-      'The Collabora Online editor/viewer is not available.',
-      $request,
-    );
+    foreach ($this->createViewerRequests() as $name => $request) {
+      $this->assertBadRequestResponse(
+        'The Collabora Online editor/viewer is not available.',
+        $request,
+        $name
+      );
+    }
   }
 
   /**
    * Tests requests with a viewer not available.
    *
    * @covers ::editor
-   * @dataProvider actionsDataProvider
    */
-  public function testEditorNoViewer(string $action): void {
+  public function testEditorNoViewer(): void {
     // Mock transcoder to force fail.
     $transcoder = $this->createMock(jwtTranscoderInterface::class);
     $transcoder->method('encode')->willThrowException(new CollaboraNotAvailableException());
     $this->container->set(jwtTranscoderInterface::class, $transcoder);
 
-    $request = $this->createViewerRequest($action);
-
-    $this->assertBadRequestResponse(
-      'The Collabora Online editor/viewer is not available.',
-      $request,
-    );
+    foreach ($this->createViewerRequests() as $name => $request) {
+      $this->assertBadRequestResponse(
+        'The Collabora Online editor/viewer is not available.',
+        $request,
+        $name
+      );
+    }
   }
 
   /**
-   * Provides data with actions available.
+   * Creates requests for different routes, with some shared parameters.
    *
-   * @return array
-   *   The list of actions.
+   * @param bool $https
+   *   If the requests are secure.
+   *
+   * @return array<string, \Symfony\Component\HttpFoundation\Request>
+   *   Requests keyed by a distinguishable name.
    */
-  public static function actionsDataProvider(): array {
+  protected function createViewerRequests($https = FALSE): array {
     return [
-      ['view'],
-      ['edit'],
+      'view' => $this->createViewerRequest('view', $https),
+      'edit' => $this->createViewerRequest('edit', $https),
     ];
   }
 
@@ -169,7 +161,7 @@ class ViewerControllerTest extends WopiControllerTestBase {
    * @return \Symfony\Component\HttpFoundation\Request
    *   The request.
    */
-  protected function createViewerRequest(string $action, bool $https = FALSE): Request {
+  protected function createViewerRequest(string $action, bool $https): Request {
     $url = Url::fromRoute(
       "collabora-online.$action",
       [
@@ -197,7 +189,7 @@ class ViewerControllerTest extends WopiControllerTestBase {
 
     $this->assertEquals(Response::HTTP_OK, $response->getStatusCode(), $message);
     $this->assertStringContainsString('iframe', $response->getContent(), $message);
-    $this->assertEquals('', $response->headers->get('Content-Type'), $message);
+    $this->assertEquals('text/html; charset=UTF-8', $response->headers->get('Content-Type'), $message);
   }
 
   /**
@@ -207,39 +199,33 @@ class ViewerControllerTest extends WopiControllerTestBase {
    *   The expected content.
    * @param \Symfony\Component\HttpFoundation\Request $request
    *   The request to perform.
+   * @param string $message
+   *   Message to distinguish this from other assertions.
    */
-  protected function assertBadRequestResponse(string $expected_content, Request $request): void {
-    $this->expectExceptionObject(new BadRequestHttpException($expected_content));
-
-    $this->expected_logs = [
+  protected function assertBadRequestResponse(string $expected_content, Request $request, string $message = ''): void {
+    $this->assertResponse(
+      Response::HTTP_BAD_REQUEST,
+      $expected_content,
+      'text/html',
+      $request,
+      $message,
+    );
+    $this->assertLogMessage(
+      RfcLogLevel::WARNING,
+      Error::DEFAULT_ERROR_MESSAGE,
       [
-        'level' => RfcLogLevel::WARNING,
-        'message' => Error::DEFAULT_ERROR_MESSAGE,
-        'replacements' => [
-          '@message' => $expected_content,
-        ],
-        'channel' => 'client error',
+        '@message' => $expected_content,
       ],
-    ];
-
-    $this->handleRequest($request);
+      'client error',
+      assertion_message: $message
+    );
   }
 
   /**
    * {@inheritdoc}
    */
   protected function assertPostConditions(): void {
-    // In case exception we want to make sure the logs are added.
-    foreach ($this->expected_logs as $log) {
-      $this->assertLogMessage(
-        $log['level'] ?? NULL,
-        $log['message'] ?? NULL,
-        $log['replacements'] ?? [],
-        $log['channel'] ?? 'cool',
-        $log['position'] ?? 0,
-        $log['assertion_message'] ?? '',
-      );
-    }
+    parent::assertPostConditions();
     $this->assertNoFurtherLogMessages();
   }
 
