@@ -76,11 +76,16 @@ class ViewerControllerTest extends WopiControllerTestBase {
       $this->assertBadRequestResponse(
         'The Collabora Online editor/viewer is not available.',
         $request,
+        $name,
+      );
+      $this->assertLogMessage(
+        RfcLogLevel::WARNING,
+        "Collabora Online is not available.<br>\n" . Error::DEFAULT_ERROR_MESSAGE,
         [
-          'message' => "Collabora Online is not available.<br>\n" . Error::DEFAULT_ERROR_MESSAGE,
-          'level' => RfcLogLevel::WARNING,
+          '%type' => CollaboraNotAvailableException::class,
+          '@message' => 'The discovery.xml file is empty.',
         ],
-        $name
+        assertion_message: $name,
       );
     }
   }
@@ -97,11 +102,44 @@ class ViewerControllerTest extends WopiControllerTestBase {
       $this->assertBadRequestResponse(
         'Viewer error: Protocol mismatch.',
         $request,
+        $name,
+      );
+      $this->assertLogMessage(
+        RfcLogLevel::ERROR,
+        "The current request uses '@current_request_scheme' url scheme, but the Collabora client url is '@wopi_client_url'.",
         [
-          'message' => "The current request uses 'https' url scheme, but the Collabora client url is '$wopi_url'.",
-          'level' => RfcLogLevel::ERROR,
+          '@current_request_scheme' => 'https',
+          '@wopi_client_url' => $wopi_url,
         ],
-        $name
+        assertion_message: $name,
+      );
+    }
+  }
+
+  /**
+   * Tests requests with missing configuration.
+   *
+   * @covers ::editor
+   */
+  public function testEditorMissingConfiguration(): void {
+    // Set empty configuration to force fail.
+    $config = \Drupal::configFactory()->getEditable('collabora_online.settings');
+    $config->set('cool', [])->save();
+
+    foreach ($this->createViewerRequests() as $name => $request) {
+      $this->assertBadRequestResponse(
+        'The Collabora Online editor/viewer is not available.',
+        $request,
+        $name,
+      );
+      $this->assertLogMessage(
+        RfcLogLevel::WARNING,
+        "Cannot show the viewer/editor.<br>\n" . Error::DEFAULT_ERROR_MESSAGE,
+        [
+          '%type' => CollaboraNotAvailableException::class,
+          '@message' => 'The Collabora Online connection is not configured.',
+        ],
+        assertion_message: $name,
       );
     }
   }
@@ -121,11 +159,16 @@ class ViewerControllerTest extends WopiControllerTestBase {
       $this->assertBadRequestResponse(
         'The Collabora Online editor/viewer is not available.',
         $request,
+        $name,
+      );
+      $this->assertLogMessage(
+        RfcLogLevel::WARNING,
+        "Cannot show the viewer/editor.<br>\n" . Error::DEFAULT_ERROR_MESSAGE,
         [
-          'message' => "Cannot show the viewer/editor.<br>\n" . Error::DEFAULT_ERROR_MESSAGE,
-          'level' => RfcLogLevel::WARNING,
+          '%type' => CollaboraNotAvailableException::class,
+          '@message' => '',
         ],
-        $name
+        assertion_message: $name,
       );
     }
   }
@@ -166,7 +209,7 @@ class ViewerControllerTest extends WopiControllerTestBase {
       [
         'https' => $https,
         'absolute' => TRUE,
-      ]
+      ],
     );
 
     return Request::create($url->toString());
@@ -195,12 +238,10 @@ class ViewerControllerTest extends WopiControllerTestBase {
    *   The expected content.
    * @param \Symfony\Component\HttpFoundation\Request $request
    *   The request to perform.
-   * @param array $expected_log
-   *   The expected log entry.
    * @param string $message
    *   Message to distinguish this from other assertions.
    */
-  protected function assertBadRequestResponse(string $expected_content, Request $request, array $expected_log = [], string $message = ''): void {
+  protected function assertBadRequestResponse(string $expected_content, Request $request, string $message = ''): void {
     $this->assertResponse(
       Response::HTTP_BAD_REQUEST,
       $expected_content,
@@ -208,14 +249,14 @@ class ViewerControllerTest extends WopiControllerTestBase {
       $request,
       $message,
     );
+  }
 
-    if ($expected_log) {
-      $this->assertTrue(
-        $this->logger->hasRecord($expected_log['message'], $expected_log['level'] ?? NULL),
-        sprintf('The logger does not contain a record like: "%s".', $expected_log['message'])
-      );
-      $this->logger->reset();
-    }
+  /**
+   * {@inheritdoc}
+   */
+  protected function assertPostConditions(): void {
+    parent::assertPostConditions();
+    $this->assertNoFurtherLogMessages();
   }
 
 }

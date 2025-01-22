@@ -349,7 +349,7 @@ New file: @new_file_id / @new_file_uri',
         RfcLogLevel::WARNING,
         'A token cannot be decoded: @message',
         [
-          '@message' => 'No key was chosen for use in Collabora.',
+          '@message' => 'The key with id \'_unknown_key_\' is empty or does not exist.',
         ],
         assertion_message: $name,
       );
@@ -500,9 +500,9 @@ New file: @new_file_id / @new_file_uri',
   /**
    * {@inheritdoc}
    */
-  protected function tearDown(): void {
+  protected function assertPostConditions(): void {
+    parent::assertPostConditions();
     $this->assertNoFurtherLogMessages();
-    parent::tearDown();
   }
 
 }
