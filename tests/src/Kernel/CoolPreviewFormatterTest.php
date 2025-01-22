@@ -16,6 +16,7 @@ namespace Drupal\Tests\collabora_online\Kernel;
 
 use Drupal\Core\Cache\Cache;
 use Drupal\Core\Entity\Display\EntityDisplayInterface;
+use Drupal\Core\Entity\Entity\EntityViewDisplay;
 use Drupal\entity_test\Entity\EntityTest;
 use Drupal\field\Entity\FieldConfig;
 use Drupal\field\Entity\FieldStorageConfig;
@@ -89,15 +90,10 @@ class CoolPreviewFormatterTest extends CollaboraKernelTestBase {
       $field_name => 1,
     ]);
     $entity->save();
+    // Default formatter is applied.
     $this->assertSame(
-      [
-        '#cache' => [
-          'contexts' => [],
-          'tags' => [],
-          'max-age' => Cache::PERMANENT,
-        ],
-      ],
-      $test_display->build($entity)[$field_name]
+      'file_default',
+      $test_display->build($entity)[$field_name]['#formatter']
     );
 
     // Iframe is not displayed for users without permission.
@@ -113,6 +109,18 @@ class CoolPreviewFormatterTest extends CollaboraKernelTestBase {
       $media_display->build($media)[$field_name]
     );
     $this->setCurrentUser($user);
+
+    // Fields with multiple values are not supported.
+    $field_storage = FieldStorageConfig::load("media.$field_name");
+    $field_storage->setCardinality(3)->save();
+    $media_display = EntityViewDisplay::load($media_display->id());
+    // Default formatter is applied.
+    $this->assertSame(
+      'file_default',
+      $test_display->build($entity)[$field_name]['#formatter']
+    );
+    $field_storage->setCardinality(1)->save();
+    $media_display = EntityViewDisplay::load($media_display->id());
 
     // Iframe is not displayed for empty value field.
     $this->setCurrentUser($this->createUser([

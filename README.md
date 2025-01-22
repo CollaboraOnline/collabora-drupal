@@ -152,7 +152,7 @@ head -c 64 /dev/urandom | base64 -w 0
 Go to _Configuration_ > _Media_ > _Collabora Online Settings_
 
 - _Collabora Online server URL_: the URL of the collabora online
-  server. Note that you have to take into considerartion containers. If
+  server. Note that you have to take into consideration containers. If
   you run Drupal in one container and Collabora Online in another, you
   can not use `localhost`.
 - _WOPI host base URL_: how the Collabora Online server can reach the
@@ -181,7 +181,7 @@ frame.
 To be able to attach document to Drupal content nodes, you need to
 create a field.
 
-Login as an admin, and got to the admnistration section.
+Login as an admin, and got to the administration section.
 
 - Go to _Structure_ > _Content types_
 - Find the appropriate content and click _Manage fields_.
@@ -199,6 +199,8 @@ You also must set the viewer for this kind of media.
 - In the _Field_ section, select in the _Format_ column, choose
   _Collabora Online Preview_.
 - Click _Save_.
+
+__The module only supports _file_ fields with a cardinality of 1, allowing only one file per media.__
 
 ### User permissions
 
