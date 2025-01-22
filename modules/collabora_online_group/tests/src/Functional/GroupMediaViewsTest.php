@@ -132,9 +132,9 @@ class GroupMediaViewsTest extends BrowserTestBase {
                 'group' => $group->id(),
               ])->toString(),
             ],
-          ]
+          ],
         )->toString(),
-        $operation_links[0]->getAttribute('href')
+        $operation_links[0]->getAttribute('href'),
       );
       $this->assertEquals('Edit in Collabora Online', $operation_links[1]->getText());
       $this->assertEquals(
@@ -149,9 +149,9 @@ class GroupMediaViewsTest extends BrowserTestBase {
                 'group' => $group->id(),
               ])->toString(),
             ],
-          ]
+          ],
         )->toString(),
-        $operation_links[1]->getAttribute('href')
+        $operation_links[1]->getAttribute('href'),
       );
       $i++;
     }

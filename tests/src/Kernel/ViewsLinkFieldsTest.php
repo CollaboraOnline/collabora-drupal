@@ -57,7 +57,7 @@ class ViewsLinkFieldsTest extends CollaboraKernelTestBase {
         'preview' => [FALSE, FALSE, FALSE, FALSE],
         'edit' => [FALSE, FALSE, FALSE, FALSE],
       ],
-      $this->createUser([])
+      $this->createUser([]),
     );
     // User with 'Preview' permission can see preview link.
     $this->doTestLinks(
@@ -67,7 +67,7 @@ class ViewsLinkFieldsTest extends CollaboraKernelTestBase {
       ],
       $this->createUser([
         'preview document in collabora',
-      ])
+      ]),
     );
     // User with 'Preview own unpublished' permission can see preview link
     // for unpublished entity they own.
@@ -78,7 +78,7 @@ class ViewsLinkFieldsTest extends CollaboraKernelTestBase {
       ],
       $this->createUser([
         'preview own unpublished document in collabora',
-      ])
+      ]),
     );
     // User with 'Edit any' permission can see edit link.
     $this->doTestLinks(
@@ -88,7 +88,7 @@ class ViewsLinkFieldsTest extends CollaboraKernelTestBase {
       ],
       $this->createUser([
         'edit any document in collabora',
-      ])
+      ]),
     );
     // User with 'Edit own' permission can see edit link for entities they
     // own.
@@ -99,7 +99,7 @@ class ViewsLinkFieldsTest extends CollaboraKernelTestBase {
       ],
       $this->createUser([
         'edit own document in collabora',
-      ])
+      ]),
     );
   }
 

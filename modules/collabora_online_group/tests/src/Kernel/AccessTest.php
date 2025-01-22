@@ -101,7 +101,7 @@ class AccessTest extends GroupKernelTestBase {
       $this->assertEquals(
         $scenario['result'],
         $media->access($scenario['operation'], $user),
-        sprintf('Access check failed for scenario: "%s"', $scenario_name)
+        sprintf('Access check failed for scenario: "%s"', $scenario_name),
       );
     }
   }
