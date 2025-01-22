@@ -52,6 +52,7 @@ class ConfigForm extends ConfigFormBase {
       '#title' => $this->t('Collabora Online server URL'),
       '#description' => $this->t(
         "Base URL for server-side requests from Drupal to Collabora Online.<br>
+A trailing slash is optional.<br>
 E.g. 'https://collabora.example.com' or 'http://localhost:9980/'.",
       ),
       '#default_value' => $cool_settings['server'] ?? '',
@@ -64,6 +65,7 @@ E.g. 'https://collabora.example.com' or 'http://localhost:9980/'.",
       '#description' => $this->t(
         "Base URL for server-side WOPI requests from Collabora Online to Drupal.<br>
 This can be different from the public Drupal URL, if these requests happen through an internal network.<br>
+A trailing slash will be removed on save.<br>
 E.g. 'https://drupal.example.com' or 'http://localhost/' or 'http://localhost/subdir'.",
       ),
       '#default_value' => $cool_settings['wopi_base'] ?? '',
