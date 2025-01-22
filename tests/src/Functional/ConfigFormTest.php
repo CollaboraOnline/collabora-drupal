@@ -113,6 +113,21 @@ class ConfigFormTest extends BrowserTestBase {
     $assert_session->checkboxChecked('Disable TLS certificate check for COOL.');
     $assert_session->checkboxNotChecked('Verify proof header and timestamp in incoming WOPI requests.');
     $assert_session->checkboxNotChecked('Allow COOL to use fullscreen mode.');
+    $settings = $this->config('collabora_online.settings')->get('cool');
+    $this->assertSame('http://collaboraserver.com/', $settings['server']);
+    $this->assertSame('http://wopihost.com', $settings['wopi_base']);
+
+    // Test urls without trailing slash.
+    $assert_session->fieldExists('Collabora Online server URL')
+      ->setValue('https://collabora.example.com');
+    $assert_session->fieldExists('WOPI host URL')
+      ->setValue('https://drupal.example.com');
+    $assert_session->buttonExists('Save configuration')->press();
+    $assert_session->statusMessageContains('The configuration options have been saved.', 'status');
+    \Drupal::configFactory()->reset();
+    $settings = $this->config('collabora_online.settings')->get('cool');
+    $this->assertSame('https://collabora.example.com', $settings['server']);
+    $this->assertSame('https://drupal.example.com', $settings['wopi_base']);
 
     // Test validation of required fields.
     $this->drupalGet(Url::fromRoute('collabora-online.settings'));
