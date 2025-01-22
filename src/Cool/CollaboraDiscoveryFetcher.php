@@ -90,6 +90,8 @@ class CollaboraDiscoveryFetcher implements CollaboraDiscoveryFetcherInterface {
       throw new CollaboraNotAvailableException('The configured Collabora Online server address is empty.');
     }
     $wopi_client_server = trim($wopi_client_server);
+    // The trailing slash in the configured URL is optional.
+    $wopi_client_server = rtrim($wopi_client_server, '/');
 
     if (!str_starts_with($wopi_client_server, 'http://') && !str_starts_with($wopi_client_server, 'https://')) {
       throw new CollaboraNotAvailableException(sprintf(
