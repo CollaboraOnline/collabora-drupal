@@ -50,6 +50,10 @@ class ConfigForm extends ConfigFormBase {
     $form['server'] = [
       '#type' => 'url',
       '#title' => $this->t('Collabora Online server URL'),
+      '#description' => $this->t(
+        "Base URL for server-side requests from Drupal to Collabora Online.<br>
+E.g. 'https://collabora.example.com' or 'http://localhost:9980/'.",
+      ),
       '#default_value' => $cool_settings['server'] ?? '',
       '#required' => TRUE,
     ];
@@ -57,7 +61,11 @@ class ConfigForm extends ConfigFormBase {
     $form['wopi_base'] = [
       '#type' => 'url',
       '#title' => $this->t('WOPI host URL'),
-      '#description' => $this->t('Likely https://&lt;drupal_server&gt;'),
+      '#description' => $this->t(
+        "Base URL for server-side WOPI requests from Collabora Online to Drupal.<br>
+This can be different from the public Drupal URL, if these requests happen through an internal network.<br>
+E.g. 'https://drupal.example.com' or 'http://localhost/' or 'http://localhost/subdir'.",
+      ),
       '#default_value' => $cool_settings['wopi_base'] ?? '',
       '#required' => TRUE,
     ];
