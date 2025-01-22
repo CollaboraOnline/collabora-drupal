@@ -8,6 +8,8 @@
   <exclude-pattern>./web/*</exclude-pattern>
   <file>.</file>
 
+  <rule ref="SlevomatCodingStandard.Functions.RequireTrailingCommaInCall"/>
+
   <rule ref="vendor/drupal/coder/coder_sniffer/Drupal/ruleset.xml">
     <!-- Accept file doc comment with copyright. -->
     <exclude name="Drupal.Commenting.FileComment.NamespaceNoFileDoc"/>
