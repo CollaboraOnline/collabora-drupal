@@ -93,7 +93,7 @@ class CoolPreviewFormatterTest extends CollaboraKernelTestBase {
     // Default formatter is applied.
     $this->assertSame(
       'file_default',
-      $test_display->build($entity)[$field_name]['#formatter']
+      $test_display->build($entity)[$field_name]['#formatter'],
     );
 
     // Iframe is not displayed for users without permission.
@@ -106,7 +106,7 @@ class CoolPreviewFormatterTest extends CollaboraKernelTestBase {
           'max-age' => Cache::PERMANENT,
         ],
       ],
-      $media_display->build($media)[$field_name]
+      $media_display->build($media)[$field_name],
     );
     $this->setCurrentUser($user);
 
@@ -117,7 +117,7 @@ class CoolPreviewFormatterTest extends CollaboraKernelTestBase {
     // Default formatter is applied.
     $this->assertSame(
       'file_default',
-      $test_display->build($entity)[$field_name]['#formatter']
+      $test_display->build($entity)[$field_name]['#formatter'],
     );
     $field_storage->setCardinality(1)->save();
     $media_display = EntityViewDisplay::load($media_display->id());
@@ -136,7 +136,7 @@ class CoolPreviewFormatterTest extends CollaboraKernelTestBase {
           'max-age' => Cache::PERMANENT,
         ],
       ],
-      $media_display->build($media)[$field_name]
+      $media_display->build($media)[$field_name],
     );
   }
 
