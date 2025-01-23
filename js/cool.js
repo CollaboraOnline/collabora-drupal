@@ -39,6 +39,7 @@ function receiveMessage(hasCloseButton, event) {
           postMessage(reply);
         }
         if (window.parent.location === window.location) {
+          // eslint-disable-next-line no-restricted-globals
           history.back();
         } else {
           /* we send back the UI_Close message to the parent frame. */

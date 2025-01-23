@@ -65,4 +65,4 @@ services:
         /start-collabora-online.sh
 
 volumes:
-  mysql:
+  mysql: # eslint-disable-line yml/no-empty-mapping-value
