@@ -15,6 +15,10 @@ declare(strict_types=1);
 namespace Drupal\collabora_online\Discovery;
 
 use Drupal\collabora_online\Exception\CollaboraNotAvailableException;
+use Drupal\Component\Datetime\TimeInterface;
+use Drupal\Core\Cache\Cache;
+use Drupal\Core\Cache\CacheableMetadata;
+use Drupal\Core\Cache\CacheBackendInterface;
 use Drupal\Core\Cache\RefinableCacheableDependencyInterface;
 use Drupal\Core\Config\ConfigFactoryInterface;
 use Drupal\Core\Config\ImmutableConfig;
@@ -29,17 +33,68 @@ use Symfony\Component\DependencyInjection\Attribute\Autowire;
  */
 class CollaboraDiscoveryFetcher implements CollaboraDiscoveryFetcherInterface {
 
+  protected const DEFAULT_CID = 'collabora_online.discovery';
+
   public function __construct(
     #[Autowire(service: 'logger.channel.collabora_online')]
     protected readonly LoggerInterface $logger,
     protected readonly ConfigFactoryInterface $configFactory,
     protected readonly ClientInterface $httpClient,
+    #[Autowire(service: 'cache.default')]
+    protected readonly CacheBackendInterface $cache,
+    protected readonly TimeInterface $time,
+    protected readonly string $cid = self::DEFAULT_CID,
   ) {}
 
   /**
    * {@inheritdoc}
    */
   public function getDiscoveryXml(RefinableCacheableDependencyInterface $cacheability): string {
+    $cached = $this->cache->get($this->cid);
+    if ($cached) {
+      $cacheability->addCacheTags($cached->tags);
+      $expire = $cached->expire;
+      $max_age = ($expire === Cache::PERMANENT)
+        ? Cache::PERMANENT
+        : $expire - $this->time->getRequestTime();
+      $cacheability->mergeCacheMaxAge($max_age);
+      return $cached->data;
+    }
+    // In theory, the $cacheability could already contain unrelated cache
+    // metadata when this method is called. We need to make sure that these do
+    // not leak into the cache.
+    $local_cacheability = new CacheableMetadata();
+    $xml = $this->loadDiscoveryXml($local_cacheability);
+    $max_age = $local_cacheability->getCacheMaxAge();
+
+    $cacheability->addCacheableDependency($local_cacheability);
+
+    /* @see \Drupal\Core\Cache\VariationCache::maxAgeToExpire() */
+    $expire = ($max_age === Cache::PERMANENT)
+      ? Cache::PERMANENT
+      : $max_age + $this->time->getRequestTime();
+    $this->cache->set(
+      $this->cid,
+      $xml,
+      $expire,
+      $local_cacheability->getCacheTags(),
+    );
+    return $xml;
+  }
+
+  /**
+   * Loads the contents of discovery.xml from the Collabora server.
+   *
+   * @param \Drupal\Core\Cache\RefinableCacheableDependencyInterface $cacheability
+   *   Mutable object to collect cache metadata.
+   *
+   * @return string
+   *   The full contents of discovery.xml.
+   *
+   * @throws \Drupal\collabora_online\Exception\CollaboraNotAvailableException
+   *   The client url cannot be retrieved.
+   */
+  public function loadDiscoveryXml(RefinableCacheableDependencyInterface $cacheability): string {
     $config = $this->configFactory->get('collabora_online.settings');
     $cacheability->addCacheableDependency($config);
 
