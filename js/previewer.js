@@ -10,35 +10,43 @@
  */
 
 function previewField(coolUrl) {
-  let iframe = document.querySelector("#cool-editor__dialog > .cool-frame__preview");
+  const iframe = document.querySelector(
+    '#cool-editor__dialog > .cool-frame__preview',
+  );
   iframe.src = coolUrl;
-  document.querySelector("#cool-editor__dialog").show();
+  document.querySelector('#cool-editor__dialog').show();
 }
 
 function closePreview() {
-  let iframe = document.querySelector("#cool-editor__dialog > .cool-frame__preview");
-  iframe.src = "about:blank";
+  const iframe = document.querySelector(
+    '#cool-editor__dialog > .cool-frame__preview',
+  );
+  iframe.src = 'about:blank';
   document.querySelector('#cool-editor__dialog').close();
+}
+
+function postReady() {
+  postMessage({ MessageId: 'Host_PostmessageReady' });
 }
 
 (function () {
   function receiveMessage(event) {
-    let msg = JSON.parse(event.data);
+    const msg = JSON.parse(event.data);
     if (!msg) {
       return;
     }
 
     switch (msg.MessageId) {
-      case "App_LoadingStatus":
-        if (msg.Values && msg.Values.Status == "Document_Loaded") {
+      case 'App_LoadingStatus':
+        if (msg.Values && msg.Values.Status === 'Document_Loaded') {
           postReady();
         }
         break;
-      case "UI_Close":
+      case 'UI_Close':
         closePreview();
         break;
     }
   }
 
-  window.addEventListener("message", receiveMessage, false);
-})()
+  window.addEventListener('message', receiveMessage, false);
+})();
