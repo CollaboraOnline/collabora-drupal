@@ -5,8 +5,6 @@ services:
   logger.channel.collabora_online:
     parent: logger.channel_base
     arguments: ['cool']
-  Drupal\collabora_online\Discovery\CollaboraDiscoveryFetcherInterface:
-    class: Drupal\collabora_online\Discovery\CollaboraDiscoveryFetcher
   Drupal\collabora_online\Discovery\DiscoveryLoaderInterface:
     class: Drupal\collabora_online\Discovery\DiscoveryLoader
   Drupal\collabora_online\Jwt\JwtTranscoderInterface:
