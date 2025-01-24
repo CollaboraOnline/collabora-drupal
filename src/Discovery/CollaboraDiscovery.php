@@ -22,12 +22,6 @@ use Symfony\Component\ErrorHandler\ErrorHandler;
  */
 class CollaboraDiscovery implements CollaboraDiscoveryInterface {
 
-  /**
-   * Constructor.
-   *
-   * @param \Drupal\collabora_online\Discovery\CollaboraDiscoveryFetcherInterface $discoveryFetcher
-   *   Service to load the discovery.xml from the Collabora server.
-   */
   public function __construct(
     protected readonly CollaboraDiscoveryFetcherInterface $discoveryFetcher,
   ) {}
