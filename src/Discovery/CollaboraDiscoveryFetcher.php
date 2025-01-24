@@ -17,10 +17,10 @@ namespace Drupal\collabora_online\Discovery;
 use Drupal\collabora_online\Exception\CollaboraNotAvailableException;
 use Drupal\Core\Cache\RefinableCacheableDependencyInterface;
 use Drupal\Core\Config\ConfigFactoryInterface;
-use Drupal\Core\Logger\LoggerChannelInterface;
 use GuzzleHttp\ClientInterface;
 use GuzzleHttp\RequestOptions;
 use Psr\Http\Client\ClientExceptionInterface;
+use Psr\Log\LoggerInterface;
 use Symfony\Component\DependencyInjection\Attribute\Autowire;
 
 /**
@@ -30,7 +30,7 @@ class CollaboraDiscoveryFetcher implements CollaboraDiscoveryFetcherInterface {
 
   public function __construct(
     #[Autowire(service: 'logger.channel.collabora_online')]
-    protected readonly LoggerChannelInterface $logger,
+    protected readonly LoggerInterface $logger,
     protected readonly ConfigFactoryInterface $configFactory,
     protected readonly ClientInterface $httpClient,
   ) {}
