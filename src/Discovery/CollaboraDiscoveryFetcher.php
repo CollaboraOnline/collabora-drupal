@@ -27,16 +27,6 @@ use Symfony\Component\DependencyInjection\Attribute\Autowire;
  */
 class CollaboraDiscoveryFetcher implements CollaboraDiscoveryFetcherInterface {
 
-  /**
-   * Constructor.
-   *
-   * @param \Drupal\Core\Logger\LoggerChannelInterface $logger
-   *   Logger channel.
-   * @param \Drupal\Core\Config\ConfigFactoryInterface $configFactory
-   *   Config factory.
-   * @param \GuzzleHttp\ClientInterface $httpClient
-   *   Http client.
-   */
   public function __construct(
     #[Autowire(service: 'logger.channel.collabora_online')]
     protected readonly LoggerChannelInterface $logger,
