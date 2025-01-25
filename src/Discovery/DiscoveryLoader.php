@@ -19,7 +19,6 @@ use Drupal\Component\Datetime\TimeInterface;
 use Drupal\Core\Cache\Cache;
 use Drupal\Core\Cache\CacheableMetadata;
 use Drupal\Core\Cache\CacheBackendInterface;
-use Drupal\Core\Cache\MemoryCache\MemoryCacheInterface;
 use Drupal\Core\Cache\RefinableCacheableDependencyInterface;
 use Drupal\Core\Config\ConfigFactoryInterface;
 use Drupal\Core\Config\ImmutableConfig;
@@ -35,8 +34,6 @@ use Symfony\Component\ErrorHandler\ErrorHandler;
  */
 class DiscoveryLoader implements DiscoveryLoaderInterface {
 
-  protected const MEMORY_CID = 'collabora_online.discovery.value';
-
   protected const DEFAULT_CID = 'collabora_online.discovery';
 
   public function __construct(
@@ -48,46 +45,13 @@ class DiscoveryLoader implements DiscoveryLoaderInterface {
     protected readonly CacheBackendInterface $cache,
     #[Autowire(value: self::DEFAULT_CID)]
     protected readonly string $cid,
-    protected readonly MemoryCacheInterface $memoryCache,
     protected readonly TimeInterface $time,
-    #[Autowire(value: self::MEMORY_CID)]
-    protected readonly string $memoryCid,
   ) {}
 
   /**
    * {@inheritdoc}
    */
   public function getDiscovery(): CollaboraDiscoveryInterface {
-    $cached = $this->memoryCache->get($this->memoryCid);
-    if ($cached) {
-      return $cached->data;
-    }
-    $discovery = $this->loadDiscovery();
-
-    $max_age = $discovery->getCacheMaxAge();
-    /* @see \Drupal\Core\Cache\VariationCache::maxAgeToExpire() */
-    $expire = ($max_age === Cache::PERMANENT)
-      ? Cache::PERMANENT
-      : $max_age + $this->time->getRequestTime();
-    $this->memoryCache->set(
-      $this->memoryCid,
-      $discovery,
-      $expire,
-      $discovery->getCacheTags(),
-    );
-    return $discovery;
-  }
-
-  /**
-   * Loads the discovery.
-   *
-   * @return \Drupal\collabora_online\Discovery\CollaboraDiscoveryInterface
-   *   Discovery object.
-   *
-   * @throws \Drupal\collabora_online\Exception\CollaboraNotAvailableException
-   *   Fetching the discovery.xml failed, or the result is not valid xml.
-   */
-  protected function loadDiscovery(): CollaboraDiscoveryInterface {
     $cacheability = new CacheableMetadata();
     $xml = $this->getDiscoveryXml($cacheability);
     assert($cacheability->getCacheContexts() === []);

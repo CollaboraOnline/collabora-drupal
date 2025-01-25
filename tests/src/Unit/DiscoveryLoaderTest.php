@@ -9,7 +9,6 @@ use Drupal\collabora_online\Discovery\DiscoveryLoader;
 use Drupal\collabora_online\Exception\CollaboraNotAvailableException;
 use Drupal\Component\Datetime\Time;
 use Drupal\Core\Cache\CacheBackendInterface;
-use Drupal\Core\Cache\MemoryCache\MemoryCacheInterface;
 use Drupal\Core\Config\ConfigFactory;
 use Drupal\Core\Config\ConfigFactoryInterface;
 use Drupal\Core\Config\MemoryStorage;
@@ -119,9 +118,7 @@ class DiscoveryLoaderTest extends UnitTestCase {
       ),
       $this->createMock(CacheBackendInterface::class),
       'persistent_cid',
-      $this->createMock(MemoryCacheInterface::class),
       new Time(),
-      'memory_cid',
     );
   }
 
