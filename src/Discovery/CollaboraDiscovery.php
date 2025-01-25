@@ -24,15 +24,9 @@ class CollaboraDiscovery implements CollaboraDiscoveryInterface {
    *
    * @param \SimpleXMLElement $parsedXml
    *   Parsed XML content.
-   * @param list<string> $cacheTags
-   *   Cache tags.
-   * @param int $cacheMaxAge
-   *   Cache max age in seconds.
    */
   public function __construct(
     protected readonly \SimpleXMLElement $parsedXml,
-    protected readonly array $cacheTags,
-    protected readonly int $cacheMaxAge,
   ) {}
 
   /**
@@ -61,27 +55,6 @@ class CollaboraDiscovery implements CollaboraDiscoveryInterface {
   public function getProofKeyOld(): ?string {
     $attribute = $this->parsedXml->xpath('/wopi-discovery/proof-key/@oldvalue')[0] ?? NULL;
     return $attribute?->__toString();
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public function getCacheContexts(): array {
-    return [];
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public function getCacheTags(): array {
-    return $this->cacheTags;
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public function getCacheMaxAge() {
-    return $this->cacheMaxAge;
   }
 
 }

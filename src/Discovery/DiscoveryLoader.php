@@ -35,11 +35,7 @@ class DiscoveryLoader implements DiscoveryLoaderInterface {
     $xml = $this->discoveryFetcher->getDiscoveryXml($cacheability);
     assert($cacheability->getCacheContexts() === []);
     $parsed_xml = $this->parseXml($xml);
-    return new CollaboraDiscovery(
-      $parsed_xml,
-      $cacheability->getCacheTags(),
-      $cacheability->getCacheMaxAge(),
-    );
+    return new CollaboraDiscovery($parsed_xml);
   }
 
   /**
