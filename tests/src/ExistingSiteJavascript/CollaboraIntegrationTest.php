@@ -130,7 +130,7 @@ class CollaboraIntegrationTest extends ExistingSiteSelenium2DriverTestBase {
    */
   protected function assertWaitForElement(string|array $locator, string $selector = 'css'): NodeElement {
     $element = $this->assertSession()->waitForElement($selector, $locator);
-    $this->assertNotNull($element, "The '$selector' element was not found after 10 seconds.");
+    $this->assertNotNull($element, "The '$selector:$locator' element was not found after 10 seconds.");
     return $element;
   }
 
