@@ -32,22 +32,30 @@ class DiscoveryLoaderTest extends UnitTestCase {
   public function testGetDiscovery(): void {
     $file = dirname(__DIR__, 2) . '/fixtures/discovery.mimetypes.xml';
     $xml = file_get_contents($file);
-    $loader = $this->getLoaderFromXml($xml);
+    $logger = new TestLogger();
+    $loader = $this->getLoaderFromXml($xml, $logger);
     $discovery = $loader->getDiscovery();
     $this->assertSame(
       'http://collabora.test:9980/browser/61cf2b4/cool.html?',
       $discovery->getWopiClientURL(),
     );
+    $this->assertEmpty($logger->records);
   }
 
   /**
    * Tests error behavior for blank xml content.
    */
   public function testBlankXml(): void {
-    $loader = $this->getLoaderFromXml('');
+    $logger = new TestLogger();
+    $loader = $this->getLoaderFromXml('', $logger);
     $this->expectException(CollaboraNotAvailableException::class);
     $this->expectExceptionMessage('The discovery.xml file is empty.');
-    $loader->getDiscovery();
+    try {
+      $loader->getDiscovery();
+    }
+    finally {
+      $this->assertEmpty($logger->records);
+    }
   }
 
   /**
@@ -72,7 +80,7 @@ class DiscoveryLoaderTest extends UnitTestCase {
    *
    * @param string $xml
    *   Explicit XML content returned from the HTTP client.
-   * @param \Psr\Log\LoggerInterface|null $logger
+   * @param \Psr\Log\LoggerInterface $logger
    *   A logger.
    * @param array $cool_settings
    *   Settings in 'collabora_online.settings'/'cool'.
@@ -86,7 +94,7 @@ class DiscoveryLoaderTest extends UnitTestCase {
    */
   protected function getLoaderFromXml(
     string $xml,
-    LoggerInterface $logger = NULL,
+    LoggerInterface $logger,
     array $cool_settings = [],
     string $expected_url = 'http://collabora.example.com/hosting/discovery',
     array $expected_options = [
@@ -98,7 +106,7 @@ class DiscoveryLoaderTest extends UnitTestCase {
       'disable_cert_check' => FALSE,
     ];
     return new DiscoveryLoader(
-      $logger ?? new TestLogger(),
+      $logger,
       $this->createConfigFactory([
         'collabora_online.settings' => [
           'cool' => $cool_settings,
