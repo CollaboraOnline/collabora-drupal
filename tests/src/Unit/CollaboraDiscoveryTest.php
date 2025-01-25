@@ -6,7 +6,6 @@ namespace Drupal\Tests\collabora_online\Unit;
 
 use Drupal\collabora_online\Discovery\CollaboraDiscovery;
 use Drupal\collabora_online\Discovery\CollaboraDiscoveryInterface;
-use Drupal\Core\Cache\Cache;
 use Drupal\Tests\UnitTestCase;
 use Symfony\Component\ErrorHandler\ErrorHandler;
 
@@ -88,20 +87,16 @@ class CollaboraDiscoveryTest extends UnitTestCase {
    *
    * @param string $xml
    *   Explicit XML content.
-   * @param array $cache_tags
-   *   Cache tags.
-   * @param int $cache_max_age
-   *   Cache max age in seconds.
    *
    * @return \Drupal\collabora_online\Discovery\CollaboraDiscoveryInterface
    *   Discovery instance.
    */
-  protected function getDiscoveryFromXml(string $xml, array $cache_tags = [], int $cache_max_age = Cache::PERMANENT): CollaboraDiscoveryInterface {
+  protected function getDiscoveryFromXml(string $xml): CollaboraDiscoveryInterface {
     $parsed_xml = ErrorHandler::call(
       fn () => simplexml_load_string($xml),
     );
     $this->assertNotFalse($parsed_xml, "XML: '$xml'");
-    return new CollaboraDiscovery($parsed_xml, $cache_tags, $cache_max_age);
+    return new CollaboraDiscovery($parsed_xml);
   }
 
 }
