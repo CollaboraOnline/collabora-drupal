@@ -14,8 +14,6 @@ declare(strict_types=1);
 
 namespace Drupal\collabora_online\Discovery;
 
-use Drupal\Core\Cache\RefinableCacheableDependencyInterface;
-
 /**
  * Service to load the discovery.xml from the Collabora server.
  */
@@ -24,15 +22,12 @@ interface CollaboraDiscoveryFetcherInterface {
   /**
    * Gets the contents of discovery.xml from the Collabora server.
    *
-   * @param \Drupal\Core\Cache\RefinableCacheableDependencyInterface $cacheability
-   *   Mutable object to collect cache metadata.
-   *
    * @return string
    *   The full contents of discovery.xml.
    *
    * @throws \Drupal\collabora_online\Exception\CollaboraNotAvailableException
    *   The client url cannot be retrieved.
    */
-  public function getDiscoveryXml(RefinableCacheableDependencyInterface $cacheability): string;
+  public function getDiscoveryXml(): string;
 
 }
