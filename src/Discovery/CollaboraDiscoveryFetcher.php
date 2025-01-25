@@ -24,9 +24,10 @@ use GuzzleHttp\RequestOptions;
 use Psr\Http\Client\ClientExceptionInterface;
 use Psr\Log\LoggerInterface;
 use Symfony\Component\DependencyInjection\Attribute\Autowire;
+use Symfony\Component\ErrorHandler\ErrorHandler;
 
 /**
- * Service to load the discovery.xml from the Collabora server.
+ * Creates a discovery value object.
  */
 class CollaboraDiscoveryFetcher implements CollaboraDiscoveryFetcherInterface {
 
@@ -39,14 +40,64 @@ class CollaboraDiscoveryFetcher implements CollaboraDiscoveryFetcherInterface {
     protected readonly ClientInterface $httpClient,
     #[Autowire(service: 'cache.default')]
     protected readonly CacheBackendInterface $cache,
+    #[Autowire(value: self::DEFAULT_CID)]
+    protected readonly string $cid,
     protected readonly TimeInterface $time,
-    protected readonly string $cid = self::DEFAULT_CID,
   ) {}
 
   /**
    * {@inheritdoc}
    */
-  public function getDiscoveryXml(): string {
+  public function getDiscovery(): CollaboraDiscoveryInterface {
+    $xml = $this->getDiscoveryXml();
+    $parsed_xml = $this->parseXml($xml);
+    return new CollaboraDiscovery($parsed_xml);
+  }
+
+  /**
+   * Parses an XML string.
+   *
+   * @param string $xml
+   *   XML string.
+   *
+   * @return \SimpleXMLElement
+   *   Parsed XML.
+   *
+   * @throws \Drupal\collabora_online\Exception\CollaboraNotAvailableException
+   *   The XML is invalid or empty.
+   */
+  protected function parseXml(string $xml): \SimpleXMLElement {
+    try {
+      // Avoid errors from XML parsing hitting the regular error handler.
+      // An alternative would be libxml_use_internal_errors(), but then we would
+      // have to deal with the results from libxml_get_errors().
+      $parsed_xml = ErrorHandler::call(
+        fn () => simplexml_load_string($xml),
+      );
+    }
+    catch (\ErrorException $e) {
+      throw new CollaboraNotAvailableException('Error in the retrieved discovery.xml file: ' . $e->getMessage(), previous: $e);
+    }
+    if ($parsed_xml === FALSE) {
+      // The parser returned FALSE, but no error was raised.
+      // This is known to happen when $xml is an empty string.
+      // Instead we could check for $xml === '' earlier, but we don't know for
+      // sure if this is, and always will be, the only such case.
+      throw new CollaboraNotAvailableException('The discovery.xml file is empty.');
+    }
+    return $parsed_xml;
+  }
+
+  /**
+   * Gets the contents of discovery.xml from the Collabora server.
+   *
+   * @return string
+   *   The full contents of discovery.xml.
+   *
+   * @throws \Drupal\collabora_online\Exception\CollaboraNotAvailableException
+   *   The client url cannot be retrieved.
+   */
+  protected function getDiscoveryXml(): string {
     $cached = $this->cache->get($this->cid);
     if ($cached) {
       return $cached->data;

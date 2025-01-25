@@ -14,7 +14,7 @@ declare(strict_types=1);
 
 namespace Drupal\Tests\collabora_online\Kernel\Controller;
 
-use Drupal\collabora_online\Discovery\DiscoveryLoaderInterface;
+use Drupal\collabora_online\Discovery\CollaboraDiscoveryFetcherInterface;
 use Drupal\collabora_online\Exception\CollaboraNotAvailableException;
 use Drupal\collabora_online\Jwt\JwtTranscoderInterface;
 use Drupal\Core\Logger\RfcLogLevel;
@@ -162,8 +162,8 @@ class ViewerControllerTest extends WopiControllerTestBase {
    * @covers ::editor
    */
   public function testEditorMismatchScheme(): void {
-    /** @var \Drupal\collabora_online\Discovery\DiscoveryLoaderInterface $discovery_loader */
-    $discovery_loader = \Drupal::service(DiscoveryLoaderInterface::class);
+    /** @var \Drupal\collabora_online\Discovery\CollaboraDiscoveryFetcherInterface $discovery_loader */
+    $discovery_loader = \Drupal::service(CollaboraDiscoveryFetcherInterface::class);
     $wopi_url = $discovery_loader->getDiscovery()->getWopiClientURL();
 
     foreach ($this->createViewerRequests(TRUE) as $name => $request) {
