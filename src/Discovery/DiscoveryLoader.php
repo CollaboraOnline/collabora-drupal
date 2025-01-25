@@ -15,7 +15,6 @@ declare(strict_types=1);
 namespace Drupal\collabora_online\Discovery;
 
 use Drupal\collabora_online\Exception\CollaboraNotAvailableException;
-use Drupal\Core\Cache\CacheableMetadata;
 use Symfony\Component\ErrorHandler\ErrorHandler;
 
 /**
@@ -31,9 +30,7 @@ class DiscoveryLoader implements DiscoveryLoaderInterface {
    * {@inheritdoc}
    */
   public function getDiscovery(): CollaboraDiscoveryInterface {
-    $cacheability = new CacheableMetadata();
-    $xml = $this->discoveryFetcher->getDiscoveryXml($cacheability);
-    assert($cacheability->getCacheContexts() === []);
+    $xml = $this->discoveryFetcher->getDiscoveryXml();
     $parsed_xml = $this->parseXml($xml);
     return new CollaboraDiscovery($parsed_xml);
   }

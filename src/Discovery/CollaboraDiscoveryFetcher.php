@@ -49,25 +49,14 @@ class CollaboraDiscoveryFetcher implements CollaboraDiscoveryFetcherInterface {
   /**
    * {@inheritdoc}
    */
-  public function getDiscoveryXml(RefinableCacheableDependencyInterface $cacheability): string {
+  public function getDiscoveryXml(): string {
     $cached = $this->cache->get($this->cid);
     if ($cached) {
-      $cacheability->addCacheTags($cached->tags);
-      $expire = $cached->expire;
-      $max_age = ($expire === Cache::PERMANENT)
-        ? Cache::PERMANENT
-        : $expire - $this->time->getRequestTime();
-      $cacheability->mergeCacheMaxAge($max_age);
       return $cached->data;
     }
-    // In theory, the $cacheability could already contain unrelated cache
-    // metadata when this method is called. We need to make sure that these do
-    // not leak into the cache.
-    $local_cacheability = new CacheableMetadata();
-    $xml = $this->loadDiscoveryXml($local_cacheability);
-    $max_age = $local_cacheability->getCacheMaxAge();
-
-    $cacheability->addCacheableDependency($local_cacheability);
+    $cacheability = new CacheableMetadata();
+    $xml = $this->loadDiscoveryXml($cacheability);
+    $max_age = $cacheability->getCacheMaxAge();
 
     /* @see \Drupal\Core\Cache\VariationCache::maxAgeToExpire() */
     $expire = ($max_age === Cache::PERMANENT)
@@ -77,7 +66,7 @@ class CollaboraDiscoveryFetcher implements CollaboraDiscoveryFetcherInterface {
       $this->cid,
       $xml,
       $expire,
-      $local_cacheability->getCacheTags(),
+      $cacheability->getCacheTags(),
     );
     return $xml;
   }
