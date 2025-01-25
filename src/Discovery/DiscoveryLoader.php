@@ -16,10 +16,7 @@ namespace Drupal\collabora_online\Discovery;
 
 use Drupal\collabora_online\Exception\CollaboraNotAvailableException;
 use Drupal\Component\Datetime\TimeInterface;
-use Drupal\Core\Cache\Cache;
-use Drupal\Core\Cache\CacheableMetadata;
 use Drupal\Core\Cache\CacheBackendInterface;
-use Drupal\Core\Cache\RefinableCacheableDependencyInterface;
 use Drupal\Core\Config\ConfigFactoryInterface;
 use Drupal\Core\Config\ImmutableConfig;
 use GuzzleHttp\ClientInterface;
@@ -105,19 +102,20 @@ class DiscoveryLoader implements DiscoveryLoaderInterface {
     if ($cached) {
       return $cached->data;
     }
-    $cacheability = new CacheableMetadata();
-    $xml = $this->loadDiscoveryXml($cacheability);
-    $max_age = $cacheability->getCacheMaxAge();
+    $config = $this->configFactory->get('collabora_online.settings');
 
-    /* @see \Drupal\Core\Cache\VariationCache::maxAgeToExpire() */
-    $expire = ($max_age === Cache::PERMANENT)
-      ? Cache::PERMANENT
-      : $max_age + $this->time->getRequestTime();
+    $disable_checks = (bool) $config->get('cool.disable_cert_check');
+    $discovery_url = $this->getDiscoveryUrl($config);
+    $xml = $this->loadDiscoveryXml($discovery_url, $disable_checks);
+
+    $max_age = 60 * 60 * 12;
+    $expire = $max_age + $this->time->getRequestTime();
+
     $this->cache->set(
       $this->cid,
       $xml,
       $expire,
-      $cacheability->getCacheTags(),
+      $config->getCacheTags(),
     );
     return $xml;
   }
@@ -125,8 +123,10 @@ class DiscoveryLoader implements DiscoveryLoaderInterface {
   /**
    * Loads the contents of discovery.xml from the Collabora server.
    *
-   * @param \Drupal\Core\Cache\RefinableCacheableDependencyInterface $cacheability
-   *   Mutable object to collect cache metadata.
+   * @param string $discovery_url
+   *   Discovery URL.
+   * @param bool $disable_checks
+   *   TRUE to disable SSL checks.
    *
    * @return string
    *   The full contents of discovery.xml.
@@ -134,15 +134,8 @@ class DiscoveryLoader implements DiscoveryLoaderInterface {
    * @throws \Drupal\collabora_online\Exception\CollaboraNotAvailableException
    *   The client url cannot be retrieved.
    */
-  public function loadDiscoveryXml(RefinableCacheableDependencyInterface $cacheability): string {
-    $config = $this->configFactory->get('collabora_online.settings');
-    $cacheability->addCacheableDependency($config);
-
-    $discovery_url = $this->getDiscoveryUrl($config);
-    $disable_checks = (bool) $config->get('cool.disable_cert_check');
-
+  public function loadDiscoveryXml(string $discovery_url, bool $disable_checks): string {
     try {
-      $cacheability->mergeCacheMaxAge(60 * 60 * 12);
       $response = $this->httpClient->get($discovery_url, [
         RequestOptions::VERIFY => !$disable_checks,
       ]);
