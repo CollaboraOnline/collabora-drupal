@@ -15,10 +15,7 @@ declare(strict_types=1);
 namespace Drupal\collabora_online\Discovery;
 
 use Drupal\collabora_online\Exception\CollaboraNotAvailableException;
-use Drupal\Component\Datetime\TimeInterface;
-use Drupal\Core\Cache\Cache;
 use Drupal\Core\Cache\CacheableMetadata;
-use Drupal\Core\Cache\MemoryCache\MemoryCacheInterface;
 use Symfony\Component\ErrorHandler\ErrorHandler;
 
 /**
@@ -26,49 +23,14 @@ use Symfony\Component\ErrorHandler\ErrorHandler;
  */
 class DiscoveryLoader implements DiscoveryLoaderInterface {
 
-  protected const DEFAULT_CID = 'collabora_online.discovery.value';
-
   public function __construct(
     protected readonly CollaboraDiscoveryFetcherInterface $discoveryFetcher,
-    protected readonly MemoryCacheInterface $cache,
-    protected readonly TimeInterface $time,
-    protected readonly string $cid = self::DEFAULT_CID,
   ) {}
 
   /**
    * {@inheritdoc}
    */
   public function getDiscovery(): CollaboraDiscoveryInterface {
-    $cached = $this->cache->get($this->cid);
-    if ($cached) {
-      return $cached->data;
-    }
-    $discovery = $this->loadDiscovery();
-
-    $max_age = $discovery->getCacheMaxAge();
-    /* @see \Drupal\Core\Cache\VariationCache::maxAgeToExpire() */
-    $expire = ($max_age === Cache::PERMANENT)
-      ? Cache::PERMANENT
-      : $max_age + $this->time->getRequestTime();
-    $this->cache->set(
-      $this->cid,
-      $discovery,
-      $expire,
-      $discovery->getCacheTags(),
-    );
-    return $discovery;
-  }
-
-  /**
-   * Loads the discovery.
-   *
-   * @return \Drupal\collabora_online\Discovery\CollaboraDiscoveryInterface
-   *   Discovery object.
-   *
-   * @throws \Drupal\collabora_online\Exception\CollaboraNotAvailableException
-   *   Fetching the discovery.xml failed, or the result is not valid xml.
-   */
-  protected function loadDiscovery(): CollaboraDiscoveryInterface {
     $cacheability = new CacheableMetadata();
     $xml = $this->discoveryFetcher->getDiscoveryXml($cacheability);
     assert($cacheability->getCacheContexts() === []);
