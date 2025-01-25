@@ -7,8 +7,6 @@ namespace Drupal\Tests\collabora_online\Unit;
 use Drupal\collabora_online\Discovery\CollaboraDiscoveryFetcherInterface;
 use Drupal\collabora_online\Discovery\DiscoveryLoader;
 use Drupal\collabora_online\Exception\CollaboraNotAvailableException;
-use Drupal\Component\Datetime\Time;
-use Drupal\Core\Cache\MemoryCache\MemoryCacheInterface;
 use Drupal\Tests\UnitTestCase;
 
 /**
@@ -62,9 +60,7 @@ class DiscoveryLoaderTest extends UnitTestCase {
    */
   protected function getLoaderFromXml(string $xml): DiscoveryLoader {
     $fetcher = $this->getFetcherFromXml($xml);
-    $cache = $this->createMock(MemoryCacheInterface::class);
-    $time = new Time();
-    return new DiscoveryLoader($fetcher, $cache, $time);
+    return new DiscoveryLoader($fetcher);
   }
 
   /**
