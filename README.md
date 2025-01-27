@@ -26,7 +26,8 @@ For a local demo or test installation, [see below](#development--demo-installati
 It is recommended to generate a proof key as documented here:\
 https://sdk.collaboraonline.com/docs/advanced_integration.html#wopi-proof
 
-If not, the proof mechanism needs to be disabled in the module settings.
+If not, the proof mechanism needs to be disabled in the module settings.\
+The Docker setup provided automatically generates a proof key at startup.
 
 ### Module installation steps
 
@@ -77,8 +78,6 @@ docker-compose up -d
 docker-compose exec web composer install
 docker-compose exec web ./vendor/bin/run drupal:site-install
 
-docker-compose exec collabora coolconfig generate-proof-key
-docker-compose restart collabora
 ```
 
 Optionally, generate an admin login link.
