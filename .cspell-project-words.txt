@@ -1,22 +1,15 @@
-aqab
 closebutton
 configform
 coolconfig
 exitsave
 fpfis
 groupmedia
-hamo
-httx
 infobars
 isautosave
 isexitsave
 ismodifiedbyuser
 iwork
-oldexponent
-oldmodulus
-oldvalue
 phpseclib
-pkqi
 sffkey
 sffnumbers
 sffpages
@@ -25,3 +18,12 @@ urlsafe
 urlsrc
 weitzman
 wopi
+
+# Test terms.
+aqab
+hamo
+httx
+oldexponent
+oldmodulus
+oldvalue
+pkqi
