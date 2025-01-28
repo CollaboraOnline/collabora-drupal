@@ -1,0 +1,46 @@
+<?php
+
+/*
+ * Copyright the Collabora Online contributors.
+ *
+ * SPDX-License-Identifier: MPL-2.0
+ *
+ * This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/.
+ */
+
+use Drupal\collabora_online\Cool\CollaboraDiscoveryFetcherInterface;
+use Drupal\collabora_online\Exception\CollaboraNotAvailableException;
+
+/**
+ * Implements hook_requirements().
+ */
+function collabora_online_requirements(string $phase): array {
+  $requirements = [];
+
+  if ($phase === 'runtime') {
+    // The Collabora Online settings key is set.
+    $cool_settings = \Drupal::configFactory()->get('collabora_online.settings')->get('cool');
+    if (empty($cool_settings['key_id'])) {
+      $requirements['collabora_online_settings_cool_key_id'] = [
+        'title' => t('Collabora Online JWT key'),
+        'description' => t('The Collabora Online configuration "JWT private key" is not set.'),
+        'severity' => REQUIREMENT_ERROR,
+      ];
+    }
+    // The Collabora Online server discovery.xml is available.
+    try {
+      \Drupal::service(CollaboraDiscoveryFetcherInterface::class)->getDiscoveryXml();
+    }
+    catch (CollaboraNotAvailableException $e) {
+      $requirements['collabora_online_settings_cool_server'] = [
+        'title' => t('Collabora Online server'),
+        'description' => t('The Collabora Online server discovery.xml could not be accessed. Check the logs for more information.'),
+        'severity' => REQUIREMENT_ERROR,
+      ];
+    }
+  }
+
+  return $requirements;
+}
