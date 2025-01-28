@@ -15,6 +15,7 @@ declare(strict_types=1);
 namespace Drupal\Tests\collabora_online\Kernel;
 
 use Drupal\collabora_online\Cool\CollaboraDiscoveryFetcherInterface;
+use Drupal\key\Entity\Key;
 
 /**
  * Tests the Collabora Online requirements.
@@ -38,7 +39,7 @@ class RequirementsTest extends CollaboraKernelTestBase {
       (string) $requirements['collabora_online_settings_cool_key_id']['title'],
     );
     $this->assertEquals(
-      'The Collabora Online configuration "JWT private key" is not set.',
+      'The Collabora Online configuration "JWT private key" is not set or does not exist.',
       (string) $requirements['collabora_online_settings_cool_key_id']['description'],
     );
     $this->assertEquals(
@@ -67,10 +68,11 @@ class RequirementsTest extends CollaboraKernelTestBase {
     $fetcher->method('getDiscoveryXml')->willReturn($xml);
     $this->container->set(CollaboraDiscoveryFetcherInterface::class, $fetcher);
     // Set a value for the key.
-    $key = \Drupal::service('key.repository')->getKey('collabora');
-    $this->assertEmpty($key);
+    Key::create([
+      'id' => 'collabora_test',
+    ])->save();
     $this->config('collabora_online.settings')
-      ->set('cool.key_id', 'collabora')
+      ->set('cool.key_id', 'collabora_test')
       ->save();
 
     $requirements = collabora_online_requirements('runtime');

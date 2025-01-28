@@ -24,13 +24,17 @@ function collabora_online_requirements(string $phase): array {
   if ($phase === 'runtime') {
     // The Collabora Online settings key is set.
     $cool_settings = \Drupal::configFactory()->get('collabora_online.settings')->get('cool');
-    if (empty($cool_settings['key_id'])) {
+    if (
+      empty($cool_settings['key_id']) ||
+      \Drupal::service('key.repository')->getKey($cool_settings['key_id']) === NULL
+    ) {
       $requirements['collabora_online_settings_cool_key_id'] = [
         'title' => t('Collabora Online JWT key'),
-        'description' => t('The Collabora Online configuration "JWT private key" is not set.'),
+        'description' => t('The Collabora Online configuration "JWT private key" is not set or does not exist.'),
         'severity' => REQUIREMENT_ERROR,
       ];
     }
+
     // The Collabora Online server discovery.xml is available.
     try {
       \Drupal::service(CollaboraDiscoveryFetcherInterface::class)->getDiscoveryXml();
