@@ -14,6 +14,8 @@ declare(strict_types=1);
 
 namespace Drupal\Tests\collabora_online\Kernel;
 
+use Drupal\collabora_online\Cool\CollaboraDiscoveryFetcherInterface;
+
 /**
  * Tests the Collabora Online requirements.
  */
@@ -28,7 +30,7 @@ class RequirementsTest extends CollaboraKernelTestBase {
     $moduleHandler->loadInclude('collabora_online', 'install');
 
     // Test missing JWT key and non-existing server.
-    $requirements = \collabora_online_requirements('runtime');
+    $requirements = collabora_online_requirements('runtime');
     $this->assertNotEmpty($requirements);
 
     $this->assertEquals(
@@ -58,14 +60,20 @@ class RequirementsTest extends CollaboraKernelTestBase {
     );
 
     // Test that after meeting the requirements the errors are gone.
-    $this->config('collabora_online.settings')
-      ->set('cool.server', 'http://collabora.test:9980/')
-      ->save();
+    // Mock fetcher to get a discovery XML.
+    $fetcher = $this->createMock(CollaboraDiscoveryFetcherInterface::class);
+    $file = dirname(__DIR__, 2) . '/fixtures/discovery.mimetypes.xml';
+    $xml = file_get_contents($file);
+    $fetcher->method('getDiscoveryXml')->willReturn($xml);
+    $this->container->set(CollaboraDiscoveryFetcherInterface::class, $fetcher);
+    // Set a value for the key.
+    $key = \Drupal::service('key.repository')->getKey('collabora');
+    $this->assertEmpty($key);
     $this->config('collabora_online.settings')
       ->set('cool.key_id', 'collabora')
       ->save();
 
-    $requirements = \collabora_online_requirements('runtime');
+    $requirements = collabora_online_requirements('runtime');
     $this->assertEmpty($requirements);
   }
 

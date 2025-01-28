@@ -10,6 +10,8 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
+declare(strict_types=1);
+
 use Drupal\collabora_online\Cool\CollaboraDiscoveryFetcherInterface;
 use Drupal\collabora_online\Exception\CollaboraNotAvailableException;
 
