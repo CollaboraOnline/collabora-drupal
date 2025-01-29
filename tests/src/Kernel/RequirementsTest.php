@@ -32,7 +32,7 @@ class RequirementsTest extends CollaboraKernelTestBase {
 
     // Test missing JWT key and non-existing server.
     $requirements = collabora_online_requirements('runtime');
-    $this->assertNotEmpty($requirements);
+    $this->assertCount(2, $requirements);
 
     $this->assertEquals(
       'Collabora Online JWT key',
@@ -60,13 +60,6 @@ class RequirementsTest extends CollaboraKernelTestBase {
       $requirements['collabora_online_settings_cool_server']['severity'],
     );
 
-    // Test that after meeting the requirements the errors are gone.
-    // Mock fetcher to get a discovery XML.
-    $fetcher = $this->createMock(CollaboraDiscoveryFetcherInterface::class);
-    $file = dirname(__DIR__, 2) . '/fixtures/discovery.mimetypes.xml';
-    $xml = file_get_contents($file);
-    $fetcher->method('getDiscoveryXml')->willReturn($xml);
-    $this->container->set(CollaboraDiscoveryFetcherInterface::class, $fetcher);
     // Set a value for the key.
     Key::create([
       'id' => 'collabora_test',
@@ -75,6 +68,63 @@ class RequirementsTest extends CollaboraKernelTestBase {
       ->set('cool.key_id', 'collabora_test')
       ->save();
 
+    $requirements = collabora_online_requirements('runtime');
+    $this->assertCount(1, $requirements);
+    $this->assertEquals(
+      'Collabora Online server',
+      (string) $requirements['collabora_online_settings_cool_server']['title'],
+    );
+    $this->assertEquals(
+      'The Collabora Online server discovery.xml could not be accessed. Check the logs for more information.',
+      (string) $requirements['collabora_online_settings_cool_server']['description'],
+    );
+    $this->assertEquals(
+      REQUIREMENT_ERROR,
+      $requirements['collabora_online_settings_cool_server']['severity'],
+    );
+
+    // Mock fetcher to get a discovery XML.
+    $fetcher = $this->createMock(CollaboraDiscoveryFetcherInterface::class);
+    $file = dirname(__DIR__, 2) . '/fixtures/discovery.mimetypes.xml';
+    $fetcher->method('getDiscoveryXml')->willReturnCallback(function () use (&$file) {
+      return file_get_contents($file);
+    });
+    $this->container->set(CollaboraDiscoveryFetcherInterface::class, $fetcher);
+
+    $requirements = collabora_online_requirements('runtime');
+    $this->assertCount(1, $requirements);
+    $this->assertEquals(
+      'Collabora Online WOPI proof',
+      (string) $requirements['collabora_online_settings_wopi_proof']['title'],
+    );
+    $this->assertEquals(
+      'Validation of the WOPI proof header is enabled, but no valid proof keys have been found in the configured Collabora Online server.',
+      (string) $requirements['collabora_online_settings_wopi_proof']['description'],
+    );
+    $this->assertEquals(
+      REQUIREMENT_ERROR,
+      $requirements['collabora_online_settings_wopi_proof']['severity'],
+    );
+
+    // Disable the proof validation.
+    $this->config('collabora_online.settings')
+      ->set('cool.wopi_proof', FALSE)
+      ->save();
+    $requirements = collabora_online_requirements('runtime');
+    $this->assertEmpty($requirements);
+
+    // Re-enable the proof validation.
+    $this->config('collabora_online.settings')
+      ->set('cool.wopi_proof', TRUE)
+      ->save();
+    // Do a non-full check, just to make sure that the validation is being
+    // triggered.
+    $requirements = collabora_online_requirements('runtime');
+    $this->assertCount(1, $requirements);
+    $this->assertArrayHasKey('collabora_online_settings_wopi_proof', $requirements);
+
+    // Change the XML response to contain a proof key.
+    $file = dirname(__DIR__, 2) . '/fixtures/discovery.proof-key.xml';
     $requirements = collabora_online_requirements('runtime');
     $this->assertEmpty($requirements);
   }
