@@ -23,7 +23,7 @@ use Symfony\Component\EventDispatcher\EventDispatcherInterface;
 /**
  * @coversDefaultClass \Drupal\collabora_online\Discovery\CollaboraDiscoveryFetcher
  */
-class DiscoveryLoaderTest extends UnitTestCase {
+class DiscoveryFetcherTest extends UnitTestCase {
 
   /**
    * Tests successful behavior.
