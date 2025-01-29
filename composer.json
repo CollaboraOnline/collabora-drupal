@@ -18,7 +18,7 @@
     },
     "require-dev": {
         "composer/installers": "^2",
-        "drupal/core-composer-scaffold": "^10 | ^11@dev",
+        "drupal/core-composer-scaffold": "^10.4 | ^11.1",
         "drupal/core-dev": "^10.3.6 | ^11.0.5",
         "drupal/core-recommended": "^10.3.6 | ^11.0.5",
         "drupal/groupmedia": "^3 || ^4",
