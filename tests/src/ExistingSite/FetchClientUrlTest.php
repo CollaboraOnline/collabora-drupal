@@ -38,9 +38,9 @@ class FetchClientUrlTest extends ExistingSiteBase {
    * Tests fetching the client url.
    */
   public function testFetchClientUrl(): void {
-    /** @var \Drupal\collabora_online\Discovery\CollaboraDiscoveryFetcherInterface $discovery_loader */
-    $discovery_loader = \Drupal::service(CollaboraDiscoveryFetcherInterface::class);
-    $discovery = $discovery_loader->getDiscovery();
+    /** @var \Drupal\collabora_online\Discovery\CollaboraDiscoveryFetcherInterface $discovery_fetcher */
+    $discovery_fetcher = \Drupal::service(CollaboraDiscoveryFetcherInterface::class);
+    $discovery = $discovery_fetcher->getDiscovery();
     $client_url = $discovery->getWopiClientURL();
     $this->assertNotNull($client_url);
     // The protocol, domain and port are known when this test runs in the
@@ -56,13 +56,13 @@ class FetchClientUrlTest extends ExistingSiteBase {
       ->getEditable('collabora_online.settings')
       ->set('cool.server', 'httx://example.com')
       ->save();
-    /** @var \Drupal\collabora_online\Discovery\CollaboraDiscoveryFetcherInterface $discovery_loader */
-    $discovery_loader = \Drupal::service(CollaboraDiscoveryFetcherInterface::class);
+    /** @var \Drupal\collabora_online\Discovery\CollaboraDiscoveryFetcherInterface $discovery_fetcher */
+    $discovery_fetcher = \Drupal::service(CollaboraDiscoveryFetcherInterface::class);
 
     $this->expectException(CollaboraNotAvailableException::class);
     $this->expectExceptionMessage("The configured Collabora Online server address must begin with 'http://' or 'https://'. Found 'httx://example.com'.");
 
-    $discovery_loader->getDiscovery();
+    $discovery_fetcher->getDiscovery();
   }
 
 }

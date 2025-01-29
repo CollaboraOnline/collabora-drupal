@@ -162,9 +162,9 @@ class ViewerControllerTest extends WopiControllerTestBase {
    * @covers ::editor
    */
   public function testEditorMismatchScheme(): void {
-    /** @var \Drupal\collabora_online\Discovery\CollaboraDiscoveryFetcherInterface $discovery_loader */
-    $discovery_loader = \Drupal::service(CollaboraDiscoveryFetcherInterface::class);
-    $wopi_url = $discovery_loader->getDiscovery()->getWopiClientURL();
+    /** @var \Drupal\collabora_online\Discovery\CollaboraDiscoveryFetcherInterface $discovery_fetcher */
+    $discovery_fetcher = \Drupal::service(CollaboraDiscoveryFetcherInterface::class);
+    $wopi_url = $discovery_fetcher->getDiscovery()->getWopiClientURL();
 
     foreach ($this->createViewerRequests(TRUE) as $name => $request) {
       $this->assertBadRequestResponse(

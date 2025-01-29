@@ -32,8 +32,8 @@ class DiscoveryLoaderTest extends UnitTestCase {
     $file = dirname(__DIR__, 2) . '/fixtures/discovery.mimetypes.xml';
     $xml = file_get_contents($file);
     $logger = new TestLogger();
-    $loader = $this->getLoaderFromXml($xml, $logger);
-    $discovery = $loader->getDiscovery();
+    $fetcher = $this->getLoaderFromXml($xml, $logger);
+    $discovery = $fetcher->getDiscovery();
     $this->assertSame(
       'http://collabora.test:9980/browser/61cf2b4/cool.html?',
       $discovery->getWopiClientURL(),
@@ -46,11 +46,11 @@ class DiscoveryLoaderTest extends UnitTestCase {
    */
   public function testBlankXml(): void {
     $logger = new TestLogger();
-    $loader = $this->getLoaderFromXml('', $logger);
+    $fetcher = $this->getLoaderFromXml('', $logger);
     $this->expectException(CollaboraNotAvailableException::class);
     $this->expectExceptionMessage('The discovery.xml file is empty.');
     try {
-      $loader->getDiscovery();
+      $fetcher->getDiscovery();
     }
     finally {
       $this->assertEmpty($logger->records);
@@ -63,11 +63,11 @@ class DiscoveryLoaderTest extends UnitTestCase {
   public function testBrokenXml(): void {
     $xml = 'This file does not contain valid xml.';
     $logger = new TestLogger();
-    $loader = $this->getLoaderFromXml($xml, $logger);
+    $fetcher = $this->getLoaderFromXml($xml, $logger);
     $this->expectException(CollaboraNotAvailableException::class);
     $this->expectExceptionMessageMatches('#^Error in the retrieved discovery.xml file: #');
     try {
-      $loader->getDiscovery();
+      $fetcher->getDiscovery();
     }
     finally {
       $this->assertEmpty($logger->records);

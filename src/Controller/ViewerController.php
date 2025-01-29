@@ -40,7 +40,7 @@ class ViewerController implements ContainerInjectionInterface {
   use StringTranslationTrait;
 
   public function __construct(
-    protected readonly CollaboraDiscoveryFetcherInterface $discoveryLoader,
+    protected readonly CollaboraDiscoveryFetcherInterface $discoveryFetcher,
     protected readonly JwtTranscoderInterface $jwtTranscoder,
     protected readonly RendererInterface $renderer,
     #[Autowire('logger.channel.collabora_online')]
@@ -69,7 +69,7 @@ class ViewerController implements ContainerInjectionInterface {
   public function editor(MediaInterface $media, Request $request, $edit = FALSE): Response {
     try {
       // @todo Get client url for the correct MIME type.
-      $discovery = $this->discoveryLoader->getDiscovery();
+      $discovery = $this->discoveryFetcher->getDiscovery();
       $wopi_client_url = $discovery->getWopiClientURL();
     }
     catch (CollaboraNotAvailableException $e) {
