@@ -48,7 +48,7 @@ class CollaboraDiscoveryFetcher implements CollaboraDiscoveryFetcherInterface {
    * {@inheritdoc}
    */
   public function getDiscoveryXml(): string {
-    $discovery_url = $this->getWopiClientServerBaseUrl() . '/hosting/discovery';
+    $discovery_url = $this->getDiscoveryUrl();
 
     $cool_settings = $this->loadSettings();
     $disable_checks = !empty($cool_settings['disable_cert_check']);
@@ -75,22 +75,23 @@ class CollaboraDiscoveryFetcher implements CollaboraDiscoveryFetcherInterface {
   }
 
   /**
-   * Loads the WOPI server url from configuration.
+   * Gets the URL to fetch the discovery.
    *
    * @return string
-   *   Base URL to access the WOPI server from Drupal.
+   *   URL to fetch the discovery XML.
    *
    * @throws \Drupal\collabora_online\Exception\CollaboraNotAvailableException
-   *   The WOPI server url is misconfigured, or the protocol does not match
-   *   that of the current Drupal request.
+   *   The WOPI server url is misconfigured.
    */
-  protected function getWopiClientServerBaseUrl(): string {
+  protected function getDiscoveryUrl(): string {
     $cool_settings = $this->loadSettings();
     $wopi_client_server = $cool_settings['server'] ?? NULL;
     if (!$wopi_client_server) {
       throw new CollaboraNotAvailableException('The configured Collabora Online server address is empty.');
     }
     $wopi_client_server = trim($wopi_client_server);
+    // The trailing slash in the configured URL is optional.
+    $wopi_client_server = rtrim($wopi_client_server, '/');
 
     if (!str_starts_with($wopi_client_server, 'http://') && !str_starts_with($wopi_client_server, 'https://')) {
       throw new CollaboraNotAvailableException(sprintf(
@@ -99,7 +100,7 @@ class CollaboraDiscoveryFetcher implements CollaboraDiscoveryFetcherInterface {
       ));
     }
 
-    return $wopi_client_server;
+    return $wopi_client_server . '/hosting/discovery';
   }
 
   /**

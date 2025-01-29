@@ -107,7 +107,7 @@ class ConfigFormTest extends BrowserTestBase {
     $this->drupalGet(Url::fromRoute('collabora-online.settings'));
     $assert_session->fieldValueEquals('Collabora Online server URL', 'http://collaboraserver.com/');
     // Slash is removed at the end of Wopi URL.
-    $assert_session->fieldValueEquals('WOPI host URL', 'http://wopihost.com');
+    $assert_session->fieldValueEquals('WOPI host URL', 'http://wopihost.com/');
     $assert_session->fieldValueEquals('JWT private key', 'collabora_test');
     $assert_session->fieldValueEquals('Access Token Expiration (in seconds)', '3600');
     $assert_session->checkboxChecked('Disable TLS certificate check for COOL.');

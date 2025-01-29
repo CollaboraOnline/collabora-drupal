@@ -145,6 +145,37 @@ class ViewerControllerTest extends WopiControllerTestBase {
   }
 
   /**
+   * Tests that trailing slashes in the WOPI url are normalized.
+   *
+   * @covers ::getViewerRender
+   */
+  public function testWopiBaseTrailingSlashes(): void {
+    // Set empty configuration to force fail.
+    $config = \Drupal::configFactory()->getEditable('collabora_online.settings');
+    // Form URL fields allow any number of trailing slashes.
+    $slash_cases = ['', '/', '//'];
+    foreach ($slash_cases as $slash_case_name => $slash) {
+      $wopi_url = "https://wopi.$slash_case_name.example.com";
+      $config->set('cool.wopi_base', $wopi_url . $slash)->save();
+      foreach ($this->createViewerRequests() as $request_name => $request) {
+        $response = $this->assertResponseOk($request, $request_name);
+        // Verify that the slashes are normalized.
+        $this->assertStringContainsString(
+          urlencode($wopi_url . '/cool/wopi/files/'),
+          $response->getContent(),
+          $request_name . ' / ' . $slash_case_name,
+        );
+        // Verify that only one such path exists in the response body.
+        $this->assertSame(
+          1,
+          substr_count($response->getContent(), urlencode('cool/wopi/files')),
+          $request_name . ' / ' . $slash_case_name,
+        );
+      }
+    }
+  }
+
+  /**
    * Tests requests with a viewer not available.
    *
    * @covers ::editor
@@ -222,13 +253,18 @@ class ViewerControllerTest extends WopiControllerTestBase {
    *   The request to perform.
    * @param string $message
    *   Message to distinguish this from other assertions.
+   *
+   * @return \Symfony\Component\HttpFoundation\Response
+   *   Response object for further checks.
    */
-  protected function assertResponseOk(Request $request, string $message = ''): void {
+  protected function assertResponseOk(Request $request, string $message = ''): Response {
     $response = $this->handleRequest($request);
 
     $this->assertEquals(Response::HTTP_OK, $response->getStatusCode(), $message);
     $this->assertStringContainsString('iframe', $response->getContent(), $message);
     $this->assertEquals('', $response->headers->get('Content-Type'), $message);
+
+    return $response;
   }
 
   /**

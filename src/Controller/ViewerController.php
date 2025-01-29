@@ -140,7 +140,8 @@ class ViewerController implements ContainerInjectionInterface {
       throw new CollaboraNotAvailableException('The Collabora Online connection is not configured.');
     }
 
-    $wopi_base = $cool_settings['wopi_base'];
+    // A trailing slash is optional in the configured URL.
+    $wopi_base = rtrim($cool_settings['wopi_base'], '/');
     $expire_timestamp = $this->getExpireTimestamp();
     $access_token = $this->jwtTranscoder->encode(
       [
