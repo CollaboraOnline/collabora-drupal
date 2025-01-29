@@ -63,9 +63,9 @@ class WopiControllerProofTest extends WopiControllerTestBase {
 
     // Set a mock discovery with custom proof keys.
     $mock_discovery = $this->createMock(CollaboraDiscoveryInterface::class);
-    $mock_discovery_loader = $this->createMock(CollaboraDiscoveryFetcherInterface::class);
-    $mock_discovery_loader->method('getDiscovery')->willReturn($mock_discovery);
-    $this->container->set(CollaboraDiscoveryFetcherInterface::class, $mock_discovery_loader);
+    $mock_discovery_fetcher = $this->createMock(CollaboraDiscoveryFetcherInterface::class);
+    $mock_discovery_fetcher->method('getDiscovery')->willReturn($mock_discovery);
+    $this->container->set(CollaboraDiscoveryFetcherInterface::class, $mock_discovery_fetcher);
     $mock_discovery->method('getProofKey')->willReturnReference($this->wopiProofKey);
     $mock_discovery->method('getProofKeyOld')->willReturnReference($this->wopiProofKeyOld);
   }

@@ -41,7 +41,7 @@ use Symfony\Component\HttpFoundation\Request;
 class WopiProofAccessCheck implements AccessInterface {
 
   public function __construct(
-    protected readonly CollaboraDiscoveryFetcherInterface $discoveryLoader,
+    protected readonly CollaboraDiscoveryFetcherInterface $discoveryFetcher,
     #[Autowire(service: 'logger.channel.collabora_online')]
     protected readonly LoggerInterface $logger,
     protected readonly ConfigFactoryInterface $configFactory,
@@ -201,7 +201,7 @@ class WopiProofAccessCheck implements AccessInterface {
    *   The discovery cannot be loaded.
    */
   protected function getKeys(): array {
-    $discovery = $this->discoveryLoader->getDiscovery();
+    $discovery = $this->discoveryFetcher->getDiscovery();
     // Get current and old key.
     // Remove empty values.
     // If both are the same, keep only the current one.
