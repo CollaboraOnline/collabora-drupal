@@ -32,7 +32,7 @@ class DiscoveryLoaderTest extends UnitTestCase {
     $file = dirname(__DIR__, 2) . '/fixtures/discovery.mimetypes.xml';
     $xml = file_get_contents($file);
     $logger = new TestLogger();
-    $fetcher = $this->getLoaderFromXml($xml, $logger);
+    $fetcher = $this->getFetcherFromXml($xml, $logger);
     $discovery = $fetcher->getDiscovery();
     $this->assertSame(
       'http://collabora.test:9980/browser/61cf2b4/cool.html?',
@@ -46,7 +46,7 @@ class DiscoveryLoaderTest extends UnitTestCase {
    */
   public function testBlankXml(): void {
     $logger = new TestLogger();
-    $fetcher = $this->getLoaderFromXml('', $logger);
+    $fetcher = $this->getFetcherFromXml('', $logger);
     $this->expectException(CollaboraNotAvailableException::class);
     $this->expectExceptionMessage('The discovery.xml file is empty.');
     try {
@@ -63,7 +63,7 @@ class DiscoveryLoaderTest extends UnitTestCase {
   public function testBrokenXml(): void {
     $xml = 'This file does not contain valid xml.';
     $logger = new TestLogger();
-    $fetcher = $this->getLoaderFromXml($xml, $logger);
+    $fetcher = $this->getFetcherFromXml($xml, $logger);
     $this->expectException(CollaboraNotAvailableException::class);
     $this->expectExceptionMessageMatches('#^Error in the retrieved discovery.xml file: #');
     try {
@@ -91,7 +91,7 @@ class DiscoveryLoaderTest extends UnitTestCase {
    * @return \Drupal\collabora_online\Discovery\CollaboraDiscoveryFetcher
    *   New discovery loader based on the parameters.
    */
-  protected function getLoaderFromXml(
+  protected function getFetcherFromXml(
     string $xml,
     LoggerInterface $logger,
     array $cool_settings = [],
