@@ -13,6 +13,7 @@
 declare(strict_types=1);
 
 use Drupal\collabora_online\Cool\CollaboraDiscoveryFetcherInterface;
+use Drupal\collabora_online\Cool\CollaboraDiscoveryInterface;
 use Drupal\collabora_online\Exception\CollaboraNotAvailableException;
 
 /**
@@ -46,6 +47,22 @@ function collabora_online_requirements(string $phase): array {
     $requirements['collabora_online_settings_cool_server'] = [
       'title' => t('Collabora Online server'),
       'description' => t('The Collabora Online server discovery.xml could not be accessed. Check the logs for more information.'),
+      'severity' => REQUIREMENT_ERROR,
+    ];
+
+    return $requirements;
+  }
+
+  /** @var \Drupal\collabora_online\Cool\CollaboraDiscoveryInterface $discovery */
+  $discovery = \Drupal::service(CollaboraDiscoveryInterface::class);
+  if (
+    ($cool_settings['wopi_proof'] ?? TRUE) === TRUE &&
+    $discovery->getProofKey() === NULL &&
+    $discovery->getProofKeyOld() === NULL
+  ) {
+    $requirements['collabora_online_settings_wopi_proof'] = [
+      'title' => t('Collabora Online WOPI proof'),
+      'description' => t('Validation of the WOPI proof header is enabled, but no valid proof keys have been found in the configured Collabora Online server.'),
       'severity' => REQUIREMENT_ERROR,
     ];
   }
