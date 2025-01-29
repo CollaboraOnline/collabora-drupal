@@ -35,7 +35,13 @@ phpunit:
     - !reference [.setup-webserver]
     - !reference [.simpletest-db]
     - $CI_PROJECT_DIR/vendor/bin/run drupal:settings-setup --skip-permissions-setup
-    - $CI_PROJECT_DIR/vendor/bin/run drupal:site-install --database-scheme=mysql --database-name=$MYSQL_DATABASE --database-host=database --database-user=$MYSQL_USER --database-password=$MYSQL_PASSWORD --database-port=
+    - "$CI_PROJECT_DIR/vendor/bin/run drupal:site-install \
+      --database-scheme=mysql \
+      --database-name=$MYSQL_DATABASE \
+      --database-host=database \
+      --database-user=$MYSQL_USER \
+      --database-password=$MYSQL_PASSWORD \
+      --database-port="
     - drush -y config-set collabora_online.settings cool.wopi_base $DTT_BASE_URL
     - rm /var/www/html/web # Remove symlink to allow .setup-webserver to be re-executed.
 
@@ -43,7 +49,4 @@ variables:
   DTT_BASE_URL: $SIMPLETEST_BASE_URL
   DTT_MINK_DRIVER_ARGS: $MINK_DRIVER_ARGS_WEBDRIVER
   _SHOW_ENVIRONMENT_VARIABLES: '1'
-
-composer:
-  variables:
-    DRUPAL_CORE: $CORE_PREVIOUS_STABLE
+  OPT_IN_TEST_PREVIOUS_MAJOR: '1'

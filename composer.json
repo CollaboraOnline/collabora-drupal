@@ -14,15 +14,15 @@
         "drupal/key": "^1.19",
         "firebase/php-jwt": "^6.10",
         "phpseclib/phpseclib": "^3.0",
-        "symfony/error-handler": "^6.4|^7.1"
+        "symfony/error-handler": "^6.4 || ^7.1"
     },
     "require-dev": {
         "composer/installers": "^2",
-        "drupal/core-composer-scaffold": "^10.3.6",
-        "drupal/core-dev": "^10.3.6",
-        "drupal/core-recommended": "^10.3.6",
+        "drupal/core-composer-scaffold": "^10.4 || ^11.1",
+        "drupal/core-dev": "^10.3 || ^11.0",
+        "drupal/core-recommended": "^10.3 || ^11.0",
         "drupal/groupmedia": "^3 || ^4",
-        "drush/drush": "^12.4",
+        "drush/drush": "^12.4 || ^13.3",
         "openeuropa/task-runner-drupal-project-symlink": "^1.0.0-beta6",
         "openeuropa/task-runner": "^2@alpha",
         "php-parallel-lint/php-parallel-lint": "^1.2",

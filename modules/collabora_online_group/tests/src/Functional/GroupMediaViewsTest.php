@@ -45,6 +45,15 @@ class GroupMediaViewsTest extends BrowserTestBase {
   /**
    * {@inheritdoc}
    */
+  protected static $configSchemaCheckerExclusions = [
+    // Suppress a schema error from groupmedia default config.
+    // See https://www.drupal.org/project/groupmedia/issues/3491778.
+    'views.view.group_media',
+  ];
+
+  /**
+   * {@inheritdoc}
+   */
   protected $defaultTheme = 'stark';
 
   /**
