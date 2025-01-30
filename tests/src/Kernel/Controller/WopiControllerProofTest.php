@@ -14,9 +14,11 @@ declare(strict_types=1);
 
 namespace Drupal\Tests\collabora_online\Kernel\Controller;
 
-use Drupal\collabora_online\Discovery\CollaboraDiscoveryInterface;
 use Drupal\collabora_online\Discovery\CollaboraDiscoveryFetcherInterface;
+use Drupal\collabora_online\Discovery\CollaboraDiscoveryInterface;
 use Drupal\collabora_online\Util\DotNetTime;
+use Drupal\Core\Logger\RfcLogLevel;
+use Drupal\Tests\collabora_online\Traits\KernelTestLoggerTrait;
 use Firebase\JWT\JWT;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
@@ -28,6 +30,8 @@ use Symfony\Component\HttpFoundation\Response;
  * @covers \Drupal\collabora_online\Access\WopiTimeoutAccessCheck
  */
 class WopiControllerProofTest extends WopiControllerTestBase {
+
+  use KernelTestLoggerTrait;
 
   protected const PROOF_KEY = 'BgIAAACkAABSU0ExAAgAAAEAAQCxJYuefceQ4XI3/iUQvL9+ebLFZSRdM1n6fkB+OtILJexHUsD/aItTWgzB/G6brdxLlyHXoPjbJl4QoWZVrr1XY+ZHQ/a9Yzf/VN2mPLKFB9hmnUPI580VpFfkC3gCgpqwFwMpAkQSzYSDFQ/7W4ryPP6irvVzhg16IqQ9oEhZWmwy6caKcqh4BK31oI8SrI6bsZLBMTli70197UWHmgIGk4JJbeC8cBFb6uZDaidAcRn1HSAF2JnaEscUNMIsiNMM/71BT6U6hVSv5Qk0oISMLfVOeCPQZ6OmYo4M42wDKBpaJGMOpgoeQX6Feq+agf7uBvd8S/ITGZ8WinQfHZaQ';
 
@@ -122,6 +126,7 @@ class WopiControllerProofTest extends WopiControllerTestBase {
       ?string $key_recent = NULL,
       ?string $key_old = NULL,
     ) use ($request, $wopi_tick_time, $wopi_proof) {
+      $this->assertNoFurtherLogMessages();
       // By default, set a fake request time 18 minutes after the WOPI time.
       $_SERVER['REQUEST_TIME'] = DotNetTime::ticksToTimestamp((float) $wopi_tick_time)
         + ($offset_seconds ?? 18 * 20);
@@ -189,6 +194,13 @@ class WopiControllerProofTest extends WopiControllerTestBase {
       // Print the failure message if this is not 200.
       $message . "\n" . substr((string) $response->getContent(), 0, 3000),
     );
+    // Ignore log message from write requests.
+    $this->skipLogMessages(
+      RfcLogLevel::INFO,
+      'cool',
+      regex: '@Media entity .* was updated with Collabora\.|The file contents for media .* were overwritten with Collabora\.@',
+    );
+    $this->assertNoFurtherLogMessages();
   }
 
 }
