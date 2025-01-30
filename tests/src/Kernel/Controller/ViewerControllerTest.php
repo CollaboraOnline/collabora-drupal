@@ -15,15 +15,12 @@ declare(strict_types=1);
 namespace Drupal\Tests\collabora_online\Kernel\Controller;
 
 use Drupal\collabora_online\Discovery\CollaboraDiscoveryFetcherInterface;
+use Drupal\collabora_online\Discovery\CollaboraDiscoveryInterface;
 use Drupal\collabora_online\Exception\CollaboraNotAvailableException;
 use Drupal\collabora_online\Jwt\JwtTranscoderInterface;
 use Drupal\Core\Logger\RfcLogLevel;
 use Drupal\Core\Url;
 use Drupal\Core\Utility\Error;
-use GuzzleHttp\Client;
-use GuzzleHttp\Exception\ConnectException;
-use GuzzleHttp\Psr7\Response as GuzzleResponse;
-use Psr\Http\Message\RequestInterface;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 
@@ -33,21 +30,18 @@ use Symfony\Component\HttpFoundation\Response;
 class ViewerControllerTest extends WopiControllerTestBase {
 
   /**
-   * XML content to be returned for a discovery request.
+   * Return value for $discovery->getWopiClientUrl().
    *
-   * @var string
+   * @var string|null
    */
-  protected string $xml;
+  protected ?string $mockWopiClientUrl;
 
   /**
-   * Callback to replace Client->get().
+   * Callback to replace CollaboraDiscoveryFetcher->getDiscovery().
    *
-   * The default callback will return a response with $this->xml.
-   * It can be replaced to e.g. throw an exception.
-   *
-   * @var \Closure
+   * @var \Closure(): \Drupal\collabora_online\Discovery\CollaboraDiscoveryInterface
    */
-  protected \Closure $httpClientGet;
+  protected \Closure $mockGetDiscovery;
 
   /**
    * {@inheritdoc}
@@ -55,19 +49,17 @@ class ViewerControllerTest extends WopiControllerTestBase {
   protected function setUp(): void {
     parent::setUp();
 
-    // Mock the http client to get a discovery XML.
-    $file = dirname(__DIR__, 3) . '/fixtures/discovery.mimetypes.xml';
-    $this->xml = file_get_contents($file);
-    $this->httpClientGet = fn () => new GuzzleResponse(
-      200,
-      [],
-      $this->xml,
-    );
+    $this->mockWopiClientUrl = 'http://collabora.test:9980/browser/61cf2b4/cool.html';
 
-    $client = $this->createMock(Client::class);
-    $client->method('get')
-      ->willReturnCallback(fn (...$args) => ($this->httpClientGet)($args));
-    $this->container->set('http_client', $client);
+    // Set a mock discovery with custom proof keys.
+    $mock_discovery = $this->createMock(CollaboraDiscoveryInterface::class);
+    $mock_discovery->method('getWopiClientURL')
+      ->willReturnCallback(fn () => $this->mockWopiClientUrl);
+    $this->mockGetDiscovery = fn () => $mock_discovery;
+
+    $mock_discovery_fetcher = $this->createMock(CollaboraDiscoveryFetcherInterface::class);
+    $mock_discovery_fetcher->method('getDiscovery')->willReturnCallback(fn () => ($this->mockGetDiscovery)());
+    $this->container->set(CollaboraDiscoveryFetcherInterface::class, $mock_discovery_fetcher);
 
     $this->user = $this->createUser([
       'access content',
@@ -94,12 +86,11 @@ class ViewerControllerTest extends WopiControllerTestBase {
    *
    * @covers ::editor
    */
-  public function testEditorCollaboraUnavailable(): void {
-    // Restore the regular client, which will result in a failed http request.
-    $this->httpClientGet = fn () => throw new ConnectException(
-      // Set a simplified message.
-      'Failed to connect.',
-      $this->createMock(RequestInterface::class),
+  public function testEditorDiscoveryNotAvailable(): void {
+    // Let the discovery throw an exception.
+    // The message is custom, and does not appear in the real codebase.
+    $this->mockGetDiscovery = fn () => throw new CollaboraNotAvailableException(
+      'The discovery.xml cannot be loaded or is malformed.',
     );
 
     foreach ($this->createViewerRequests() as $name => $request) {
@@ -109,47 +100,11 @@ class ViewerControllerTest extends WopiControllerTestBase {
         $name,
       );
       $this->assertLogMessage(
-        RfcLogLevel::ERROR,
-        "Failed to fetch from '@url': @message.",
-        [
-          '@url' => 'https://localhost:9980/hosting/discovery',
-          '@message' => 'Failed to connect.',
-        ],
-        assertion_message: $name,
-      );
-      $this->assertLogMessage(
         RfcLogLevel::WARNING,
         "Collabora Online is not available.<br>\n" . Error::DEFAULT_ERROR_MESSAGE,
         [
           '%type' => CollaboraNotAvailableException::class,
-          '@message' => 'Not able to retrieve the discovery.xml file from the Collabora Online server.',
-        ],
-        assertion_message: $name,
-      );
-    }
-  }
-
-  /**
-   * Tests requests with empty discovery.xml.
-   *
-   * @covers ::editor
-   */
-  public function testEditorCollaboraDiscoveryEmpty(): void {
-    // Set a client that returns a response with empty XML.
-    $this->xml = '';
-
-    foreach ($this->createViewerRequests() as $name => $request) {
-      $this->assertBadRequestResponse(
-        'The Collabora Online editor/viewer is not available.',
-        $request,
-        $name,
-      );
-      $this->assertLogMessage(
-        RfcLogLevel::WARNING,
-        "Collabora Online is not available.<br>\n" . Error::DEFAULT_ERROR_MESSAGE,
-        [
-          '%type' => CollaboraNotAvailableException::class,
-          '@message' => 'The discovery.xml file is empty.',
+          '@message' => 'The discovery.xml cannot be loaded or is malformed.',
         ],
         assertion_message: $name,
       );
@@ -161,26 +116,30 @@ class ViewerControllerTest extends WopiControllerTestBase {
    *
    * @covers ::editor
    */
-  public function testEditorMismatchScheme(): void {
-    /** @var \Drupal\collabora_online\Discovery\CollaboraDiscoveryFetcherInterface $discovery_fetcher */
-    $discovery_fetcher = \Drupal::service(CollaboraDiscoveryFetcherInterface::class);
-    $wopi_url = $discovery_fetcher->getDiscovery()->getWopiClientURL();
-
-    foreach ($this->createViewerRequests(TRUE) as $name => $request) {
-      $this->assertBadRequestResponse(
-        'Viewer error: Protocol mismatch.',
-        $request,
-        $name,
-      );
-      $this->assertLogMessage(
-        RfcLogLevel::ERROR,
-        "The current request uses '@current_request_scheme' url scheme, but the Collabora client url is '@wopi_client_url'.",
-        [
-          '@current_request_scheme' => 'https',
-          '@wopi_client_url' => $wopi_url,
-        ],
-        assertion_message: $name,
-      );
+  protected function testEditorMismatchScheme(): void {
+    $cases = [
+      ['https', 'http://collabora.test:9980/browser/61cf2b4/cool.html'],
+      ['http', 'https://collabora.test:9980/browser/61cf2b4/cool.html'],
+    ];
+    foreach ($cases as [$request_scheme, $client_url]) {
+      $requests = $this->createViewerRequests($request_scheme === 'https');
+      $this->mockWopiClientUrl = $client_url;
+      foreach ($requests as $name => $request) {
+        $this->assertBadRequestResponse(
+          'Viewer error: Protocol mismatch.',
+          $request,
+          $name,
+        );
+        $this->assertLogMessage(
+          RfcLogLevel::ERROR,
+          "The current request uses '@current_request_scheme' url scheme, but the Collabora client url is '@wopi_client_url'.",
+          [
+            '@current_request_scheme' => $request_scheme,
+            '@wopi_client_url' => $this->mockWopiClientUrl,
+          ],
+          assertion_message: $name,
+        );
+      }
     }
   }
 
@@ -190,11 +149,10 @@ class ViewerControllerTest extends WopiControllerTestBase {
    * @covers ::editor
    */
   public function testEditorMissingConfiguration(): void {
-    // Remove one config value to trigger a specific exception.
-    // We cannot remove the entire config record, because then the exception
-    // would be triggered in the discovery fetcher.
-    $config = \Drupal::configFactory()->getEditable('collabora_online.settings');
-    $config->clear('cool.wopi_base')->save();
+    // Delete the configuration to force a fail.
+    \Drupal::configFactory()
+      ->getEditable('collabora_online.settings')
+      ->delete();
 
     foreach ($this->createViewerRequests() as $name => $request) {
       $this->assertBadRequestResponse(
@@ -210,6 +168,22 @@ class ViewerControllerTest extends WopiControllerTestBase {
           '@message' => 'The Collabora Online connection is not configured.',
         ],
         assertion_message: $name,
+      );
+    }
+  }
+
+  /**
+   * Tests requests when the WOPI client url is empty.
+   *
+   * @covers ::editor
+   */
+  public function testWopiClientUrlEmpty(): void {
+    $this->mockWopiClientUrl = NULL;
+    foreach ($this->createViewerRequests() as $name => $request) {
+      $this->assertBadRequestResponse(
+        'The Collabora Online editor/viewer is not available for this file type.',
+        $request,
+        $name,
       );
     }
   }
