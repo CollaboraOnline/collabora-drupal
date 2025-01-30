@@ -57,6 +57,7 @@ class ConfigFormTest extends BrowserTestBase {
     // The form contains default values from module install.
     $this->drupalGet(Url::fromRoute('collabora-online.settings'));
     $assert_session->fieldValueEquals('Collabora Online server URL', 'https://localhost:9980/');
+    $assert_session->fieldValueEquals('Discovery cache TTL', '43200');
     $assert_session->fieldValueEquals('WOPI host URL', 'https://localhost/');
     $assert_session->fieldValueEquals('JWT private key', '');
     $assert_session->fieldValueEquals('Access Token Expiration (in seconds)', '86400');
@@ -87,6 +88,8 @@ class ConfigFormTest extends BrowserTestBase {
     // Change the form values, then submit the form.
     $assert_session->fieldExists('Collabora Online server URL')
       ->setValue('http://collaboraserver.com/');
+    $assert_session->fieldExists('Discovery cache TTL')
+      ->setValue('12345');
     $assert_session->fieldExists('WOPI host URL')
       ->setValue('http://wopihost.com/');
     $assert_session->fieldExists('JWT private key')
@@ -106,7 +109,7 @@ class ConfigFormTest extends BrowserTestBase {
     // The settings have been updated.
     $this->drupalGet(Url::fromRoute('collabora-online.settings'));
     $assert_session->fieldValueEquals('Collabora Online server URL', 'http://collaboraserver.com/');
-    // Slash is removed at the end of Wopi URL.
+    $assert_session->fieldValueEquals('Discovery cache TTL', '12345');
     $assert_session->fieldValueEquals('WOPI host URL', 'http://wopihost.com/');
     $assert_session->fieldValueEquals('JWT private key', 'collabora_test');
     $assert_session->fieldValueEquals('Access Token Expiration (in seconds)', '3600');
@@ -117,6 +120,7 @@ class ConfigFormTest extends BrowserTestBase {
     // Test validation of required fields.
     $this->drupalGet(Url::fromRoute('collabora-online.settings'));
     $assert_session->fieldExists('Collabora Online server URL')->setValue('');
+    $assert_session->fieldExists('Discovery cache TTL')->setValue('');
     $assert_session->fieldExists('WOPI host URL')->setValue('');
     $assert_session->fieldExists('JWT private key')->setValue('');
     $assert_session->fieldExists('Access Token Expiration (in seconds)')->setValue('');
@@ -124,6 +128,7 @@ class ConfigFormTest extends BrowserTestBase {
     $assert_session->fieldExists('Allow COOL to use fullscreen mode.')->uncheck();
     $assert_session->buttonExists('Save configuration')->press();
     $assert_session->statusMessageContains('Collabora Online server URL field is required.', 'error');
+    $assert_session->statusMessageContains('Discovery cache TTL field is required.', 'error');
     $assert_session->statusMessageContains('WOPI host URL field is required.', 'error');
     $assert_session->statusMessageContains('JWT private key field is required.', 'error');
     $assert_session->statusMessageContains('Access Token Expiration (in seconds) field is required.', 'error');
@@ -132,10 +137,13 @@ class ConfigFormTest extends BrowserTestBase {
     $this->drupalGet(Url::fromRoute('collabora-online.settings'));
     // Set invalid value for URL fields.
     $assert_session->fieldExists('Collabora Online server URL')->setValue('/internal');
+    $assert_session->fieldExists('Discovery cache TTL')->setValue('-1');
     $assert_session->fieldExists('WOPI host URL')->setValue('any-other-value');
     // Set invalid values for numeric field.
     $assert_session->fieldExists('Access Token Expiration (in seconds)')->setValue('text');
     $assert_session->buttonExists('Save configuration')->press();
+    $assert_session->statusMessageContains('Discovery cache TTL must be higher than or equal to 0.
+', 'error');
     $assert_session->statusMessageContains('The URL /internal is not valid.', 'error');
     $assert_session->statusMessageContains('The URL any-other-value is not valid.', 'error');
     $assert_session->statusMessageNotContains('Access Token Expiration (in seconds) must be a number.', 'status');
@@ -144,6 +152,7 @@ class ConfigFormTest extends BrowserTestBase {
     \Drupal::configFactory()->getEditable('collabora_online.settings')->setData([])->save();
     $this->drupalGet(Url::fromRoute('collabora-online.settings'));
     $assert_session->fieldValueEquals('Collabora Online server URL', '');
+    $assert_session->fieldValueEquals('Discovery cache TTL', '43200');
     $assert_session->fieldValueEquals('WOPI host URL', '');
     $assert_session->fieldValueEquals('JWT private key', '');
     $assert_session->fieldValueEquals('Access Token Expiration (in seconds)', '0');
