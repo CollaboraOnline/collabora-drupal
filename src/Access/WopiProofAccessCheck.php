@@ -132,7 +132,10 @@ class WopiProofAccessCheck implements AccessInterface {
       $keys = $this->getKeys();
     }
     catch (CollaboraNotAvailableException $e) {
-      Error::logException($this->logger, $e);
+      $log_message = "Failure in WOPI proof check:<br>\n"
+        . Error::DEFAULT_ERROR_MESSAGE;
+      $log_args = Error::decodeException($e);
+      $this->logger->error($log_message, $log_args);
       return AccessResult::forbidden('Cannot get discovery for proof keys.');
     }
     if (!isset($keys['current'])) {
