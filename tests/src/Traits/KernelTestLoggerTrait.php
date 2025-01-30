@@ -101,10 +101,16 @@ trait KernelTestLoggerTrait {
    * Asserts that the log does not have any further messages.
    */
   protected function assertNoFurtherLogMessages(string $message = ''): void {
+    if (!$this->logger->records) {
+      $this->addToAssertionCount(1);
+      return;
+    }
+    $record = reset($this->logger->records);
+    unset($record['context']['backtrace']);
     if ($message !== '') {
       $message .= "\n";
     }
-    $this->assertSame([], $this->logger->records, $message . 'No further log records expected.');
+    $this->assertNull($record, $message . 'No further log records expected.');
   }
 
 }
