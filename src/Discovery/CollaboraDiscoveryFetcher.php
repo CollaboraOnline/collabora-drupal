@@ -31,7 +31,7 @@ use Symfony\Component\ErrorHandler\ErrorHandler;
  */
 class CollaboraDiscoveryFetcher implements CollaboraDiscoveryFetcherInterface {
 
-  protected const DEFAULT_CID = 'collabora_online.discovery';
+  public const DEFAULT_CID = 'collabora_online.discovery';
 
   public function __construct(
     #[Autowire(service: 'logger.channel.collabora_online')]
