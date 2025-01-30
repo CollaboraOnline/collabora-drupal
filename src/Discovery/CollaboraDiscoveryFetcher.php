@@ -108,7 +108,8 @@ class CollaboraDiscoveryFetcher implements CollaboraDiscoveryFetcherInterface {
     $discovery_url = $this->getDiscoveryUrl($config);
     $xml = $this->loadDiscoveryXml($discovery_url, $disable_checks);
 
-    $max_age = 60 * 60 * 12;
+    $max_age = $config->get('cool.discovery_cache_ttl');
+    $max_age ??= 60 * 60 * 12;
     $expire = $max_age + $this->time->getRequestTime();
 
     $this->cache->set(

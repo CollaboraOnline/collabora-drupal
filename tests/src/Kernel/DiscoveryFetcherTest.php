@@ -152,6 +152,15 @@ class DiscoveryFetcherTest extends KernelTestBase {
 
     $fetcher->getDiscovery();
     $this->assertCount(2, $this->httpClientGetCalls);
+
+    $this->config('collabora_online.settings')
+      ->set('cool.discovery_cache_ttl', 12345)
+      ->save();
+
+    $fetcher->getDiscovery();
+    $cache_record = $load_cache();
+    $this->assertNotFalse($cache_record);
+    $this->assertSame(12345, $cache_record->expire - $cache_record->created);
   }
 
   /**
