@@ -16,8 +16,10 @@ namespace Drupal\Tests\collabora_online\Kernel\Controller;
 
 use Drupal\collabora_online\Discovery\CollaboraDiscoveryFetcherInterface;
 use Drupal\collabora_online\Discovery\CollaboraDiscoveryInterface;
+use Drupal\collabora_online\Exception\CollaboraNotAvailableException;
 use Drupal\collabora_online\Util\DotNetTime;
 use Drupal\Core\Logger\RfcLogLevel;
+use Drupal\Core\Utility\Error;
 use Drupal\Tests\collabora_online\Traits\KernelTestLoggerTrait;
 use Firebase\JWT\JWT;
 use Symfony\Component\HttpFoundation\Request;
@@ -59,6 +61,13 @@ class WopiControllerProofTest extends WopiControllerTestBase {
   protected string $wopiProofKeyOld = self::PROOF_KEY;
 
   /**
+   * Callback to replace CollaboraDiscoveryFetcher->getDiscovery().
+   *
+   * @var \Closure(): \Drupal\collabora_online\Discovery\CollaboraDiscoveryInterface
+   */
+  protected \Closure $mockGetDiscovery;
+
+  /**
    * {@inheritdoc}
    */
   protected function setUp(): void {
@@ -66,11 +75,15 @@ class WopiControllerProofTest extends WopiControllerTestBase {
 
     // Set a mock discovery with custom proof keys.
     $mock_discovery = $this->createMock(CollaboraDiscoveryInterface::class);
-    $mock_discovery_fetcher = $this->createMock(CollaboraDiscoveryFetcherInterface::class);
-    $mock_discovery_fetcher->method('getDiscovery')->willReturn($mock_discovery);
-    $this->container->set(CollaboraDiscoveryFetcherInterface::class, $mock_discovery_fetcher);
     $mock_discovery->method('getProofKey')->willReturnReference($this->wopiProofKey);
     $mock_discovery->method('getProofKeyOld')->willReturnReference($this->wopiProofKeyOld);
+    $this->mockGetDiscovery = fn () => $mock_discovery;
+
+    $mock_discovery_fetcher = $this->createMock(CollaboraDiscoveryFetcherInterface::class);
+    $mock_discovery_fetcher->method('getDiscovery')->willReturnCallback(
+      fn () => ($this->mockGetDiscovery)(),
+    );
+    $this->container->set(CollaboraDiscoveryFetcherInterface::class, $mock_discovery_fetcher);
   }
 
   /**
@@ -173,7 +186,23 @@ class WopiControllerProofTest extends WopiControllerTestBase {
     $set_state(offset_seconds: 22 * 60);
     $this->assertAccessDeniedResponse('The X-WOPI-Timestamp header is 1320 seconds old, which is more than the 1200 seconds TTL.', clone $request, $message);
 
-    // Reset everything to clean up.
+    // Test behavior when the discovery throws an exception.
+    $set_state();
+    $mock_discovery_backup = $this->mockGetDiscovery;
+    $this->mockGetDiscovery = fn () => throw new CollaboraNotAvailableException(
+      'The discovery.xml cannot be loaded or is malformed.',
+    );
+    $this->assertAccessDeniedResponse('Cannot get discovery for proof keys.', clone $request, $message);
+    $this->mockGetDiscovery = $mock_discovery_backup;
+    $this->assertLogMessage(
+      RfcLogLevel::ERROR,
+      "Failure in WOPI proof check:<br>\n" . Error::DEFAULT_ERROR_MESSAGE,
+      [
+        '%type' => CollaboraNotAvailableException::class,
+        '@message' => 'The discovery.xml cannot be loaded or is malformed.',
+      ],
+    );
+
     $set_state();
   }
 
