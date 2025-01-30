@@ -27,7 +27,6 @@ use Symfony\Component\HttpFoundation\Response;
  * Tests proof validation on WOPI requests.
  *
  * @covers \Drupal\collabora_online\Access\WopiProofAccessCheck
- * @covers \Drupal\collabora_online\Access\WopiTimeoutAccessCheck
  */
 class WopiControllerProofTest extends WopiControllerTestBase {
 
