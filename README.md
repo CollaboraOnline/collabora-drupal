@@ -164,7 +164,7 @@ Optional
   development server you might have self-signed certificate. Checking
   this is **INSECURE** but allow the drupal server to contact the
   collabora online server is the certificate doesn't check.
-- _Access Token Expiration_: In second the expiration of the token to
+- _Access token TTL_: In second the expiration of the token to
   access the document. Default to 86400 seconds (24 hours).
 
 ### COOL
