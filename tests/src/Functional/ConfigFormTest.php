@@ -60,7 +60,7 @@ class ConfigFormTest extends BrowserTestBase {
     $assert_session->fieldValueEquals('Discovery cache TTL', '43200');
     $assert_session->fieldValueEquals('WOPI host URL', 'https://localhost/');
     $assert_session->fieldValueEquals('JWT private key', '');
-    $assert_session->fieldValueEquals('Access Token Expiration (in seconds)', '86400');
+    $assert_session->fieldValueEquals('Access token TTL', '86400');
     $assert_session->checkboxNotChecked('Disable TLS certificate check for COOL.');
     $assert_session->checkboxChecked('Verify proof header and timestamp in incoming WOPI requests.');
     $assert_session->checkboxChecked('Allow COOL to use fullscreen mode.');
@@ -94,7 +94,7 @@ class ConfigFormTest extends BrowserTestBase {
       ->setValue('http://wopihost.com/');
     $assert_session->fieldExists('JWT private key')
       ->setValue('collabora_test');
-    $assert_session->fieldExists('Access Token Expiration (in seconds)')
+    $assert_session->fieldExists('Access token TTL')
       ->setValue('3600');
     $assert_session->fieldExists('Disable TLS certificate check for COOL.')
       ->check();
@@ -112,7 +112,7 @@ class ConfigFormTest extends BrowserTestBase {
     $assert_session->fieldValueEquals('Discovery cache TTL', '12345');
     $assert_session->fieldValueEquals('WOPI host URL', 'http://wopihost.com/');
     $assert_session->fieldValueEquals('JWT private key', 'collabora_test');
-    $assert_session->fieldValueEquals('Access Token Expiration (in seconds)', '3600');
+    $assert_session->fieldValueEquals('Access token TTL', '3600');
     $assert_session->checkboxChecked('Disable TLS certificate check for COOL.');
     $assert_session->checkboxNotChecked('Verify proof header and timestamp in incoming WOPI requests.');
     $assert_session->checkboxNotChecked('Allow COOL to use fullscreen mode.');
@@ -123,7 +123,7 @@ class ConfigFormTest extends BrowserTestBase {
     $assert_session->fieldExists('Discovery cache TTL')->setValue('');
     $assert_session->fieldExists('WOPI host URL')->setValue('');
     $assert_session->fieldExists('JWT private key')->setValue('');
-    $assert_session->fieldExists('Access Token Expiration (in seconds)')->setValue('');
+    $assert_session->fieldExists('Access token TTL')->setValue('');
     $assert_session->fieldExists('Disable TLS certificate check for COOL.')->uncheck();
     $assert_session->fieldExists('Allow COOL to use fullscreen mode.')->uncheck();
     $assert_session->buttonExists('Save configuration')->press();
@@ -131,7 +131,7 @@ class ConfigFormTest extends BrowserTestBase {
     $assert_session->statusMessageContains('Discovery cache TTL field is required.', 'error');
     $assert_session->statusMessageContains('WOPI host URL field is required.', 'error');
     $assert_session->statusMessageContains('JWT private key field is required.', 'error');
-    $assert_session->statusMessageContains('Access Token Expiration (in seconds) field is required.', 'error');
+    $assert_session->statusMessageContains('Access token TTL field is required.', 'error');
 
     // Test validation of bad form values.
     $this->drupalGet(Url::fromRoute('collabora-online.settings'));
@@ -140,13 +140,13 @@ class ConfigFormTest extends BrowserTestBase {
     $assert_session->fieldExists('Discovery cache TTL')->setValue('-1');
     $assert_session->fieldExists('WOPI host URL')->setValue('any-other-value');
     // Set invalid values for numeric field.
-    $assert_session->fieldExists('Access Token Expiration (in seconds)')->setValue('text');
+    $assert_session->fieldExists('Access token TTL')->setValue('text');
     $assert_session->buttonExists('Save configuration')->press();
     $assert_session->statusMessageContains('Discovery cache TTL must be higher than or equal to 0.
 ', 'error');
     $assert_session->statusMessageContains('The URL /internal is not valid.', 'error');
     $assert_session->statusMessageContains('The URL any-other-value is not valid.', 'error');
-    $assert_session->statusMessageNotContains('Access Token Expiration (in seconds) must be a number.', 'status');
+    $assert_session->statusMessageNotContains('Access token TTL must be a number.', 'status');
 
     // Test form with no configuration.
     \Drupal::configFactory()->getEditable('collabora_online.settings')->setData([])->save();
@@ -155,7 +155,7 @@ class ConfigFormTest extends BrowserTestBase {
     $assert_session->fieldValueEquals('Discovery cache TTL', '43200');
     $assert_session->fieldValueEquals('WOPI host URL', '');
     $assert_session->fieldValueEquals('JWT private key', '');
-    $assert_session->fieldValueEquals('Access Token Expiration (in seconds)', '0');
+    $assert_session->fieldValueEquals('Access token TTL', '0');
     $assert_session->checkboxNotChecked('Disable TLS certificate check for COOL.');
     $assert_session->checkboxChecked('Verify proof header and timestamp in incoming WOPI requests.');
     $assert_session->checkboxNotChecked('Allow COOL to use fullscreen mode.');

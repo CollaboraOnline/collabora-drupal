@@ -102,7 +102,9 @@ E.g. 'https://drupal.example.com' or 'http://localhost/' or 'http://localhost/su
 
     $form['access_token_ttl'] = [
       '#type' => 'number',
-      '#title' => $this->t('Access Token Expiration (in seconds)'),
+      '#title' => $this->t('Access token TTL'),
+      '#description' => $this->t('Duration after which the access token for an editing session expires.'),
+      '#field_suffix' => $this->t('seconds'),
       '#default_value' => $cool_settings['access_token_ttl'] ?? 0,
       '#min' => 0,
       '#required' => TRUE,
