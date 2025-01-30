@@ -1,6 +1,8 @@
 cool:
   # The address of the COOL server.
   server: https://localhost:9980/
+  # Microsoft recommends 12-24 hours for this cache.
+  discovery_cache_ttl: 43200
   # The WOPI base
   wopi_base: https://localhost/
   # The JWT key id.
