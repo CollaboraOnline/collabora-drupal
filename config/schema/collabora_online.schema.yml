@@ -9,6 +9,12 @@ collabora_online.settings:
         server:
           type: uri
           label: 'The address of the COOL server.'
+        discovery_cache_ttl:
+          type: integer
+          label: 'Discovery cache TTL'
+          constraints:
+            Range:
+              min: 0
         wopi_base:
           type: uri
           label: 'The WOPI base'
