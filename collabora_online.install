@@ -1,0 +1,71 @@
+<?php
+
+/*
+ * Copyright the Collabora Online contributors.
+ *
+ * SPDX-License-Identifier: MPL-2.0
+ *
+ * This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/.
+ */
+
+declare(strict_types=1);
+
+use Drupal\collabora_online\Cool\CollaboraDiscoveryFetcherInterface;
+use Drupal\collabora_online\Cool\CollaboraDiscoveryInterface;
+use Drupal\collabora_online\Exception\CollaboraNotAvailableException;
+
+/**
+ * Implements hook_requirements().
+ */
+function collabora_online_requirements(string $phase): array {
+  $requirements = [];
+
+  if ($phase !== 'runtime') {
+    return $requirements;
+  }
+
+  // The Collabora Online settings key is set.
+  $cool_settings = \Drupal::configFactory()->get('collabora_online.settings')->get('cool');
+  if (
+    empty($cool_settings['key_id']) ||
+    \Drupal::service('key.repository')->getKey($cool_settings['key_id']) === NULL
+  ) {
+    $requirements['collabora_online_settings_cool_key_id'] = [
+      'title' => t('Collabora Online JWT key'),
+      'description' => t('The Collabora Online configuration "JWT private key" is not set or does not exist.'),
+      'severity' => REQUIREMENT_ERROR,
+    ];
+  }
+
+  // Check if Collabora Online server is configured and can be reached.
+  try {
+    \Drupal::service(CollaboraDiscoveryFetcherInterface::class)->getDiscoveryXml();
+  }
+  catch (CollaboraNotAvailableException $e) {
+    $requirements['collabora_online_settings_cool_server'] = [
+      'title' => t('Collabora Online server'),
+      'description' => t('The Collabora Online server discovery.xml could not be accessed. Check the logs for more information.'),
+      'severity' => REQUIREMENT_ERROR,
+    ];
+
+    return $requirements;
+  }
+
+  /** @var \Drupal\collabora_online\Cool\CollaboraDiscoveryInterface $discovery */
+  $discovery = \Drupal::service(CollaboraDiscoveryInterface::class);
+  if (
+    ($cool_settings['wopi_proof'] ?? TRUE) === TRUE &&
+    $discovery->getProofKey() === NULL &&
+    $discovery->getProofKeyOld() === NULL
+  ) {
+    $requirements['collabora_online_settings_wopi_proof'] = [
+      'title' => t('Collabora Online WOPI proof'),
+      'description' => t('Validation of the WOPI proof header is enabled, but no valid proof keys have been found in the configured Collabora Online server.'),
+      'severity' => REQUIREMENT_ERROR,
+    ];
+  }
+
+  return $requirements;
+}
