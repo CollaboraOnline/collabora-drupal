@@ -90,6 +90,15 @@ E.g. 'https://drupal.example.com' or 'http://localhost/' or 'http://localhost/su
       '#required' => TRUE,
     ];
 
+    $form['copy_file_frequency'] = [
+      '#type' => 'number',
+      '#title' => $this->t('Frequency (in seconds) at which file copies are created upon save.'),
+      '#default_value' => $cool_settings['copy_file_frequency'] ?? 0,
+      '#min' => 0,
+      '#description' => $this->t('A value of 0 will create copies on every save.'),
+      '#required' => TRUE,
+    ];
+
     $form['disable_cert_check'] = [
       '#type' => 'checkbox',
       '#title' => $this->t('Disable TLS certificate check for COOL.'),
@@ -123,6 +132,7 @@ E.g. 'https://drupal.example.com' or 'http://localhost/' or 'http://localhost/su
       ->set('cool.disable_cert_check', $form_state->getValue('disable_cert_check'))
       ->set('cool.wopi_proof', $form_state->getValue('wopi_proof'))
       ->set('cool.allowfullscreen', $form_state->getValue('allowfullscreen'))
+      ->set('cool.copy_file_frequency', $form_state->getValue('copy_file_frequency'))
       ->save();
 
     parent::submitForm($form, $form_state);

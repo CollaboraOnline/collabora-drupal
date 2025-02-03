@@ -27,6 +27,9 @@ collabora_online.settings:
         allowfullscreen:
           type: boolean
           label: 'Allow full-screen.'
+        copy_file_frequency:
+          type: integer
+          label: 'File copy frequency.'
 
 key.type.collabora_jwt_hs:
   # The key type has no actual configurable settings, but it still needs a

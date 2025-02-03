@@ -13,3 +13,5 @@ cool:
   wopi_proof: true
   # Allow fullscreen - Enabled by default for functionality.
   allowfullscreen: true
+  # File copy frequency on save.
+  copy_file_frequency: 0
