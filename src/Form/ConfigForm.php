@@ -95,7 +95,7 @@ E.g. 'https://drupal.example.com' or 'http://localhost/' or 'http://localhost/su
       '#title' => $this->t('Frequency (in seconds) at which file copies are created upon save.'),
       '#default_value' => $cool_settings['copy_file_frequency'] ?? 0,
       '#min' => 0,
-      '#description' => $this->t('A value of 0 will create copies on every save.'),
+      '#description' => $this->t('A value of 0 will not create any copy.'),
       '#required' => TRUE,
     ];
 

@@ -17,6 +17,7 @@ use Drupal\collabora_online\Jwt\JwtTranscoderInterface;
 use Drupal\collabora_online\MediaHelperInterface;
 use Drupal\collabora_online\Util\DateTimeHelper;
 use Drupal\Component\Datetime\TimeInterface;
+use Drupal\Core\Config\ConfigFactoryInterface;
 use Drupal\Core\DependencyInjection\AutowireTrait;
 use Drupal\Core\DependencyInjection\ContainerInjectionInterface;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
@@ -52,6 +53,7 @@ class WopiController implements ContainerInjectionInterface {
     protected readonly TimeInterface $time,
     protected readonly FileUrlGeneratorInterface $fileUrlGenerator,
     protected readonly MediaHelperInterface $mediaHelper,
+    protected readonly ConfigFactoryInterface $configFactory,
     #[Autowire('logger.channel.collabora_online')]
     protected readonly LoggerInterface $logger,
     TranslationInterface $string_translation,
@@ -148,13 +150,33 @@ class WopiController implements ContainerInjectionInterface {
     }
 
     $new_file_content = $request->getContent();
-    $new_file = $this->createNewFileEntity($file, $new_file_content);
+    $copy_frequency = $this->configFactory->get('collabora_online.settings')->get('cool.copy_file_frequency') ?? 0;
+    $request_time = $this->time->getRequestTime();
+    $new_file = $file;
+
+    if (
+      $copy_frequency !== 0 &&
+      $request_time - $file->getChangedTime() > $copy_frequency
+    ) {
+      $new_file = $this->createNewFileEntity($file, $new_file_content);
+      $this->mediaHelper->setMediaSource($media, $new_file);
+    }
+    else {
+      $this->fileSystem->saveData(
+        $new_file_content,
+        $file->getFileUri(),
+        FileExists::Replace,
+      );
+
+      // Entity didn't change but file has been replaced.
+      $file->setChangedTime($request_time);
+      $file->save();
+    }
 
     $save_reason = $this->buildSaveReason($request);
 
-    $this->mediaHelper->setMediaSource($media, $new_file);
     $media->setRevisionUser($user);
-    $media->setRevisionCreationTime($this->time->getRequestTime());
+    $media->setRevisionCreationTime($request_time);
     $media->setRevisionLogMessage($save_reason);
     $media->save();
 

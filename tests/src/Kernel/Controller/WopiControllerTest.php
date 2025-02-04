@@ -14,6 +14,7 @@ declare(strict_types=1);
 
 namespace Drupal\Tests\collabora_online\Kernel\Controller;
 
+use Drupal\collabora_online\Util\DateTimeHelper;
 use Drupal\Core\File\FileSystemInterface;
 use Drupal\Core\Logger\RfcLogLevel;
 use Drupal\media\Entity\Media;
@@ -27,6 +28,13 @@ use Symfony\Component\HttpFoundation\Response;
 class WopiControllerTest extends WopiControllerTestBase {
 
   use UserPictureTrait;
+
+  /**
+   * {@inheritdoc}
+   */
+  protected static $modules = [
+    'datetime_testing',
+  ];
 
   /**
    * {@inheritdoc}
@@ -135,6 +143,42 @@ class WopiControllerTest extends WopiControllerTestBase {
   }
 
   /**
+   * Tests copy frequency on successful requests.
+   *
+   * @covers ::wopiPutFile
+   */
+  public function testWopiPutFileCopyFrequency(): void {
+    // Change configuration to 300 seconds and attempt a save immediately after.
+    // File was created just before, so file copy won't be triggered.
+    $wopi_settings = \Drupal::configFactory()->getEditable('collabora_online.settings');
+    $wopi_settings->set('cool.copy_file_frequency', 300)->save();
+    $this->doTestWopiPutFile();
+
+    // Time passes but it's still under configured frequency.
+    \Drupal::time()->setTime('+100 seconds');
+    $this->doTestWopiPutFile();
+
+    // Wait more than 300 seconds to trigger file copy.
+    \Drupal::time()->setTime('+301 seconds');
+    $this->doTestWopiPutFile(new_file: TRUE);
+
+    // Multiple sequential calls under the configured time prevents duplication.
+    \Drupal::time()->setTime('+295 seconds');
+    $this->doTestWopiPutFile();
+    \Drupal::time()->setTime('+295 seconds');
+    $this->doTestWopiPutFile();
+    \Drupal::time()->setTime('+295 seconds');
+    $this->doTestWopiPutFile();
+
+    // Configured frequency of 0 won't copy files no matter how much we wait.
+    $wopi_settings = \Drupal::configFactory()->getEditable('collabora_online.settings');
+    $wopi_settings->set('cool.copy_file_frequency', 0)->save();
+    $this->doTestWopiPutFile();
+    \Drupal::time()->setTime('+1000 seconds');
+    $this->doTestWopiPutFile();
+  }
+
+  /**
    * Does test the 'collabora-online.wopi.save' route with specific parameters.
    *
    * This is called repeatedly from the same test method, to save time.
@@ -143,14 +187,19 @@ class WopiControllerTest extends WopiControllerTestBase {
    *   Request headers.
    * @param string $reason_message
    *   Reason message expected to appear in the log and in the revision log.
+   * @param string $new_file
+   *   New file is expected.
    */
   protected function doTestWopiPutFile(
     array $request_headers = [],
     string $reason_message = 'Saved by Collabora Online',
+    bool $new_file = FALSE,
   ): void {
-    $i = $this->getCounterValue();
+    $i = 0;
+    if ($new_file) {
+      $i = $this->getCounterValue();
+    }
     // The request time is always the same.
-    $file_changed_time = \DateTimeImmutable::createFromFormat('U', (string) $this->file->getChangedTime());
     $new_file_content = "File content $i " . str_repeat('m', $i + 1) . '.';
     $old_file = $this->loadCurrentMediaFile();
     $this->logger->reset();
@@ -163,27 +212,34 @@ class WopiControllerTest extends WopiControllerTestBase {
     $request->headers->add($request_headers);
     $this->assertJsonResponseOk(
       [
-        'LastModifiedTime' => $file_changed_time->format('c'),
+        'LastModifiedTime' => DateTimeHelper::format(\Drupal::time()->getRequestTime()),
       ],
       $request,
     );
     $media = Media::load($this->media->id());
     $this->assertSame($reason_message, $media->getRevisionLogMessage());
-    // Assert that a new file was created.
-    $new_file = $this->loadCurrentMediaFile();
-    $this->assertGreaterThan((int) $old_file->id(), (int) $new_file->id());
-    // The file uri is fully predictable in the context of this test.
-    // Each new file version gets a new number suffix.
-    // There is no repeated suffix like "test_0_0_0_0.txt".
-    $this->assertSame('public://test_' . $i . '.txt', $new_file->getFileUri());
+    $file = $this->loadCurrentMediaFile();
+    if (!$new_file) {
+      // Uri remains the same, and no File has been created.
+      $this->assertEquals((int) $old_file->id(), (int) $file->id());
+      $this->assertSame($file->getFileUri(), $file->getFileUri());
+    }
+    else {
+      // Assert that a new file was created.
+      $this->assertGreaterThan((int) $old_file->id(), (int) $file->id());
+      // The file uri is fully predictable in the context of this test.
+      // Each new file version gets a new number suffix.
+      // There is no repeated suffix like "test_0_0_0_0.txt".
+      $this->assertSame('public://test_' . $i . '.txt', $file->getFileUri());
+    }
     // The file name is preserved.
-    $this->assertSame('test.txt', $new_file->getFilename());
+    $this->assertSame('test.txt', $file->getFilename());
     // The file owner is preserved.
-    $this->assertSame($this->fileOwner->id(), $new_file->getOwnerId());
-    $actual_file_content = file_get_contents($new_file->getFileUri());
+    $this->assertSame($this->fileOwner->id(), $file->getOwnerId());
+    $actual_file_content = file_get_contents($file->getFileUri());
     $this->assertSame($new_file_content, $actual_file_content);
-    $this->assertSame($i + 17, $new_file->getSize());
-    $this->assertTrue($new_file->isPermanent());
+    $this->assertSame($i + 17, $file->getSize());
+    $this->assertTrue($file->isPermanent());
     $this->assertLogMessage(
       RfcLogLevel::INFO,
       'Media entity @media_id was updated with Collabora.<br>
@@ -195,8 +251,8 @@ New file: @new_file_id / @new_file_uri',
         '@reason' => $reason_message,
         '@old_file_id' => $old_file->id(),
         '@old_file_uri' => $old_file->getFileUri(),
-        '@new_file_id' => $new_file->id(),
-        '@new_file_uri' => $new_file->getFileUri(),
+        '@new_file_id' => $file->id(),
+        '@new_file_uri' => $file->getFileUri(),
       ],
     );
   }
