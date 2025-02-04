@@ -152,16 +152,12 @@ class WopiController implements ContainerInjectionInterface {
     $new_file_content = $request->getContent();
     $copy_frequency = $this->configFactory->get('collabora_online.settings')->get('cool.copy_file_frequency') ?? 0;
     $request_time = $this->time->getRequestTime();
-    $new_file = $file;
 
     if (
-      $copy_frequency !== 0 &&
-      $request_time - $file->getChangedTime() > $copy_frequency
+      $copy_frequency === 0 ||
+      $request_time - $file->getChangedTime() <= $copy_frequency
     ) {
-      $new_file = $this->createNewFileEntity($file, $new_file_content);
-      $this->mediaHelper->setMediaSource($media, $new_file);
-    }
-    else {
+      // Replace file with new content.
       $this->fileSystem->saveData(
         $new_file_content,
         $file->getFileUri(),
@@ -171,10 +167,21 @@ class WopiController implements ContainerInjectionInterface {
       // Entity didn't change but file has been replaced.
       $file->setChangedTime($request_time);
       $file->save();
+
+      return new JsonResponse(
+        [
+          'LastModifiedTime' => DateTimeHelper::format($file->getChangedTime()),
+        ],
+        Response::HTTP_OK,
+        ['content-type' => 'application/json'],
+      );
     }
+
+    $new_file = $this->createNewFileEntity($file, $new_file_content);
 
     $save_reason = $this->buildSaveReason($request);
 
+    $this->mediaHelper->setMediaSource($media, $new_file);
     $media->setRevisionUser($user);
     $media->setRevisionCreationTime($request_time);
     $media->setRevisionLogMessage($save_reason);

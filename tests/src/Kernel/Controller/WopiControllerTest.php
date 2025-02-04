@@ -195,12 +195,7 @@ class WopiControllerTest extends WopiControllerTestBase {
     string $reason_message = 'Saved by Collabora Online',
     bool $new_file = FALSE,
   ): void {
-    $i = 0;
-    if ($new_file) {
-      $i = $this->getCounterValue();
-    }
-    // The request time is always the same.
-    $new_file_content = "File content $i " . str_repeat('m', $i + 1) . '.';
+    $new_file_content = "File content " . str_repeat('m', rand(0, 999)) . '.';
     $old_file = $this->loadCurrentMediaFile();
     $this->logger->reset();
     $request = $this->createRequest(
@@ -210,36 +205,48 @@ class WopiControllerTest extends WopiControllerTestBase {
       content: $new_file_content,
     );
     $request->headers->add($request_headers);
+
+    $request_time = \Drupal::time()->getRequestTime();
     $this->assertJsonResponseOk(
       [
-        'LastModifiedTime' => DateTimeHelper::format(\Drupal::time()->getRequestTime()),
+        'LastModifiedTime' => DateTimeHelper::format($request_time),
       ],
       $request,
     );
+
     $media = Media::load($this->media->id());
-    $this->assertSame($reason_message, $media->getRevisionLogMessage());
     $file = $this->loadCurrentMediaFile();
+
+    // File entity and content are updated.
+    $this->assertSame($request_time, $file->getChangedTime());
+    $actual_file_content = file_get_contents($file->getFileUri());
+    $this->assertSame($new_file_content, $actual_file_content);
+    $this->assertSame(strlen($new_file_content), $file->getSize());
+
     if (!$new_file) {
-      // Uri remains the same, and no File has been created.
-      $this->assertEquals((int) $old_file->id(), (int) $file->id());
+      // The URI remains the same, and no File entity has been created.
+      $this->assertSame($old_file->id(), $file->id());
       $this->assertSame($file->getFileUri(), $file->getFileUri());
+      $this->assertNoFurtherLogMessages();
+
+      return;
     }
-    else {
-      // Assert that a new file was created.
-      $this->assertGreaterThan((int) $old_file->id(), (int) $file->id());
-      // The file uri is fully predictable in the context of this test.
-      // Each new file version gets a new number suffix.
-      // There is no repeated suffix like "test_0_0_0_0.txt".
-      $this->assertSame('public://test_' . $i . '.txt', $file->getFileUri());
-    }
+
+    $i = $this->getCounterValue();
+    // Assert that a new file was created.
+    $this->assertGreaterThan((int) $old_file->id(), (int) $file->id());
+    // The file uri is fully predictable in the context of this test.
+    // Each new file version gets a new number suffix.
+    // There is no repeated suffix like "test_0_0_0_0.txt".
+    $this->assertSame('public://test_' . $i . '.txt', $file->getFileUri());
     // The file name is preserved.
     $this->assertSame('test.txt', $file->getFilename());
     // The file owner is preserved.
     $this->assertSame($this->fileOwner->id(), $file->getOwnerId());
-    $actual_file_content = file_get_contents($file->getFileUri());
-    $this->assertSame($new_file_content, $actual_file_content);
-    $this->assertSame($i + 17, $file->getSize());
     $this->assertTrue($file->isPermanent());
+
+    // Revision messages and logs.
+    $this->assertSame($reason_message, $media->getRevisionLogMessage());
     $this->assertLogMessage(
       RfcLogLevel::INFO,
       'Media entity @media_id was updated with Collabora.<br>
@@ -494,14 +501,6 @@ New file: @new_file_id / @new_file_uri',
         // is missing in the file system.
         $response = $this->handleRequest($request);
         $this->assertSame(200, $response->getStatusCode(), $name);
-        if ($name === 'save') {
-          // The save reason is sufficient to identify the log message.
-          $this->assertLogMessage(
-            replacements: [
-              '@reason' => 'Saved by Collabora Online',
-            ],
-          );
-        }
       }
     }
   }
