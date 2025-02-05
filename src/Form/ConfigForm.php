@@ -84,16 +84,18 @@ E.g. 'https://drupal.example.com' or 'http://localhost/' or 'http://localhost/su
 
     $form['access_token_ttl'] = [
       '#type' => 'number',
-      '#title' => $this->t('Access Token Expiration (in seconds)'),
+      '#title' => $this->t('Access Token Expiration'),
       '#default_value' => $cool_settings['access_token_ttl'] ?? 0,
+      '#field_suffix' => $this->t('seconds'),
       '#min' => 0,
       '#required' => TRUE,
     ];
 
     $form['copy_file_frequency'] = [
       '#type' => 'number',
-      '#title' => $this->t('Frequency (in seconds) at which file copies are created upon save.'),
+      '#title' => $this->t('Frequency at which file copies are created upon save.'),
       '#default_value' => $cool_settings['copy_file_frequency'] ?? 0,
+      '#field_suffix' => $this->t('seconds'),
       '#min' => 0,
       '#description' => $this->t('A value of 0 will not create any copy.'),
       '#required' => TRUE,

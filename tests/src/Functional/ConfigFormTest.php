@@ -59,11 +59,11 @@ class ConfigFormTest extends BrowserTestBase {
     $assert_session->fieldValueEquals('Collabora Online server URL', 'https://localhost:9980/');
     $assert_session->fieldValueEquals('WOPI host URL', 'https://localhost/');
     $assert_session->fieldValueEquals('JWT private key', '');
-    $assert_session->fieldValueEquals('Access Token Expiration (in seconds)', '86400');
+    $assert_session->fieldValueEquals('Access Token Expiration', '86400');
+    $assert_session->fieldValueEquals('Frequency at which file copies are created upon save.', '0');
     $assert_session->checkboxNotChecked('Disable TLS certificate check for COOL.');
     $assert_session->checkboxChecked('Verify proof header and timestamp in incoming WOPI requests.');
     $assert_session->checkboxChecked('Allow COOL to use fullscreen mode.');
-    $assert_session->fieldValueEquals('Frequency (in seconds) at which file copies are created upon save.', '0');
 
     // The key select element has no options, because no compatible key exists.
     $this->assertSame(
@@ -92,9 +92,9 @@ class ConfigFormTest extends BrowserTestBase {
       ->setValue('http://wopihost.com/');
     $assert_session->fieldExists('JWT private key')
       ->setValue('collabora_test');
-    $assert_session->fieldExists('Access Token Expiration (in seconds)')
+    $assert_session->fieldExists('Access Token Expiration')
       ->setValue('3600');
-    $assert_session->fieldExists('Frequency (in seconds) at which file copies are created upon save.')
+    $assert_session->fieldExists('Frequency at which file copies are created upon save.')
       ->setValue(value: '300');
     $assert_session->fieldExists('Disable TLS certificate check for COOL.')
       ->check();
@@ -112,8 +112,8 @@ class ConfigFormTest extends BrowserTestBase {
     // Slash is removed at the end of Wopi URL.
     $assert_session->fieldValueEquals('WOPI host URL', 'http://wopihost.com/');
     $assert_session->fieldValueEquals('JWT private key', 'collabora_test');
-    $assert_session->fieldValueEquals('Access Token Expiration (in seconds)', '3600');
-    $assert_session->fieldValueEquals('Frequency (in seconds) at which file copies are created upon save.', '300');
+    $assert_session->fieldValueEquals('Access Token Expiration', '3600');
+    $assert_session->fieldValueEquals('Frequency at which file copies are created upon save.', '300');
     $assert_session->checkboxChecked('Disable TLS certificate check for COOL.');
     $assert_session->checkboxNotChecked('Verify proof header and timestamp in incoming WOPI requests.');
     $assert_session->checkboxNotChecked('Allow COOL to use fullscreen mode.');
@@ -123,16 +123,16 @@ class ConfigFormTest extends BrowserTestBase {
     $assert_session->fieldExists('Collabora Online server URL')->setValue('');
     $assert_session->fieldExists('WOPI host URL')->setValue('');
     $assert_session->fieldExists('JWT private key')->setValue('');
-    $assert_session->fieldExists('Access Token Expiration (in seconds)')->setValue('');
-    $assert_session->fieldExists('Frequency (in seconds) at which file copies are created upon save.')->setValue('');
+    $assert_session->fieldExists('Access Token Expiration')->setValue('');
+    $assert_session->fieldExists('Frequency at which file copies are created upon save.')->setValue('');
     $assert_session->fieldExists('Disable TLS certificate check for COOL.')->uncheck();
     $assert_session->fieldExists('Allow COOL to use fullscreen mode.')->uncheck();
     $assert_session->buttonExists('Save configuration')->press();
     $assert_session->statusMessageContains('Collabora Online server URL field is required.', 'error');
     $assert_session->statusMessageContains('WOPI host URL field is required.', 'error');
     $assert_session->statusMessageContains('JWT private key field is required.', 'error');
-    $assert_session->statusMessageContains('Access Token Expiration (in seconds) field is required.', 'error');
-    $assert_session->statusMessageContains('Frequency (in seconds) at which file copies are created upon save.', 'error');
+    $assert_session->statusMessageContains('Access Token Expiration field is required.', 'error');
+    $assert_session->statusMessageContains('Frequency at which file copies are created upon save.', 'error');
 
     // Test validation of bad form values.
     $this->drupalGet(Url::fromRoute('collabora-online.settings'));
@@ -140,13 +140,13 @@ class ConfigFormTest extends BrowserTestBase {
     $assert_session->fieldExists('Collabora Online server URL')->setValue('/internal');
     $assert_session->fieldExists('WOPI host URL')->setValue('any-other-value');
     // Set invalid values for numeric field.
-    $assert_session->fieldExists('Access Token Expiration (in seconds)')->setValue('text');
-    $assert_session->fieldExists('Frequency (in seconds) at which file copies are created upon save.')->setValue('text');
+    $assert_session->fieldExists('Access Token Expiration')->setValue('text');
+    $assert_session->fieldExists('Frequency at which file copies are created upon save.')->setValue('text');
     $assert_session->buttonExists('Save configuration')->press();
     $assert_session->statusMessageContains('The URL /internal is not valid.', 'error');
     $assert_session->statusMessageContains('The URL any-other-value is not valid.', 'error');
-    $assert_session->statusMessageNotContains('Access Token Expiration (in seconds) must be a number.', 'status');
-    $assert_session->statusMessageNotContains('Frequency (in seconds) at which file copies are created upon save must be a number.', 'status');
+    $assert_session->statusMessageNotContains('Access Token Expiration must be a number.', 'status');
+    $assert_session->statusMessageNotContains('Frequency at which file copies are created upon save must be a number.', 'status');
 
     // Test form with no configuration.
     \Drupal::configFactory()->getEditable('collabora_online.settings')->setData([])->save();
@@ -154,8 +154,8 @@ class ConfigFormTest extends BrowserTestBase {
     $assert_session->fieldValueEquals('Collabora Online server URL', '');
     $assert_session->fieldValueEquals('WOPI host URL', '');
     $assert_session->fieldValueEquals('JWT private key', '');
-    $assert_session->fieldValueEquals('Access Token Expiration (in seconds)', '0');
-    $assert_session->fieldValueEquals('Frequency (in seconds) at which file copies are created upon save', '0');
+    $assert_session->fieldValueEquals('Access Token Expiration', '0');
+    $assert_session->fieldValueEquals('Frequency at which file copies are created upon save', '0');
     $assert_session->checkboxNotChecked('Disable TLS certificate check for COOL.');
     $assert_session->checkboxChecked('Verify proof header and timestamp in incoming WOPI requests.');
     $assert_session->checkboxNotChecked('Allow COOL to use fullscreen mode.');
