@@ -235,7 +235,17 @@ class WopiControllerTest extends WopiControllerTestBase {
       // The URI remains the same, and no File entity has been created.
       $this->assertSame($old_file->id(), $file->id());
       $this->assertSame($file->getFileUri(), $file->getFileUri());
-      $this->assertNoFurtherLogMessages();
+
+      $this->assertLogMessage(
+        RfcLogLevel::INFO,
+        'File entity @file_id source @file_uri was replaced with Collabora.<br>
+  Save reason: @reason<br>',
+        [
+          '@file_id' => $file->id(),
+          '@file_uri' => $file->getFileUri(),
+          '@reason' => $reason_message,
+        ],
+      );
 
       return;
     }
@@ -509,6 +519,14 @@ New file: @new_file_id / @new_file_uri',
         // is missing in the file system.
         $response = $this->handleRequest($request);
         $this->assertSame(200, $response->getStatusCode(), $name);
+        if ($name === 'save') {
+          // The save reason is sufficient to identify the log message.
+          $this->assertLogMessage(
+            replacements: [
+              '@reason' => 'Saved by Collabora Online',
+            ],
+          );
+        }
       }
     }
   }
