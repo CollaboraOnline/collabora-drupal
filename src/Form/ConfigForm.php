@@ -93,11 +93,11 @@ E.g. 'https://drupal.example.com' or 'http://localhost/' or 'http://localhost/su
 
     $form['copy_file_frequency'] = [
       '#type' => 'number',
-      '#title' => $this->t('Frequency at which file copies are created upon save.'),
+      '#title' => $this->t('File copy frequency'),
       '#default_value' => $cool_settings['copy_file_frequency'] ?? 0,
       '#field_suffix' => $this->t('seconds'),
       '#min' => 0,
-      '#description' => $this->t('A value of 0 will not create any copy.'),
+      '#description' => $this->t('Frequency at which file copies are created upon save. A value of 0 will not create any copy.'),
       '#required' => TRUE,
     ];
 
