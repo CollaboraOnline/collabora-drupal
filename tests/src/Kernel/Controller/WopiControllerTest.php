@@ -166,9 +166,11 @@ class WopiControllerTest extends WopiControllerTestBase {
     \Drupal::time()->setTime('+295 seconds');
     $this->doTestWopiPutFile();
     \Drupal::time()->setTime('+295 seconds');
-    $this->doTestWopiPutFile();
+    $this->doTestWopiPutFile(new_file: TRUE);
     \Drupal::time()->setTime('+295 seconds');
     $this->doTestWopiPutFile();
+    \Drupal::time()->setTime('+295 seconds');
+    $this->doTestWopiPutFile(new_file: TRUE);
 
     // Configured frequency of 0 won't copy files no matter how much we wait.
     $wopi_settings = \Drupal::configFactory()->getEditable('collabora_online.settings');

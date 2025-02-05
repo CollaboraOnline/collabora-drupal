@@ -155,7 +155,7 @@ class WopiController implements ContainerInjectionInterface {
 
     if (
       $copy_frequency === 0 ||
-      $request_time - $file->getChangedTime() <= $copy_frequency
+      $request_time - $file->getCreatedTime() <= $copy_frequency
     ) {
       // Replace file with new content.
       $this->fileSystem->saveData(
