@@ -64,8 +64,6 @@ class WopiController implements ContainerInjectionInterface {
   /**
    * Handles the WOPI 'info' request for a media entity.
    *
-   * @param \Drupal\media\MediaInterface $media
-   *   Media entity.
    * @param \Drupal\file\FileInterface $file
    *   File attached to the media entity.
    * @param \Drupal\user\UserInterface $user
@@ -76,7 +74,7 @@ class WopiController implements ContainerInjectionInterface {
    * @return \Symfony\Component\HttpFoundation\Response
    *   The response with file contents.
    */
-  protected function wopiCheckFileInfo(MediaInterface $media, FileInterface $file, UserInterface $user, bool $can_write): Response {
+  protected function wopiCheckFileInfo(FileInterface $file, UserInterface $user, bool $can_write): Response {
     $response_data = [
       'BaseFileName' => $file->getFilename(),
       'Size' => $file->getSize(),
@@ -365,7 +363,7 @@ New file: @new_file_id / @new_file_uri',
 
     switch ($action) {
       case 'info':
-        return $this->wopiCheckFileInfo($media, $file, $user, $can_write);
+        return $this->wopiCheckFileInfo($file, $user, $can_write);
 
       case 'content':
         return $this->wopiGetFile($file);
