@@ -148,13 +148,13 @@ class WopiController implements ContainerInjectionInterface {
     }
 
     $new_file_content = $request->getContent();
-    $copy_frequency = $this->configFactory->get('collabora_online.settings')->get('cool.copy_file_frequency') ?? 0;
+    $new_file_interval = $this->configFactory->get('collabora_online.settings')->get('cool.new_file_interval') ?? 0;
     $request_time = $this->time->getRequestTime();
     $save_reason = $this->buildSaveReason($request);
 
     if (
-      $copy_frequency === 0 ||
-      $request_time - $file->getCreatedTime() <= $copy_frequency
+      $new_file_interval === 0 ||
+      $request_time - $file->getCreatedTime() <= $new_file_interval
     ) {
       // Replace file with new content.
       $this->fileSystem->saveData(

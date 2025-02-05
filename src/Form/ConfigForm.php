@@ -91,13 +91,13 @@ E.g. 'https://drupal.example.com' or 'http://localhost/' or 'http://localhost/su
       '#required' => TRUE,
     ];
 
-    $form['copy_file_frequency'] = [
+    $form['new_file_interval'] = [
       '#type' => 'number',
-      '#title' => $this->t('File copy frequency'),
-      '#default_value' => $cool_settings['copy_file_frequency'] ?? 0,
+      '#title' => $this->t('New File interval'),
+      '#default_value' => $cool_settings['new_file_interval'] ?? 0,
       '#field_suffix' => $this->t('seconds'),
       '#min' => 0,
-      '#description' => $this->t('Frequency at which file copies are created upon save. A value of 0 will not create any copy.'),
+      '#description' => $this->t('Minimum interval of time required to create a new File upon save. A value of 0 will not create any entity.'),
       '#required' => TRUE,
     ];
 
@@ -134,7 +134,7 @@ E.g. 'https://drupal.example.com' or 'http://localhost/' or 'http://localhost/su
       ->set('cool.disable_cert_check', $form_state->getValue('disable_cert_check'))
       ->set('cool.wopi_proof', $form_state->getValue('wopi_proof'))
       ->set('cool.allowfullscreen', $form_state->getValue('allowfullscreen'))
-      ->set('cool.copy_file_frequency', $form_state->getValue('copy_file_frequency'))
+      ->set('cool.new_file_interval', $form_state->getValue('new_file_interval'))
       ->save();
 
     parent::submitForm($form, $form_state);

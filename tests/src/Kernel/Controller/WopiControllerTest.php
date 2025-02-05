@@ -143,26 +143,27 @@ class WopiControllerTest extends WopiControllerTestBase {
   }
 
   /**
-   * Tests copy frequency on successful requests.
+   * Tests new File creation on successful requests.
    *
    * @covers ::wopiPutFile
    */
-  public function testWopiPutFileCopyFrequency(): void {
+  public function testWopiPutFileNewFile(): void {
     // Change configuration to 300 seconds and attempt a save immediately after.
-    // File was created just before, so file copy won't be triggered.
+    // File was created just before, so no new File.
     $wopi_settings = \Drupal::configFactory()->getEditable('collabora_online.settings');
-    $wopi_settings->set('cool.copy_file_frequency', 300)->save();
+    $wopi_settings->set('cool.new_file_interval', 300)->save();
     $this->doTestWopiPutFile();
 
-    // Time passes but it's still under configured frequency.
+    // Time passes but it's still below configured interval.
     \Drupal::time()->setTime('+100 seconds');
     $this->doTestWopiPutFile();
 
-    // Wait more than 300 seconds to trigger file copy.
+    // Wait more than 300 seconds to trigger the File creation.
     \Drupal::time()->setTime('+301 seconds');
     $this->doTestWopiPutFile(new_file: TRUE);
 
-    // Multiple sequential calls under the configured time prevents duplication.
+    // Multiple sequential calls under the configured time does not prevent the
+    // creation of the File.
     \Drupal::time()->setTime('+295 seconds');
     $this->doTestWopiPutFile();
     \Drupal::time()->setTime('+295 seconds');
@@ -172,16 +173,13 @@ class WopiControllerTest extends WopiControllerTestBase {
     \Drupal::time()->setTime('+295 seconds');
     $this->doTestWopiPutFile(new_file: TRUE);
 
-    // Configured frequency of 0 won't copy files no matter how much we wait.
-    $wopi_settings = \Drupal::configFactory()->getEditable('collabora_online.settings');
-    $wopi_settings->set('cool.copy_file_frequency', 0)->save();
-    $this->doTestWopiPutFile();
-    \Drupal::time()->setTime('+1000 seconds');
+    // Configured interval of 0 won't create any File.
+    $wopi_settings->set('cool.new_file_interval', 0)->save();
+    \Drupal::time()->setTime('+5 seconds');
     $this->doTestWopiPutFile();
 
-    // Empty values on the configuration won't create any copies.
-    $wopi_settings = \Drupal::configFactory()->getEditable('collabora_online.settings');
-    $wopi_settings->set('cool.copy_file_frequency', '')->save();
+    // Empty value on the configuration won't create any File.
+    $wopi_settings->set('cool.new_file_interval', '')->save();
     \Drupal::time()->setTime('+5 seconds');
     $this->doTestWopiPutFile();
   }
