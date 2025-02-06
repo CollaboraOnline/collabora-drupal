@@ -236,12 +236,17 @@ class WopiControllerTest extends WopiControllerTestBase {
 
       $this->assertLogMessage(
         RfcLogLevel::INFO,
-        'File entity @file_id source @file_uri was replaced with Collabora.<br>
-  Save reason: @reason<br>',
+        'The file @file_uri was replaced with Collabora.<br>
+Save reason: @reason<br>
+File ID: @file_id<br>
+Media ID: @media_id<br>
+User ID: @user_id',
         [
-          '@file_id' => $file->id(),
           '@file_uri' => $file->getFileUri(),
           '@reason' => $reason_message,
+          '@file_id' => $file->id(),
+          '@media_id' => $media->id(),
+          '@user_id' => $this->user->id(),
         ],
       );
 
@@ -268,7 +273,8 @@ class WopiControllerTest extends WopiControllerTestBase {
       'Media entity @media_id was updated with Collabora.<br>
 Save reason: @reason<br>
 Old file: @old_file_id / @old_file_uri<br>
-New file: @new_file_id / @new_file_uri',
+New file: @new_file_id / @new_file_uri
+User ID: @user_id',
       [
         '@media_id' => $this->media->id(),
         '@reason' => $reason_message,
@@ -276,6 +282,7 @@ New file: @new_file_id / @new_file_uri',
         '@old_file_uri' => $old_file->getFileUri(),
         '@new_file_id' => $file->id(),
         '@new_file_uri' => $file->getFileUri(),
+        '@user_id' => $this->user->id(),
       ],
     );
   }
