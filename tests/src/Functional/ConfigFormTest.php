@@ -60,7 +60,7 @@ class ConfigFormTest extends BrowserTestBase {
     $assert_session->fieldValueEquals('WOPI host URL', 'https://localhost/');
     $assert_session->fieldValueEquals('JWT private key', '');
     $assert_session->fieldValueEquals('Access Token Expiration', '86400');
-    $assert_session->fieldValueEquals('New File interval', '0');
+    $assert_session->fieldValueEquals('Create new file on save after…', '0');
     $assert_session->checkboxNotChecked('Disable TLS certificate check for COOL.');
     $assert_session->checkboxChecked('Verify proof header and timestamp in incoming WOPI requests.');
     $assert_session->checkboxChecked('Allow COOL to use fullscreen mode.');
@@ -94,8 +94,8 @@ class ConfigFormTest extends BrowserTestBase {
       ->setValue('collabora_test');
     $assert_session->fieldExists('Access Token Expiration')
       ->setValue('3600');
-    $assert_session->fieldExists('New File interval')
-      ->setValue(value: '300');
+    $assert_session->fieldExists('Create new file on save after…')
+      ->setValue('300');
     $assert_session->fieldExists('Disable TLS certificate check for COOL.')
       ->check();
     $assert_session->fieldExists('Verify proof header and timestamp in incoming WOPI requests.')
@@ -112,7 +112,7 @@ class ConfigFormTest extends BrowserTestBase {
     $assert_session->fieldValueEquals('WOPI host URL', 'http://wopihost.com/');
     $assert_session->fieldValueEquals('JWT private key', 'collabora_test');
     $assert_session->fieldValueEquals('Access Token Expiration', '3600');
-    $assert_session->fieldValueEquals('New File interval', '300');
+    $assert_session->fieldValueEquals('Create new file on save after…', '300');
     $assert_session->checkboxChecked('Disable TLS certificate check for COOL.');
     $assert_session->checkboxNotChecked('Verify proof header and timestamp in incoming WOPI requests.');
     $assert_session->checkboxNotChecked('Allow COOL to use fullscreen mode.');
@@ -123,7 +123,7 @@ class ConfigFormTest extends BrowserTestBase {
     $assert_session->fieldExists('WOPI host URL')->setValue('');
     $assert_session->fieldExists('JWT private key')->setValue('');
     $assert_session->fieldExists('Access Token Expiration')->setValue('');
-    $assert_session->fieldExists('New File interval')->setValue('');
+    $assert_session->fieldExists('Create new file on save after…')->setValue('');
     $assert_session->fieldExists('Disable TLS certificate check for COOL.')->uncheck();
     $assert_session->fieldExists('Allow COOL to use fullscreen mode.')->uncheck();
     $assert_session->buttonExists('Save configuration')->press();
@@ -131,7 +131,7 @@ class ConfigFormTest extends BrowserTestBase {
     $assert_session->statusMessageContains('WOPI host URL field is required.', 'error');
     $assert_session->statusMessageContains('JWT private key field is required.', 'error');
     $assert_session->statusMessageContains('Access Token Expiration field is required.', 'error');
-    $assert_session->statusMessageContains('New File interval', 'error');
+    $assert_session->statusMessageContains('Create new file on save after… field is required.', 'error');
 
     // Test validation of bad form values.
     $this->drupalGet(Url::fromRoute('collabora-online.settings'));
@@ -140,12 +140,12 @@ class ConfigFormTest extends BrowserTestBase {
     $assert_session->fieldExists('WOPI host URL')->setValue('any-other-value');
     // Set invalid values for numeric field.
     $assert_session->fieldExists('Access Token Expiration')->setValue('text');
-    $assert_session->fieldExists('New File interval')->setValue('text');
+    $assert_session->fieldExists('Create new file on save after…')->setValue('text');
     $assert_session->buttonExists('Save configuration')->press();
     $assert_session->statusMessageContains('The URL /internal is not valid.', 'error');
     $assert_session->statusMessageContains('The URL any-other-value is not valid.', 'error');
-    $assert_session->statusMessageNotContains('Access Token Expiration must be a number.', 'status');
-    $assert_session->statusMessageNotContains('New File interval', 'status');
+    $assert_session->statusMessageContains('Access Token Expiration must be a number.', 'error');
+    $assert_session->statusMessageContains('Create new file on save after… must be a number.', 'error');
 
     // Test form with no configuration.
     \Drupal::configFactory()->getEditable('collabora_online.settings')->setData([])->save();
@@ -154,7 +154,7 @@ class ConfigFormTest extends BrowserTestBase {
     $assert_session->fieldValueEquals('WOPI host URL', '');
     $assert_session->fieldValueEquals('JWT private key', '');
     $assert_session->fieldValueEquals('Access Token Expiration', '0');
-    $assert_session->fieldValueEquals('New File interval', '0');
+    $assert_session->fieldValueEquals('Create new file on save after…', '0');
     $assert_session->checkboxNotChecked('Disable TLS certificate check for COOL.');
     $assert_session->checkboxChecked('Verify proof header and timestamp in incoming WOPI requests.');
     $assert_session->checkboxNotChecked('Allow COOL to use fullscreen mode.');
