@@ -143,13 +143,13 @@ class WopiControllerTest extends WopiControllerTestBase {
   }
 
   /**
-   * Tests new File creation on successful requests.
+   * Tests new file creation on successful requests.
    *
    * @covers ::wopiPutFile
    */
   public function testWopiPutFileNewFile(): void {
     // Change configuration to 300 seconds and attempt a save immediately after.
-    // File was created just before, so no new File.
+    // File was created just before, so no new file.
     $wopi_settings = \Drupal::configFactory()->getEditable('collabora_online.settings');
     $wopi_settings->set('cool.new_file_interval', 300)->save();
     $this->doTestWopiPutFile();
@@ -158,12 +158,12 @@ class WopiControllerTest extends WopiControllerTestBase {
     \Drupal::time()->setTime('+100 seconds');
     $this->doTestWopiPutFile();
 
-    // Wait more than 300 seconds to trigger the File creation.
-    \Drupal::time()->setTime('+301 seconds');
+    // Wait more than 300 seconds to trigger the file creation.
+    \Drupal::time()->setTime('+305 seconds');
     $this->doTestWopiPutFile(new_file: TRUE);
 
     // Multiple sequential calls under the configured time does not prevent the
-    // creation of the File.
+    // creation of the file.
     \Drupal::time()->setTime('+295 seconds');
     $this->doTestWopiPutFile();
     \Drupal::time()->setTime('+295 seconds');
@@ -173,12 +173,12 @@ class WopiControllerTest extends WopiControllerTestBase {
     \Drupal::time()->setTime('+295 seconds');
     $this->doTestWopiPutFile(new_file: TRUE);
 
-    // Configured interval of 0 won't create any File.
+    // Configured interval of 0 won't create any file.
     $wopi_settings->set('cool.new_file_interval', 0)->save();
     \Drupal::time()->setTime('+5 seconds');
     $this->doTestWopiPutFile();
 
-    // Empty value on the configuration won't create any File.
+    // Empty value on the configuration won't create any file.
     $wopi_settings->set('cool.new_file_interval', '')->save();
     \Drupal::time()->setTime('+5 seconds');
     $this->doTestWopiPutFile();
@@ -193,7 +193,7 @@ class WopiControllerTest extends WopiControllerTestBase {
    *   Request headers.
    * @param string $reason_message
    *   Reason message expected to appear in the log and in the revision log.
-   * @param string $new_file
+   * @param bool $new_file
    *   New file is expected.
    */
   protected function doTestWopiPutFile(
@@ -203,6 +203,8 @@ class WopiControllerTest extends WopiControllerTestBase {
   ): void {
     $new_file_content = "File content " . str_repeat('m', rand(0, 999)) . '.';
     $old_file = $this->loadCurrentMediaFile();
+    $old_file_id = $old_file->id();
+    $old_file_uri = $old_file->getFileUri();
     $this->logger->reset();
     $request = $this->createRequest(
       '/contents',
@@ -230,18 +232,22 @@ class WopiControllerTest extends WopiControllerTestBase {
     $this->assertSame(strlen($new_file_content), $file->getSize());
 
     if (!$new_file) {
-      // The URI remains the same, and no File entity has been created.
-      $this->assertSame($old_file->id(), $file->id());
-      $this->assertSame($file->getFileUri(), $file->getFileUri());
+      // The URI remains the same, and no file entity has been created.
+      $this->assertSame($old_file_id, $file->id());
+      $this->assertSame($old_file_uri, $file->getFileUri());
 
       $this->assertLogMessage(
         RfcLogLevel::INFO,
-        'File entity @file_id source @file_uri was replaced with Collabora.<br>
-  Save reason: @reason<br>',
+        'The file contents for media @media_id were overwritten with Collabora.<br>
+Save reason: @reason<br>
+File: @file_id / @file_uri<br>
+User ID: @user_id',
         [
+          '@media_id' => $media->id(),
+          '@reason' => $reason_message,
           '@file_id' => $file->id(),
           '@file_uri' => $file->getFileUri(),
-          '@reason' => $reason_message,
+          '@user_id' => $this->user->id(),
         ],
       );
 
@@ -250,7 +256,7 @@ class WopiControllerTest extends WopiControllerTestBase {
 
     $i = $this->getCounterValue();
     // Assert that a new file was created.
-    $this->assertGreaterThan((int) $old_file->id(), (int) $file->id());
+    $this->assertGreaterThan((int) $old_file_id, (int) $file->id());
     // The file uri is fully predictable in the context of this test.
     // Each new file version gets a new number suffix.
     // There is no repeated suffix like "test_0_0_0_0.txt".
@@ -268,7 +274,8 @@ class WopiControllerTest extends WopiControllerTestBase {
       'Media entity @media_id was updated with Collabora.<br>
 Save reason: @reason<br>
 Old file: @old_file_id / @old_file_uri<br>
-New file: @new_file_id / @new_file_uri',
+New file: @new_file_id / @new_file_uri<br>
+User ID: @user_id',
       [
         '@media_id' => $this->media->id(),
         '@reason' => $reason_message,
@@ -276,6 +283,7 @@ New file: @new_file_id / @new_file_uri',
         '@old_file_uri' => $old_file->getFileUri(),
         '@new_file_id' => $file->id(),
         '@new_file_uri' => $file->getFileUri(),
+        '@user_id' => $this->user->id(),
       ],
     );
   }

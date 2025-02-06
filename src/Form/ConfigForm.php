@@ -93,11 +93,13 @@ E.g. 'https://drupal.example.com' or 'http://localhost/' or 'http://localhost/su
 
     $form['new_file_interval'] = [
       '#type' => 'number',
-      '#title' => $this->t('New File interval'),
+      '#title' => $this->t('Create new file on save after…'),
       '#default_value' => $cool_settings['new_file_interval'] ?? 0,
       '#field_suffix' => $this->t('seconds'),
       '#min' => 0,
-      '#description' => $this->t('Minimum interval of time required to create a new File upon save. A value of 0 will not create any entity.'),
+      '#description' => $this->t('Period during which a save operation will overwrite the existing file, rather than creating a new file.<br>
+If the value is 0, the existing file will always be overwritten, and no new file will be created.<br>
+This applies equally to autosave, the editor\'s save button, and the close button.'),
       '#required' => TRUE,
     ];
 

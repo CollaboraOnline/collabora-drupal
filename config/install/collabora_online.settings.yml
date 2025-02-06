@@ -13,5 +13,5 @@ cool:
   wopi_proof: true
   # Allow fullscreen - Enabled by default for functionality.
   allowfullscreen: true
-  # New File interval on save.
+  # New file interval on save.
   new_file_interval: 0

@@ -164,16 +164,19 @@ class WopiController implements ContainerInjectionInterface {
       );
 
       // Entity didn't change but file has been replaced.
-      $file->setChangedTime($request_time);
       $file->save();
 
       $this->logger->info(
-        'File entity @file_id source @file_uri was replaced with Collabora.<br>
-  Save reason: @reason<br>',
+        'The file contents for media @media_id were overwritten with Collabora.<br>
+Save reason: @reason<br>
+File: @file_id / @file_uri<br>
+User ID: @user_id',
         [
+          '@media_id' => $media->id(),
+          '@reason' => $save_reason,
           '@file_id' => $file->id(),
           '@file_uri' => $file->getFileUri(),
-          '@reason' => $save_reason,
+          '@user_id' => $user->id(),
         ],
       );
 
@@ -198,7 +201,8 @@ class WopiController implements ContainerInjectionInterface {
       'Media entity @media_id was updated with Collabora.<br>
 Save reason: @reason<br>
 Old file: @old_file_id / @old_file_uri<br>
-New file: @new_file_id / @new_file_uri',
+New file: @new_file_id / @new_file_uri<br>
+User ID: @user_id',
       [
         '@media_id' => $media->id(),
         '@reason' => $save_reason,
@@ -206,6 +210,7 @@ New file: @new_file_id / @new_file_uri',
         '@old_file_uri' => $file->getFileUri(),
         '@new_file_id' => $new_file->id(),
         '@new_file_uri' => $new_file->getFileUri(),
+        '@user_id' => $user->id(),
       ],
     );
 
