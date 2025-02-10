@@ -21,6 +21,7 @@ use Drupal\Core\Cache\CacheTagsInvalidatorInterface;
 use Drupal\Core\Logger\RfcLogLevel;
 use Drupal\KernelTests\KernelTestBase;
 use Drupal\Tests\collabora_online\Traits\KernelTestLoggerTrait;
+use Drupal\Tests\collabora_online\Traits\KernelTestTimeTrait;
 use GuzzleHttp\Client;
 use GuzzleHttp\Exception\TransferException;
 use GuzzleHttp\Psr7\Response;
@@ -31,6 +32,7 @@ use GuzzleHttp\Psr7\Response;
 class DiscoveryFetcherTest extends KernelTestBase {
 
   use KernelTestLoggerTrait;
+  use KernelTestTimeTrait;
 
   /**
    * XML content to be returned for a discovery request.
@@ -158,9 +160,38 @@ class DiscoveryFetcherTest extends KernelTestBase {
       ->save();
 
     $fetcher->getDiscovery();
+    $this->assertCount(3, $this->httpClientGetCalls);
     $cache_record = $load_cache();
     $this->assertNotFalse($cache_record);
     $this->assertSame(12345, $cache_record->expire - $cache_record->created);
+
+    $this->mockRequestTime = $this->mockRequestTime->add(new \DateInterval('PT12330S'));
+
+    $this->assertSame(12330, $this->mockRequestTime->getTimestamp() - $cache_record->created);
+    $this->assertNotFalse($load_cache());
+
+    $fetcher->getDiscovery();
+    $this->assertCount(3, $this->httpClientGetCalls);
+
+    $this->mockRequestTime = $this->mockRequestTime->add(new \DateInterval('PT30S'));
+
+    $this->assertFalse($load_cache());
+    $this->assertSame(12360, $this->mockRequestTime->getTimestamp() - $cache_record->created);
+
+    $fetcher->getDiscovery();
+    $this->assertCount(4, $this->httpClientGetCalls);
+
+    // Set TTL = 0 for no cache, always refresh.
+    $this->config('collabora_online.settings')
+      ->set('cool.discovery_cache_ttl', 0)
+      ->save();
+    $fetcher->getDiscovery();
+    $this->assertCount(5, $this->httpClientGetCalls);
+    $fetcher->getDiscovery();
+    $this->assertCount(5, $this->httpClientGetCalls);
+    $this->mockRequestTime = $this->mockRequestTime->add(new \DateInterval('PT1S'));
+    $fetcher->getDiscovery();
+    $this->assertCount(6, $this->httpClientGetCalls);
   }
 
   /**
