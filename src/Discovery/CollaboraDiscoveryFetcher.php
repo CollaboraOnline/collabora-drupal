@@ -83,7 +83,7 @@ class CollaboraDiscoveryFetcher implements CollaboraDiscoveryFetcherInterface {
       // This is known to happen when $xml is an empty string.
       // Instead we could check for $xml === '' earlier, but we don't know for
       // sure if this is, and always will be, the only such case.
-      throw new CollaboraNotAvailableException('The discovery.xml file is empty.');
+      throw new CollaboraNotAvailableException('The discovery.xml file seems to be empty.');
     }
     return $parsed_xml;
   }
