@@ -57,7 +57,7 @@ class ConfigFormTest extends BrowserTestBase {
     // The form contains default values from module install.
     $this->drupalGet(Url::fromRoute('collabora-online.settings'));
     $assert_session->fieldValueEquals('Collabora Online server URL', 'https://localhost:9980/');
-    $assert_session->fieldValueEquals('Discovery cache TTL', '43200');
+    $assert_session->fieldValueEquals('Discovery cache TTL', '3600');
     $assert_session->fieldValueEquals('WOPI host URL', 'https://localhost/');
     $assert_session->fieldValueEquals('JWT private key', '');
     $assert_session->fieldValueEquals('Access token TTL', '86400');
@@ -152,7 +152,7 @@ class ConfigFormTest extends BrowserTestBase {
     \Drupal::configFactory()->getEditable('collabora_online.settings')->setData([])->save();
     $this->drupalGet(Url::fromRoute('collabora-online.settings'));
     $assert_session->fieldValueEquals('Collabora Online server URL', '');
-    $assert_session->fieldValueEquals('Discovery cache TTL', '43200');
+    $assert_session->fieldValueEquals('Discovery cache TTL', '3600');
     $assert_session->fieldValueEquals('WOPI host URL', '');
     $assert_session->fieldValueEquals('JWT private key', '');
     $assert_session->fieldValueEquals('Access token TTL', '0');
