@@ -111,7 +111,7 @@ class RequirementsTest extends CollaboraKernelTestBase {
       ->set('cool.wopi_proof', FALSE)
       ->save();
     $requirements = collabora_online_requirements('runtime');
-    $this->assertEmpty($requirements);
+    $this->assertSame([], $requirements);
 
     // Re-enable the proof validation.
     $this->config('collabora_online.settings')
@@ -126,7 +126,7 @@ class RequirementsTest extends CollaboraKernelTestBase {
     // Change the XML response to contain a proof key.
     $file = dirname(__DIR__, 2) . '/fixtures/discovery.proof-key.xml';
     $requirements = collabora_online_requirements('runtime');
-    $this->assertEmpty($requirements);
+    $this->assertSame([], $requirements);
   }
 
 }
