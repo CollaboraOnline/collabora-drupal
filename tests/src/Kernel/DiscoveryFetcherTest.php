@@ -188,9 +188,6 @@ class DiscoveryFetcherTest extends KernelTestBase {
     $fetcher->getDiscovery();
     $this->assertCount(5, $this->httpClientGetCalls);
     $fetcher->getDiscovery();
-    $this->assertCount(5, $this->httpClientGetCalls);
-    $this->mockRequestTime = $this->mockRequestTime->add(new \DateInterval('PT1S'));
-    $fetcher->getDiscovery();
     $this->assertCount(6, $this->httpClientGetCalls);
   }
 
