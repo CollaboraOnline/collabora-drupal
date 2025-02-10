@@ -207,7 +207,7 @@ class DiscoveryFetcherTest extends KernelTestBase {
   public function testBlankXml(): void {
     $this->xml = '';
     $this->expectException(CollaboraNotAvailableException::class);
-    $this->expectExceptionMessage('The discovery.xml file is empty.');
+    $this->expectExceptionMessage('The discovery.xml file seems to be empty.');
     $this->getFetcher()->getDiscovery();
   }
 
