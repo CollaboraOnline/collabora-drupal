@@ -212,7 +212,9 @@ class DiscoveryFetcherTest extends KernelTestBase {
   }
 
   /**
-   * Tests error behavior when the 'cool.server' setting is empty.
+   * Tests the effect of the 'cool.disable_cert_check' setting.
+   *
+   * @see \GuzzleHttp\RequestOptions::VERIFY
    */
   public function testConfigDisableCertCheck(): void {
     // Also test with NULL to verify the fallback value.
@@ -226,7 +228,7 @@ class DiscoveryFetcherTest extends KernelTestBase {
     $this->assertCount(3, $this->httpClientGetCalls);
     $this->assertFalse($this->httpClientGetCalls[0][1]['verify']);
     $this->assertTrue($this->httpClientGetCalls[1][1]['verify']);
-    $this->assertTrue($this->httpClientGetCalls[1][1]['verify']);
+    $this->assertTrue($this->httpClientGetCalls[2][1]['verify']);
   }
 
   /**
