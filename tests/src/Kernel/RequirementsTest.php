@@ -112,7 +112,7 @@ class RequirementsTest extends CollaboraKernelTestBase {
       ->set('cool.wopi_proof', FALSE)
       ->save();
     $requirements = collabora_online_requirements('runtime');
-    $this->assertEmpty($requirements);
+    $this->assertSame([], $requirements);
 
     // Re-enable the proof validation.
     $this->config('collabora_online.settings')
@@ -129,7 +129,7 @@ class RequirementsTest extends CollaboraKernelTestBase {
     $this->invalidateDiscoveryCache();
 
     $requirements = collabora_online_requirements('runtime');
-    $this->assertEmpty($requirements);
+    $this->assertSame([], $requirements);
   }
 
   /**
