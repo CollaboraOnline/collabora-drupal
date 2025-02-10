@@ -12,8 +12,7 @@
 
 declare(strict_types=1);
 
-use Drupal\collabora_online\Cool\CollaboraDiscoveryFetcherInterface;
-use Drupal\collabora_online\Cool\CollaboraDiscoveryInterface;
+use Drupal\collabora_online\Discovery\CollaboraDiscoveryFetcherInterface;
 use Drupal\collabora_online\Exception\CollaboraNotAvailableException;
 
 /**
@@ -40,10 +39,12 @@ function collabora_online_requirements(string $phase): array {
   }
 
   // Check if Collabora Online server is configured and can be reached.
+  /** @var \Drupal\collabora_online\Discovery\CollaboraDiscoveryFetcherInterface $fetcher */
+  $fetcher = \Drupal::service(CollaboraDiscoveryFetcherInterface::class);
   try {
-    \Drupal::service(CollaboraDiscoveryFetcherInterface::class)->getDiscoveryXml();
+    $discovery = $fetcher->getDiscovery();
   }
-  catch (CollaboraNotAvailableException $e) {
+  catch (CollaboraNotAvailableException) {
     $requirements['collabora_online_settings_cool_server'] = [
       'title' => t('Collabora Online server'),
       'description' => t('The Collabora Online server discovery.xml could not be accessed. Check the logs for more information.'),
@@ -53,8 +54,6 @@ function collabora_online_requirements(string $phase): array {
     return $requirements;
   }
 
-  /** @var \Drupal\collabora_online\Cool\CollaboraDiscoveryInterface $discovery */
-  $discovery = \Drupal::service(CollaboraDiscoveryInterface::class);
   if (
     ($cool_settings['wopi_proof'] ?? TRUE) === TRUE &&
     $discovery->getProofKey() === NULL &&
