@@ -15,6 +15,8 @@ declare(strict_types=1);
 namespace Drupal\collabora_online\Discovery;
 
 use Drupal\collabora_online\Exception\CollaboraNotAvailableException;
+use Drupal\Component\Datetime\TimeInterface;
+use Drupal\Core\Cache\CacheBackendInterface;
 use Drupal\Core\Config\ConfigFactoryInterface;
 use Drupal\Core\Config\ImmutableConfig;
 use GuzzleHttp\ClientInterface;
@@ -25,15 +27,22 @@ use Symfony\Component\DependencyInjection\Attribute\Autowire;
 use Symfony\Component\ErrorHandler\ErrorHandler;
 
 /**
- * Service to load the discovery.xml from the Collabora server.
+ * Creates a discovery value object.
  */
 class CollaboraDiscoveryFetcher implements CollaboraDiscoveryFetcherInterface {
+
+  public const DEFAULT_CID = 'collabora_online.discovery';
 
   public function __construct(
     #[Autowire(service: 'logger.channel.collabora_online')]
     protected readonly LoggerInterface $logger,
     protected readonly ConfigFactoryInterface $configFactory,
     protected readonly ClientInterface $httpClient,
+    #[Autowire(service: 'cache.default')]
+    protected readonly CacheBackendInterface $cache,
+    #[Autowire(value: self::DEFAULT_CID)]
+    protected readonly string $cid,
+    protected readonly TimeInterface $time,
   ) {}
 
   /**
@@ -89,10 +98,43 @@ class CollaboraDiscoveryFetcher implements CollaboraDiscoveryFetcherInterface {
    *   The client url cannot be retrieved.
    */
   protected function getDiscoveryXml(): string {
+    $cached = $this->cache->get($this->cid);
+    if ($cached) {
+      return $cached->data;
+    }
     $config = $this->configFactory->get('collabora_online.settings');
 
     $disable_checks = (bool) $config->get('cool.disable_cert_check');
     $discovery_url = $this->getDiscoveryUrl($config);
+    $xml = $this->loadDiscoveryXml($discovery_url, $disable_checks);
+
+    $max_age = 60 * 60 * 12;
+    $expire = $max_age + $this->time->getRequestTime();
+
+    $this->cache->set(
+      $this->cid,
+      $xml,
+      $expire,
+      $config->getCacheTags(),
+    );
+    return $xml;
+  }
+
+  /**
+   * Loads the contents of discovery.xml from the Collabora server.
+   *
+   * @param string $discovery_url
+   *   Discovery URL.
+   * @param bool $disable_checks
+   *   TRUE to disable SSL checks.
+   *
+   * @return string
+   *   The full contents of discovery.xml.
+   *
+   * @throws \Drupal\collabora_online\Exception\CollaboraNotAvailableException
+   *   The client url cannot be retrieved.
+   */
+  public function loadDiscoveryXml(string $discovery_url, bool $disable_checks): string {
     try {
       $response = $this->httpClient->get($discovery_url, [
         RequestOptions::VERIFY => !$disable_checks,

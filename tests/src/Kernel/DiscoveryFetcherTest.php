@@ -17,6 +17,7 @@ namespace Drupal\Tests\collabora_online\Kernel;
 use Drupal\collabora_online\Discovery\CollaboraDiscoveryFetcher;
 use Drupal\collabora_online\Discovery\CollaboraDiscoveryFetcherInterface;
 use Drupal\collabora_online\Exception\CollaboraNotAvailableException;
+use Drupal\Core\Cache\CacheTagsInvalidatorInterface;
 use Drupal\Core\Logger\RfcLogLevel;
 use Drupal\KernelTests\KernelTestBase;
 use Drupal\Tests\collabora_online\Traits\KernelTestLoggerTrait;
@@ -125,6 +126,32 @@ class DiscoveryFetcherTest extends KernelTestBase {
       ],
       $this->httpClientGetCalls,
     );
+  }
+
+  /**
+   * Tests that subsequent calls are cached.
+   */
+  public function testGetDiscoveryIsCached(): void {
+    $fetcher = $this->getFetcher();
+    $load_cache = fn () => \Drupal::cache()->get(CollaboraDiscoveryFetcher::DEFAULT_CID);
+    $this->assertFalse($load_cache());
+
+    $fetcher->getDiscovery();
+    $this->assertCount(1, $this->httpClientGetCalls);
+
+    $cache_record = $load_cache();
+    $this->assertNotFalse($cache_record);
+    $this->assertSame(['config:collabora_online.settings'], $cache_record->tags);
+
+    $fetcher->getDiscovery();
+    $this->assertCount(1, $this->httpClientGetCalls);
+
+    /** @var \Drupal\Core\Cache\CacheTagsInvalidatorInterface $invalidator */
+    $invalidator = \Drupal::service(CacheTagsInvalidatorInterface::class);
+    $invalidator->invalidateTags(['config:collabora_online.settings']);
+
+    $fetcher->getDiscovery();
+    $this->assertCount(2, $this->httpClientGetCalls);
   }
 
   /**
