@@ -14,7 +14,7 @@ declare(strict_types=1);
 
 namespace Drupal\Tests\collabora_online\ExistingSite;
 
-use Drupal\collabora_online\Discovery\CollaboraDiscoveryInterface;
+use Drupal\collabora_online\Discovery\CollaboraDiscoveryFetcherInterface;
 use Drupal\collabora_online\Exception\CollaboraNotAvailableException;
 use Drupal\Tests\collabora_online\Traits\ConfigurationBackupTrait;
 use weitzman\DrupalTestTraits\ExistingSiteBase;
@@ -38,8 +38,9 @@ class FetchClientUrlTest extends ExistingSiteBase {
    * Tests fetching the client url.
    */
   public function testFetchClientUrl(): void {
-    /** @var \Drupal\collabora_online\Discovery\CollaboraDiscoveryInterface $discovery */
-    $discovery = \Drupal::service(CollaboraDiscoveryInterface::class);
+    /** @var \Drupal\collabora_online\Discovery\CollaboraDiscoveryFetcherInterface $discovery_fetcher */
+    $discovery_fetcher = \Drupal::service(CollaboraDiscoveryFetcherInterface::class);
+    $discovery = $discovery_fetcher->getDiscovery();
     $client_url = $discovery->getWopiClientURL();
     $this->assertNotNull($client_url);
     // The protocol, domain and port are known when this test runs in the
@@ -55,13 +56,13 @@ class FetchClientUrlTest extends ExistingSiteBase {
       ->getEditable('collabora_online.settings')
       ->set('cool.server', 'httx://example.com')
       ->save();
-    /** @var \Drupal\collabora_online\Discovery\CollaboraDiscoveryInterface $discovery */
-    $discovery = \Drupal::service(CollaboraDiscoveryInterface::class);
+    /** @var \Drupal\collabora_online\Discovery\CollaboraDiscoveryFetcherInterface $discovery_fetcher */
+    $discovery_fetcher = \Drupal::service(CollaboraDiscoveryFetcherInterface::class);
 
     $this->expectException(CollaboraNotAvailableException::class);
     $this->expectExceptionMessage("The configured Collabora Online server address must begin with 'http://' or 'https://'. Found 'httx://example.com'.");
 
-    $discovery->getWopiClientURL();
+    $discovery_fetcher->getDiscovery();
   }
 
 }

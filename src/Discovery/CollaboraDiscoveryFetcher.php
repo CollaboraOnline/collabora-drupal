@@ -16,11 +16,13 @@ namespace Drupal\collabora_online\Discovery;
 
 use Drupal\collabora_online\Exception\CollaboraNotAvailableException;
 use Drupal\Core\Config\ConfigFactoryInterface;
+use Drupal\Core\Config\ImmutableConfig;
 use GuzzleHttp\ClientInterface;
 use GuzzleHttp\RequestOptions;
 use Psr\Http\Client\ClientExceptionInterface;
 use Psr\Log\LoggerInterface;
 use Symfony\Component\DependencyInjection\Attribute\Autowire;
+use Symfony\Component\ErrorHandler\ErrorHandler;
 
 /**
  * Service to load the discovery.xml from the Collabora server.
@@ -37,12 +39,60 @@ class CollaboraDiscoveryFetcher implements CollaboraDiscoveryFetcherInterface {
   /**
    * {@inheritdoc}
    */
-  public function getDiscoveryXml(): string {
-    $discovery_url = $this->getDiscoveryUrl();
+  public function getDiscovery(): CollaboraDiscoveryInterface {
+    $xml = $this->getDiscoveryXml();
+    $parsed_xml = $this->parseXml($xml);
+    return new CollaboraDiscovery($parsed_xml);
+  }
 
-    $cool_settings = $this->loadSettings();
-    $disable_checks = !empty($cool_settings['disable_cert_check']);
+  /**
+   * Parses an XML string.
+   *
+   * @param string $xml
+   *   XML string.
+   *
+   * @return \SimpleXMLElement
+   *   Parsed XML.
+   *
+   * @throws \Drupal\collabora_online\Exception\CollaboraNotAvailableException
+   *   The XML is invalid or empty.
+   */
+  protected function parseXml(string $xml): \SimpleXMLElement {
+    try {
+      // Avoid errors from XML parsing hitting the regular error handler.
+      // An alternative would be libxml_use_internal_errors(), but then we would
+      // have to deal with the results from libxml_get_errors().
+      $parsed_xml = ErrorHandler::call(
+        fn () => simplexml_load_string($xml),
+      );
+    }
+    catch (\ErrorException $e) {
+      throw new CollaboraNotAvailableException('Error in the retrieved discovery.xml file: ' . $e->getMessage(), previous: $e);
+    }
+    if ($parsed_xml === FALSE) {
+      // The parser returned FALSE, but no error was raised.
+      // This is known to happen when $xml is an empty string.
+      // Instead we could check for $xml === '' earlier, but we don't know for
+      // sure if this is, and always will be, the only such case.
+      throw new CollaboraNotAvailableException('The discovery.xml file is empty.');
+    }
+    return $parsed_xml;
+  }
 
+  /**
+   * Gets the contents of discovery.xml from the Collabora server.
+   *
+   * @return string
+   *   The full contents of discovery.xml.
+   *
+   * @throws \Drupal\collabora_online\Exception\CollaboraNotAvailableException
+   *   The client url cannot be retrieved.
+   */
+  protected function getDiscoveryXml(): string {
+    $config = $this->configFactory->get('collabora_online.settings');
+
+    $disable_checks = (bool) $config->get('cool.disable_cert_check');
+    $discovery_url = $this->getDiscoveryUrl($config);
     try {
       $response = $this->httpClient->get($discovery_url, [
         RequestOptions::VERIFY => !$disable_checks,
@@ -67,15 +117,17 @@ class CollaboraDiscoveryFetcher implements CollaboraDiscoveryFetcherInterface {
   /**
    * Gets the URL to fetch the discovery.
    *
+   * @param \Drupal\Core\Config\ImmutableConfig $config
+   *   Configuration for this module.
+   *
    * @return string
    *   URL to fetch the discovery XML.
    *
    * @throws \Drupal\collabora_online\Exception\CollaboraNotAvailableException
    *   The WOPI server url is misconfigured.
    */
-  protected function getDiscoveryUrl(): string {
-    $cool_settings = $this->loadSettings();
-    $wopi_client_server = $cool_settings['server'] ?? NULL;
+  protected function getDiscoveryUrl(ImmutableConfig $config): string {
+    $wopi_client_server = $config->get('cool.server');
     if (!$wopi_client_server) {
       throw new CollaboraNotAvailableException('The configured Collabora Online server address is empty.');
     }
@@ -91,23 +143,6 @@ class CollaboraDiscoveryFetcher implements CollaboraDiscoveryFetcherInterface {
     }
 
     return $wopi_client_server . '/hosting/discovery';
-  }
-
-  /**
-   * Loads the relevant configuration.
-   *
-   * @return array
-   *   Configuration.
-   *
-   * @throws \Drupal\collabora_online\Exception\CollaboraNotAvailableException
-   *   The module is not configured.
-   */
-  protected function loadSettings(): array {
-    $cool_settings = $this->configFactory->get('collabora_online.settings')->get('cool');
-    if (!$cool_settings) {
-      throw new CollaboraNotAvailableException('The Collabora Online connection is not configured.');
-    }
-    return $cool_settings;
   }
 
 }

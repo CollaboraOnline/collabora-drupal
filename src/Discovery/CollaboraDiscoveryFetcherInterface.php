@@ -15,19 +15,19 @@ declare(strict_types=1);
 namespace Drupal\collabora_online\Discovery;
 
 /**
- * Service to load the discovery.xml from the Collabora server.
+ * Creates a WOPI discovery value object.
  */
 interface CollaboraDiscoveryFetcherInterface {
 
   /**
-   * Gets the contents of discovery.xml from the Collabora server.
+   * Gets a discovery value object.
    *
-   * @return string
-   *   The full contents of discovery.xml.
+   * @return \Drupal\collabora_online\Discovery\CollaboraDiscoveryInterface
+   *   Discovery value object.
    *
    * @throws \Drupal\collabora_online\Exception\CollaboraNotAvailableException
-   *   The client url cannot be retrieved.
+   *   Fetching the discovery.xml failed, or the result is not valid xml.
    */
-  public function getDiscoveryXml(): string;
+  public function getDiscovery(): CollaboraDiscoveryInterface;
 
 }
