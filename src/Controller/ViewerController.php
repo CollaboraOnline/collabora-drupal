@@ -14,7 +14,7 @@ declare(strict_types=1);
 
 namespace Drupal\collabora_online\Controller;
 
-use Drupal\collabora_online\Discovery\CollaboraDiscoveryInterface;
+use Drupal\collabora_online\Discovery\CollaboraDiscoveryFetcherInterface;
 use Drupal\collabora_online\Exception\CollaboraNotAvailableException;
 use Drupal\collabora_online\Jwt\JwtTranscoderInterface;
 use Drupal\Core\Config\ConfigFactoryInterface;
@@ -40,7 +40,7 @@ class ViewerController implements ContainerInjectionInterface {
   use StringTranslationTrait;
 
   public function __construct(
-    protected readonly CollaboraDiscoveryInterface $discovery,
+    protected readonly CollaboraDiscoveryFetcherInterface $discoveryFetcher,
     protected readonly JwtTranscoderInterface $jwtTranscoder,
     protected readonly RendererInterface $renderer,
     #[Autowire('logger.channel.collabora_online')]
@@ -69,7 +69,8 @@ class ViewerController implements ContainerInjectionInterface {
   public function editor(MediaInterface $media, Request $request, $edit = FALSE): Response {
     try {
       // @todo Get client url for the correct MIME type.
-      $wopi_client_url = $this->discovery->getWopiClientURL();
+      $discovery = $this->discoveryFetcher->getDiscovery();
+      $wopi_client_url = $discovery->getWopiClientURL();
     }
     catch (CollaboraNotAvailableException $e) {
       $this->logger->warning(
