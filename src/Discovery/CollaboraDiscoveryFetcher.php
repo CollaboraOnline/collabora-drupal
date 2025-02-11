@@ -142,6 +142,8 @@ class CollaboraDiscoveryFetcher implements CollaboraDiscoveryFetcherInterface {
    */
   public function loadDiscoveryXml(string $discovery_url, bool $disable_checks): string {
     try {
+      // The ->get() method is not part of the interface.
+      // @phpstan-ignore method.notFound
       $response = $this->httpClient->get($discovery_url, [
         RequestOptions::VERIFY => !$disable_checks,
       ]);

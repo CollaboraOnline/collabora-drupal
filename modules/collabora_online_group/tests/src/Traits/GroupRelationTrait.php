@@ -45,9 +45,11 @@ trait GroupRelationTrait {
       $entity_type_id = 'group_content_type';
     }
 
-    $entity = $this->entityTypeManager()
-      ->getStorage($entity_type_id)
-      ->createFromPlugin($group_type, $plugin_id, $values);
+    $storage = $this->entityTypeManager()->getStorage($entity_type_id);
+    // The storage has a different interface in group v1 than in group v2.
+    // Both of them have a ->createFromPlugin() method.
+    // @phpstan-ignore method.notFound
+    $entity = $storage->createFromPlugin($group_type, $plugin_id, $values);
     $entity->save();
 
     return $entity;
