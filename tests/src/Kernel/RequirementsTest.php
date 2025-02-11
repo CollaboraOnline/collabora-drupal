@@ -14,6 +14,7 @@ declare(strict_types=1);
 
 namespace Drupal\Tests\collabora_online\Kernel;
 
+use Drupal\Core\Cache\CacheTagsInvalidatorInterface;
 use Drupal\key\Entity\Key;
 use GuzzleHttp\Client;
 use GuzzleHttp\Psr7\Response;
@@ -87,6 +88,8 @@ class RequirementsTest extends CollaboraKernelTestBase {
       $requirements['collabora_online_settings_cool_server']['severity'],
     );
 
+    // No need to invalidate the discovery cache at this point, because a failed
+    // discovery is not cached.
     $file_reference = dirname(__DIR__, 2) . '/fixtures/discovery.mimetypes.xml';
 
     $requirements = collabora_online_requirements('runtime');
@@ -123,6 +126,7 @@ class RequirementsTest extends CollaboraKernelTestBase {
 
     // Change the XML response to contain a proof key.
     $file_reference = dirname(__DIR__, 2) . '/fixtures/discovery.proof-key.xml';
+    $this->invalidateDiscoveryCache();
 
     $requirements = collabora_online_requirements('runtime');
     $this->assertSame([], $requirements);
@@ -156,6 +160,15 @@ class RequirementsTest extends CollaboraKernelTestBase {
         },
       );
     $this->container->set('http_client', $client);
+  }
+
+  /**
+   * Invalidates the discovery cache.
+   */
+  protected function invalidateDiscoveryCache(): void {
+    /** @var \Drupal\Core\Cache\CacheTagsInvalidatorInterface $invalidator */
+    $invalidator = \Drupal::service(CacheTagsInvalidatorInterface::class);
+    $invalidator->invalidateTags(['config:collabora_online.settings']);
   }
 
 }
