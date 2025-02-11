@@ -1,0 +1,13 @@
+parameters:
+  level: 2
+  treatPhpDocTypesAsCertain: false
+  paths:
+    - .
+  excludePaths:
+    # For now do not check tests.
+    - tests
+    - vendor
+    - web
+  ignoreErrors:
+    # Allow 'new static()', which is common and accepted in Drupal.
+    - "#^Unsafe usage of new static\\(\\).$#"

@@ -88,6 +88,7 @@ class WopiController implements ContainerInjectionInterface {
       'SupportsRename' => FALSE,
     ];
 
+    // @phpstan-ignore property.notFound
     $user_picture = $user->user_picture?->entity;
     if ($user_picture) {
       $response_data['UserExtraInfo']['avatar'] = $this->fileUrlGenerator->generateAbsoluteString($user_picture->getFileUri());
