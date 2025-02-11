@@ -27,6 +27,9 @@ collabora_online.settings:
         allowfullscreen:
           type: boolean
           label: 'Allow full-screen.'
+        new_file_interval:
+          type: integer
+          label: 'New file interval.'
 
 key.type.collabora_jwt_hs:
   # The key type has no actual configurable settings, but it still needs a

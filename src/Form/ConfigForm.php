@@ -84,9 +84,22 @@ E.g. 'https://drupal.example.com' or 'http://localhost/' or 'http://localhost/su
 
     $form['access_token_ttl'] = [
       '#type' => 'number',
-      '#title' => $this->t('Access Token Expiration (in seconds)'),
+      '#title' => $this->t('Access Token Expiration'),
       '#default_value' => $cool_settings['access_token_ttl'] ?? 0,
+      '#field_suffix' => $this->t('seconds'),
       '#min' => 0,
+      '#required' => TRUE,
+    ];
+
+    $form['new_file_interval'] = [
+      '#type' => 'number',
+      '#title' => $this->t('Create new file on save after…'),
+      '#default_value' => $cool_settings['new_file_interval'] ?? 0,
+      '#field_suffix' => $this->t('seconds'),
+      '#min' => 0,
+      '#description' => $this->t('Period during which a save operation will overwrite the existing file, rather than creating a new file.<br>
+If the value is 0, the existing file will always be overwritten, and no new file will be created.<br>
+This applies equally to autosave, the editor\'s save button, and the close button.'),
       '#required' => TRUE,
     ];
 
@@ -123,6 +136,7 @@ E.g. 'https://drupal.example.com' or 'http://localhost/' or 'http://localhost/su
       ->set('cool.disable_cert_check', $form_state->getValue('disable_cert_check'))
       ->set('cool.wopi_proof', $form_state->getValue('wopi_proof'))
       ->set('cool.allowfullscreen', $form_state->getValue('allowfullscreen'))
+      ->set('cool.new_file_interval', $form_state->getValue('new_file_interval'))
       ->save();
 
     parent::submitForm($form, $form_state);

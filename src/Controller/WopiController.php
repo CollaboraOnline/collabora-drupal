@@ -17,6 +17,7 @@ use Drupal\collabora_online\Jwt\JwtTranscoderInterface;
 use Drupal\collabora_online\MediaHelperInterface;
 use Drupal\collabora_online\Util\DateTimeHelper;
 use Drupal\Component\Datetime\TimeInterface;
+use Drupal\Core\Config\ConfigFactoryInterface;
 use Drupal\Core\DependencyInjection\AutowireTrait;
 use Drupal\Core\DependencyInjection\ContainerInjectionInterface;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
@@ -52,6 +53,7 @@ class WopiController implements ContainerInjectionInterface {
     protected readonly TimeInterface $time,
     protected readonly FileUrlGeneratorInterface $fileUrlGenerator,
     protected readonly MediaHelperInterface $mediaHelper,
+    protected readonly ConfigFactoryInterface $configFactory,
     #[Autowire('logger.channel.collabora_online')]
     protected readonly LoggerInterface $logger,
     TranslationInterface $string_translation,
@@ -62,8 +64,6 @@ class WopiController implements ContainerInjectionInterface {
   /**
    * Handles the WOPI 'info' request for a media entity.
    *
-   * @param \Drupal\media\MediaInterface $media
-   *   Media entity.
    * @param \Drupal\file\FileInterface $file
    *   File attached to the media entity.
    * @param \Drupal\user\UserInterface $user
@@ -74,7 +74,7 @@ class WopiController implements ContainerInjectionInterface {
    * @return \Symfony\Component\HttpFoundation\Response
    *   The response with file contents.
    */
-  protected function wopiCheckFileInfo(MediaInterface $media, FileInterface $file, UserInterface $user, bool $can_write): Response {
+  protected function wopiCheckFileInfo(FileInterface $file, UserInterface $user, bool $can_write): Response {
     $response_data = [
       'BaseFileName' => $file->getFilename(),
       'Size' => $file->getSize(),
@@ -148,13 +148,52 @@ class WopiController implements ContainerInjectionInterface {
     }
 
     $new_file_content = $request->getContent();
-    $new_file = $this->createNewFileEntity($file, $new_file_content);
-
+    $new_file_interval = $this->configFactory->get('collabora_online.settings')->get('cool.new_file_interval') ?? 0;
+    $request_time = $this->time->getRequestTime();
     $save_reason = $this->buildSaveReason($request);
+
+    if (
+      $new_file_interval === 0 ||
+      $request_time - $file->getCreatedTime() <= $new_file_interval
+    ) {
+      // Replace file with new content.
+      $this->fileSystem->saveData(
+        $new_file_content,
+        $file->getFileUri(),
+        FileExists::Replace,
+      );
+
+      // Entity didn't change but file has been replaced.
+      $file->save();
+
+      $this->logger->info(
+        'The file contents for media @media_id were overwritten with Collabora.<br>
+Save reason: @reason<br>
+File: @file_id / @file_uri<br>
+User ID: @user_id',
+        [
+          '@media_id' => $media->id(),
+          '@reason' => $save_reason,
+          '@file_id' => $file->id(),
+          '@file_uri' => $file->getFileUri(),
+          '@user_id' => $user->id(),
+        ],
+      );
+
+      return new JsonResponse(
+        [
+          'LastModifiedTime' => DateTimeHelper::format($file->getChangedTime()),
+        ],
+        Response::HTTP_OK,
+        ['content-type' => 'application/json'],
+      );
+    }
+
+    $new_file = $this->createNewFileEntity($file, $new_file_content);
 
     $this->mediaHelper->setMediaSource($media, $new_file);
     $media->setRevisionUser($user);
-    $media->setRevisionCreationTime($this->time->getRequestTime());
+    $media->setRevisionCreationTime($request_time);
     $media->setRevisionLogMessage($save_reason);
     $media->save();
 
@@ -162,7 +201,8 @@ class WopiController implements ContainerInjectionInterface {
       'Media entity @media_id was updated with Collabora.<br>
 Save reason: @reason<br>
 Old file: @old_file_id / @old_file_uri<br>
-New file: @new_file_id / @new_file_uri',
+New file: @new_file_id / @new_file_uri<br>
+User ID: @user_id',
       [
         '@media_id' => $media->id(),
         '@reason' => $save_reason,
@@ -170,6 +210,7 @@ New file: @new_file_id / @new_file_uri',
         '@old_file_uri' => $file->getFileUri(),
         '@new_file_id' => $new_file->id(),
         '@new_file_uri' => $new_file->getFileUri(),
+        '@user_id' => $user->id(),
       ],
     );
 
@@ -336,7 +377,7 @@ New file: @new_file_id / @new_file_uri',
 
     switch ($action) {
       case 'info':
-        return $this->wopiCheckFileInfo($media, $file, $user, $can_write);
+        return $this->wopiCheckFileInfo($file, $user, $can_write);
 
       case 'content':
         return $this->wopiGetFile($file);
