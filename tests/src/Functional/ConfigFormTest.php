@@ -60,7 +60,7 @@ class ConfigFormTest extends BrowserTestBase {
     $assert_session->fieldValueEquals('WOPI host URL', 'https://localhost/');
     $assert_session->fieldValueEquals('JWT private key', '');
     $assert_session->fieldValueEquals('Access Token Expiration', '86400');
-    $assert_session->fieldValueEquals('Create new file on save after…', '0');
+    $assert_session->fieldValueEquals('Create new file on save after…', '60');
     $assert_session->checkboxNotChecked('Disable TLS certificate check for COOL.');
     $assert_session->checkboxChecked('Verify proof header and timestamp in incoming WOPI requests.');
     $assert_session->checkboxChecked('Allow COOL to use fullscreen mode.');
