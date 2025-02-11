@@ -22,3 +22,12 @@ function collabora_online_post_update_add_wopi_proof_setting(): void {
   $config->set('cool', $cool_settings);
   $config->save();
 }
+
+/**
+ * Sets an initial value for the new 'new_file_interval' setting.
+ */
+function collabora_online_post_update_add_new_file_interval(): void {
+  \Drupal::configFactory()->getEditable('collabora_online.settings')
+    ->set('cool.new_file_interval', 60)
+    ->save();
+}

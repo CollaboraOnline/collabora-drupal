@@ -14,4 +14,4 @@ cool:
   # Allow fullscreen - Enabled by default for functionality.
   allowfullscreen: true
   # New file interval on save.
-  new_file_interval: 0
+  new_file_interval: 60
