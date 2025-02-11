@@ -46,7 +46,9 @@ class MediaHelper implements MediaHelperInterface {
    * {@inheritdoc}
    */
   public function setMediaSource(MediaInterface $media, FileInterface $file): void {
-    $field_name = $media->getSource()->getSourceFieldDefinition($media->bundle->entity)->getName();
+    // @phpstan-ignore property.notFound
+    $media_type = $media->bundle->entity;
+    $field_name = $media->getSource()->getSourceFieldDefinition($media_type)->getName();
     $media->set($field_name, $file);
   }
 
