@@ -17,6 +17,12 @@ function postMessage(msg) {
 
 function postReady() {
   postMessage({ MessageId: 'Host_PostmessageReady' });
+  postMessage({
+    MessageId: 'Hide_Button',
+    Values: {
+      id: 'renamedocument'
+    }
+  });
 }
 
 function receiveMessage(hasCloseButton, event) {

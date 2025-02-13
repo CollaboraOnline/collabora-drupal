@@ -67,6 +67,7 @@ class WopiControllerTest extends WopiControllerTestBase {
       'UserCanWrite' => FALSE,
       'IsAdminUser' => FALSE,
       'IsAnonymousUser' => FALSE,
+      'SupportsRename' => FALSE,
     ];
 
     $request = $this->createRequest();
