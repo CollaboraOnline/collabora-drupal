@@ -75,7 +75,18 @@ class CollaboraIntegrationTest extends ExistingSiteSelenium2DriverTestBase {
     // Verify the edit mode.
     // The button is always present when in edit mode, but it is only
     // visible on a mobile / touch device.
-    $this->assertWaitForElement('#mobile-edit-button');
+    $this->assertWaitForElement('#mobile-edit-button')->click();
+
+    // Txt files have no format so we must accept the dialog informing about no
+    // supported format.
+    $assert_session = $this->assertSession();
+    $assert_session->pageTextContains('This document may contain formatting or content that cannot be saved in the current file format.');
+    $assert_session->buttonExists('Continue editing')->click();
+
+    // Switch to 'File' menu where 'Rename' button should be.
+    $assert_session->buttonExists('File')->click();
+    // Button actually exists, but is not visible.
+    $this->assertFalse($assert_session->buttonExists('Rename')->isVisible());
   }
 
   /**
