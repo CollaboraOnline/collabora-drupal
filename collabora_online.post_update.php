@@ -31,3 +31,12 @@ function collabora_online_post_update_add_new_file_interval(): void {
     ->set('cool.new_file_interval', 60)
     ->save();
 }
+
+/**
+ * Sets an initial value for the new 'discovery_cache_ttl' setting.
+ */
+function collabora_online_post_update_add_discovery_cache_ttl(): void {
+  \Drupal::configFactory()->getEditable('collabora_online.settings')
+    ->set('cool.discovery_cache_ttl', 3600)
+    ->save();
+}
