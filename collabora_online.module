@@ -148,8 +148,8 @@ function collabora_online_media_access(MediaInterface $media, string $operation,
         $access_result = AccessResult::allowed();
       }
       else {
-        $access_result = AccessResult::neutral()
-          ->setReason("The user has the '$preview_own_permission' permission, but is not the owner of the media item.");
+        $access_result = AccessResult::neutral();
+        $access_result->setReason("The user has the '$preview_own_permission' permission, but is not the owner of the media item.");
       }
       return $access_result
         ->cachePerUser()
@@ -168,8 +168,8 @@ function collabora_online_media_access(MediaInterface $media, string $operation,
       // Use '==' because Drupal sometimes loads integers as strings.
       $is_owner = ($account->id() && $account->id() == $media->getOwnerId());
       if (!$is_owner) {
-        $access_result = AccessResult::neutral()
-          ->setReason("The user has the '$edit_own_permission' permission, but is not the owner of the media item.");
+        $access_result = AccessResult::neutral();
+        $access_result->setReason("The user has the '$edit_own_permission' permission, but is not the owner of the media item.");
       }
       else {
         $access_result = AccessResult::allowed();
