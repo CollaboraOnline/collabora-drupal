@@ -165,7 +165,7 @@ class DiscoveryFetcherTest extends KernelTestBase {
     $this->assertNotFalse($cache_record);
     $this->assertSame(12345, $cache_record->expire - $cache_record->created);
 
-    $this->mockRequestTime = $this->mockRequestTime->add(new \DateInterval('PT12330S'));
+    $this->mockRequestTime = $this->mockRequestTime->add(\DateInterval::createFromDateString('12330 seconds'));
 
     $this->assertSame(12330, $this->mockRequestTime->getTimestamp() - $cache_record->created);
     $this->assertNotFalse($load_cache());
@@ -173,7 +173,7 @@ class DiscoveryFetcherTest extends KernelTestBase {
     $fetcher->getDiscovery();
     $this->assertCount(3, $this->httpClientGetCalls);
 
-    $this->mockRequestTime = $this->mockRequestTime->add(new \DateInterval('PT30S'));
+    $this->mockRequestTime = $this->mockRequestTime->add(\DateInterval::createFromDateString('30 seconds'));
 
     $this->assertFalse($load_cache());
     $this->assertSame(12360, $this->mockRequestTime->getTimestamp() - $cache_record->created);
