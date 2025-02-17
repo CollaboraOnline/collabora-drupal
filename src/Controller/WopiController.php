@@ -286,7 +286,7 @@ User ID: @user_id',
       return NULL;
     }
     $wopi_datetime = \DateTimeImmutable::createFromFormat(\DateTimeInterface::ATOM, $wopi_time_atom);
-    $file_datetime = \DateTimeImmutable::createFromFormat('U', $file->getChangedTime());
+    $file_datetime = \DateTimeImmutable::createFromFormat('U', (string) $file->getChangedTime());
 
     if ($wopi_datetime == $file_datetime) {
       return NULL;
