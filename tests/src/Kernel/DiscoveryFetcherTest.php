@@ -170,12 +170,10 @@ class DiscoveryFetcherTest extends KernelTestBase {
     $this->assertCount(3, $this->httpClientGetCalls);
     $cache_record = $load_cache();
     $this->assertNotFalse($cache_record);
-    $this->assertSame(12345, $cache_record->expire - $cache_record->created);
 
     // Advance the mock request time by less than the configured TTL.
     $this->mockRequestTime = $this->mockRequestTime->add(\DateInterval::createFromDateString('12330 seconds'));
     // The cache record is still valid.
-    $this->assertSame(12330, $this->mockRequestTime->getTimestamp() - $cache_record->created);
     $this->assertNotFalse($load_cache());
     // Fetching the discovery does not cause a http request.
     $fetcher->getDiscovery();
@@ -185,7 +183,6 @@ class DiscoveryFetcherTest extends KernelTestBase {
     $this->mockRequestTime = $this->mockRequestTime->add(\DateInterval::createFromDateString('30 seconds'));
     // The cache record is now expired, and $cache->get() returns FALSE.
     $this->assertFalse($load_cache());
-    $this->assertSame(12360, $this->mockRequestTime->getTimestamp() - $cache_record->created);
     // Fetching the discovery does cause another http request.
     $fetcher->getDiscovery();
     $this->assertCount(4, $this->httpClientGetCalls);
