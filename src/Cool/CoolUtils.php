@@ -12,7 +12,7 @@
 
 namespace Drupal\collabora_online\Cool;
 
-use Drupal\file\Entity\File;
+use Drupal\file\FileInterface;
 
 /**
  * Class with various static methods.
@@ -33,14 +33,14 @@ class CoolUtils {
    *
    * There are few types that Collabora Online only views.
    *
-   * @param \Drupal\file\Entity\File $file
+   * @param \Drupal\file\FileInterface $file
    *   File entity.
    *
    * @return bool
    *   TRUE if the file has a file type that is supported for editing.
    *   FALSE if the file can only be opened as read-only.
    */
-  public static function canEdit(File $file) {
+  public static function canEdit(FileInterface $file) {
     $mimetype = $file->getMimeType();
     return !array_key_exists($mimetype, static::READ_ONLY);
   }
