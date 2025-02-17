@@ -67,7 +67,7 @@ class CollaboraIntegrationTest extends ExistingSiteSelenium2DriverTestBase {
       'Shopping list',
       'shopping-list',
       'Chocolate, pickles',
-      'odt'
+      'odt',
     );
 
     $this->drupalGet('/cool/edit/' . $media->id());
