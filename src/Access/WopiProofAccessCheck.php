@@ -176,7 +176,7 @@ class WopiProofAccessCheck implements AccessInterface {
     // This class is not responsible for checking the expiration, but it still
     // needs the WOPI timestamp to build the message for the signature.
     $timestamp_ticks = $request->headers->get('X-WOPI-Timestamp');
-    $token = $request->query->get('access_token', '');
+    $token = (string) $request->query->get('access_token', '');
     $url = $request->getUri();
     return sprintf(
       '%s%s%s%s%s%s',
