@@ -10,8 +10,8 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
-use Drupal\collabora_online\Cool\CoolUtils;
 use Drupal\collabora_online\CollaboraUrl;
+use Drupal\collabora_online\Cool\CoolUtils;
 use Drupal\collabora_online\MediaHelperInterface;
 use Drupal\Core\Access\AccessResult;
 use Drupal\Core\Access\AccessResultInterface;
