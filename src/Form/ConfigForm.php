@@ -71,8 +71,6 @@ If the proof check is enabled (see below), and Collabora is configured to period
       ),
       '#field_suffix' => $this->t('seconds'),
       '#default_value' => $cool_settings['discovery_cache_ttl'] ?? 3600,
-      // Do not allow a TTL of -1 (forever).
-      // The cache needs to be refreshed periodically for the proof key to work.
       '#min' => 0,
       '#required' => TRUE,
     ];
