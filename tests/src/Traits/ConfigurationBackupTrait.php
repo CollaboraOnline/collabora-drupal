@@ -1,16 +1,17 @@
 <?php
 
 /*
- * Copyright the Collabora Online contributors.
+ * This code is mostly copied from the 'openeuropa/oe_showcase' package, which
+ * is authored by the OpenEuropa team, and published under the EUPL-1.2 license.
+ *
+ * It is re-licensed under the MPL license, as permitted in the compatibilty
+ * clause of the EUPL.
  *
  * SPDX-License-Identifier: MPL-2.0
  *
  * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
- *
- * Most of this code is copied from openeuropa/oe_showcase, which is published
- * under the EUPL license.
  */
 
 declare(strict_types=1);
