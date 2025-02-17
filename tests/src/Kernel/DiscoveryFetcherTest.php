@@ -136,8 +136,10 @@ class DiscoveryFetcherTest extends KernelTestBase {
   public function testGetDiscoveryIsCached(): void {
     $fetcher = $this->getFetcher();
     $load_cache = fn () => \Drupal::cache()->get(CollaboraDiscoveryFetcher::DEFAULT_CID);
+    // Initially the cache is cold.
     $this->assertFalse($load_cache());
 
+    // Fetching the discovery causes a http request, and creates a cache record.
     $fetcher->getDiscovery();
     $this->assertCount(1, $this->httpClientGetCalls);
 
@@ -145,9 +147,12 @@ class DiscoveryFetcherTest extends KernelTestBase {
     $this->assertNotFalse($cache_record);
     $this->assertSame(['config:collabora_online.settings'], $cache_record->tags);
 
+    // Repeatedly fetching the discovery does not cause further http requests.
     $fetcher->getDiscovery();
     $this->assertCount(1, $this->httpClientGetCalls);
 
+    // After invalidating the cache tag, fetching the discovery causes a new
+    // http request.
     /** @var \Drupal\Core\Cache\CacheTagsInvalidatorInterface $invalidator */
     $invalidator = \Drupal::service(CacheTagsInvalidatorInterface::class);
     $invalidator->invalidateTags(['config:collabora_online.settings']);
@@ -155,6 +160,8 @@ class DiscoveryFetcherTest extends KernelTestBase {
     $fetcher->getDiscovery();
     $this->assertCount(2, $this->httpClientGetCalls);
 
+    // Set an arbitrary TTL for the discovery cache.
+    // This configuration change invalidates the cache record.
     $this->config('collabora_online.settings')
       ->set('cool.discovery_cache_ttl', 12345)
       ->save();
@@ -165,23 +172,26 @@ class DiscoveryFetcherTest extends KernelTestBase {
     $this->assertNotFalse($cache_record);
     $this->assertSame(12345, $cache_record->expire - $cache_record->created);
 
+    // Advance the mock request time by less than the configured TTL.
     $this->mockRequestTime = $this->mockRequestTime->add(\DateInterval::createFromDateString('12330 seconds'));
-
+    // The cache record is still valid.
     $this->assertSame(12330, $this->mockRequestTime->getTimestamp() - $cache_record->created);
     $this->assertNotFalse($load_cache());
-
+    // Fetching the discovery does not cause a http request.
     $fetcher->getDiscovery();
     $this->assertCount(3, $this->httpClientGetCalls);
 
+    // Advance the mock request time beyond the cache record's expiration time.
     $this->mockRequestTime = $this->mockRequestTime->add(\DateInterval::createFromDateString('30 seconds'));
-
+    // The cache record is now expired, and $cache->get() returns FALSE.
     $this->assertFalse($load_cache());
     $this->assertSame(12360, $this->mockRequestTime->getTimestamp() - $cache_record->created);
-
+    // Fetching the discovery does cause another http request.
     $fetcher->getDiscovery();
     $this->assertCount(4, $this->httpClientGetCalls);
 
     // Set TTL = 0 for no cache, always refresh.
+    // Each further fetching of the discovery will cause another http request.
     $this->config('collabora_online.settings')
       ->set('cool.discovery_cache_ttl', 0)
       ->save();
