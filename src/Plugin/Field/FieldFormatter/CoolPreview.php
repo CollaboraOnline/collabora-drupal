@@ -17,6 +17,7 @@ namespace Drupal\collabora_online\Plugin\Field\FieldFormatter;
 use Drupal\collabora_online\CollaboraUrl;
 use Drupal\Core\Cache\CacheableMetadata;
 use Drupal\Core\Field\Attribute\FieldFormatter;
+use Drupal\Core\Field\EntityReferenceFieldItemListInterface;
 use Drupal\Core\Field\FieldDefinitionInterface;
 use Drupal\Core\Field\FieldItemListInterface;
 use Drupal\Core\Field\Plugin\Field\FieldFormatter\EntityReferenceFormatterBase;
@@ -59,6 +60,7 @@ class CoolPreview extends EntityReferenceFormatterBase {
    * {@inheritdoc}
    */
   public function viewElements(FieldItemListInterface $items, $langcode): array {
+    assert($items instanceof EntityReferenceFieldItemListInterface);
     $elements = [];
     /** @var \Drupal\media\MediaInterface $media */
     $media = $items->getEntity();
