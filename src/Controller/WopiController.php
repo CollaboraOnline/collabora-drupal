@@ -251,7 +251,7 @@ User ID: @user_id',
       FileExists::Rename,
     );
 
-    /** @var \Drupal\file\FileInterface|null $new_file */
+    /** @var \Drupal\file\FileInterface $new_file */
     $new_file = $this->entityTypeManager->getStorage('file')->create([
       'uri' => $new_file_uri,
     ]);
