@@ -12,8 +12,6 @@
 
 namespace Drupal\collabora_online\Cool;
 
-use Drupal\file\FileInterface;
-
 /**
  * Class with various static methods.
  */
@@ -29,19 +27,16 @@ class CoolUtils {
   ];
 
   /**
-   * Determines if we can edit that media file.
+   * Determines if a MIME type is supported for editing.
    *
-   * There are few types that Collabora Online only views.
-   *
-   * @param \Drupal\file\FileInterface $file
-   *   File entity.
+   * @param string $mimetype
+   *   File MIME type.
    *
    * @return bool
-   *   TRUE if the file has a file type that is supported for editing.
-   *   FALSE if the file can only be opened as read-only.
+   *   TRUE if the MIME type is supported for editing.
+   *   FALSE if the MIME type can only be opened as read-only.
    */
-  public static function canEdit(FileInterface $file) {
-    $mimetype = $file->getMimeType();
+  public static function canEditMimeType(string $mimetype) {
     return !array_key_exists($mimetype, static::READ_ONLY);
   }
 
