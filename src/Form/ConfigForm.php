@@ -62,10 +62,8 @@ E.g. 'https://collabora.example.com' or 'http://localhost:9980/'.",
     $form['discovery_cache_ttl'] = [
       '#type' => 'number',
       '#title' => $this->t('Discovery cache TTL'),
-      // Microsoft recommends 12-24 hours for this cache.
       '#description' => $this->t(
         "Duration after which the cached discovery.xml needs to be refreshed.<br>
-A typical value would be 12 or 24 hours.<br>
 A value of 0 effectively disables this cache.<br>
 If the proof check is enabled (see below), and Collabora is configured to periodically change the proof keys, then this cache TTL must be shorter than the proof key duration.",
       ),
