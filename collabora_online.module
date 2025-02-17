@@ -81,15 +81,17 @@ function collabora_online_theme($existing, $type, $theme, $path) {
  * open the viewer/editor directly.
  */
 function collabora_online_entity_operation(EntityInterface $entity) {
-  if (($entity->getEntityTypeId() !== 'media') ||
-    ($entity->getSource()->getPluginId() !== 'file')) {
+  if ($entity->getEntityTypeId() !== 'media') {
     return [];
   }
 
   /** @var \Drupal\media\MediaInterface $media */
   $media = $entity;
 
-  if (!$media->access('preview in collabora')) {
+  if (
+    $media->getSource()->getPluginId() !== 'file' ||
+    !$media->access('preview in collabora')
+  ) {
     return [];
   }
 
