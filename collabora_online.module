@@ -111,7 +111,10 @@ function collabora_online_entity_operation(EntityInterface $entity): array {
     ],
   ];
 
-  if (CoolUtils::canEdit($file) && $media->access('edit in collabora')) {
+  if (
+    CoolUtils::canEdit($file) &&
+    $media->access('edit in collabora')
+  ) {
     $entries['collabora_online_edit'] = [
       'title' => t("Edit in Collabora Online"),
       'weight' => 50,
