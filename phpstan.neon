@@ -1,5 +1,5 @@
 parameters:
-  level: 5
+  level: 6
   treatPhpDocTypesAsCertain: false
   paths:
     - .
@@ -11,3 +11,6 @@ parameters:
   ignoreErrors:
     # Allow 'new static()', which is common and accepted in Drupal.
     - "#^Unsafe usage of new static\\(\\).$#"
+    # Allow to omit `<mixed>` as iterable or generic type qualifier.
+    - identifier: missingType.iterableValue
+    - identifier: missingType.generics
