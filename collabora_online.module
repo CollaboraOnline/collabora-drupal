@@ -112,7 +112,7 @@ function collabora_online_entity_operation(EntityInterface $entity): array {
   ];
 
   if (
-    CoolUtils::canEdit($file) &&
+    CoolUtils::canEditMimeType($type) &&
     $media->access('edit in collabora')
   ) {
     $entries['collabora_online_edit'] = [
