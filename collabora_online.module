@@ -33,7 +33,6 @@ use Drupal\media\MediaInterface;
  * 'drush cc theme-registry' and 'drush cc router'.
  */
 function collabora_online_theme() {
-
   return [
     'collabora_online' => [
       'render element' => 'children',
