@@ -32,7 +32,7 @@ use Drupal\media\MediaInterface;
  * If you change this method, clear theme registry and routing table
  * 'drush cc theme-registry' and 'drush cc router'.
  */
-function collabora_online_theme($existing, $type, $theme, $path) {
+function collabora_online_theme() {
 
   return [
     'collabora_online' => [
