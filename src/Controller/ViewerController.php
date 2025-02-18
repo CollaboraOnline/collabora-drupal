@@ -143,6 +143,7 @@ class ViewerController implements ContainerInjectionInterface {
    *   The key to use by Collabora is empty or not configured.
    */
   protected function getViewerRender(MediaInterface $media, string $wopi_client, bool $can_write): array {
+    /** @var array $cool_settings */
     $cool_settings = $this->configFactory->get('collabora_online.settings')->get('cool');
 
     if (empty($cool_settings['wopi_base'])) {
@@ -187,6 +188,7 @@ class ViewerController implements ContainerInjectionInterface {
    *   Expiration timestamp in seconds, with millisecond accuracy.
    */
   protected function getExpireTimestamp(): float {
+    /** @var array $cool_settings */
     $cool_settings = $this->configFactory->get('collabora_online.settings')->get('cool');
     $ttl_seconds = $cool_settings['access_token_ttl'] ?? 0;
     // Set a fallback of 24 hours.
