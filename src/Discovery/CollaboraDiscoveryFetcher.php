@@ -100,6 +100,7 @@ class CollaboraDiscoveryFetcher implements CollaboraDiscoveryFetcherInterface {
   protected function getDiscoveryXml(): string {
     $cached = $this->cache->get($this->cid);
     if ($cached) {
+      assert(is_string($cached->data));
       return $cached->data;
     }
     $config = $this->configFactory->get('collabora_online.settings');
