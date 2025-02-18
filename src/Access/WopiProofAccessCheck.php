@@ -61,7 +61,7 @@ class WopiProofAccessCheck implements AccessInterface {
    */
   public function access(Request $request): AccessResultInterface {
     $config = $this->configFactory->get('collabora_online.settings');
-    if (!($config->get('cool')['wopi_proof'] ?? TRUE)) {
+    if (!($config->get('cool.wopi_proof') ?? TRUE)) {
       return AccessResult::allowed()
         ->addCacheableDependency($config);
     }
