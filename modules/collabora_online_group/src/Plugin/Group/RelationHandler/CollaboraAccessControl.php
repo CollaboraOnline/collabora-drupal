@@ -57,6 +57,7 @@ class CollaboraAccessControl extends AccessControl {
       }
     }
 
+    assert($this->parent !== NULL);
     return $this->parent->entityAccess($entity, $operation, $account, $return_as_object);
   }
 
