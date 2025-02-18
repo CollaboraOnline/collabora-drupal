@@ -71,6 +71,7 @@ class CollaboraDiscoveryFetcher implements CollaboraDiscoveryFetcherInterface {
       // Avoid errors from XML parsing hitting the regular error handler.
       // An alternative would be libxml_use_internal_errors(), but then we would
       // have to deal with the results from libxml_get_errors().
+      /** @var \SimpleXMLElement|false $parsed_xml */
       $parsed_xml = ErrorHandler::call(
         fn () => simplexml_load_string($xml),
       );
