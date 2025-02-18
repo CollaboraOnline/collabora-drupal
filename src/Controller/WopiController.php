@@ -365,6 +365,10 @@ User ID: @user_id',
     if ($token === NULL) {
       throw new AccessDeniedHttpException('Missing access token.');
     }
+    if (!is_string($token)) {
+      // A malformed request could have a non-string value for access_token.
+      throw new AccessDeniedHttpException(sprintf('Expected a string access token, found %s.', gettype($token)));
+    }
     $jwt_payload = $this->verifyTokenForMedia($token, $media);
 
     /** @var \Drupal\user\UserInterface|null $user */
