@@ -179,6 +179,7 @@ class CollaboraDiscoveryFetcher implements CollaboraDiscoveryFetcherInterface {
    *   The WOPI server url is misconfigured.
    */
   protected function getDiscoveryUrl(ImmutableConfig $config): string {
+    /** @var string $wopi_client_server */
     $wopi_client_server = $config->get('cool.server');
     if (!$wopi_client_server) {
       throw new CollaboraNotAvailableException('The configured Collabora Online server address is empty.');
