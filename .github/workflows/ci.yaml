@@ -72,6 +72,10 @@ jobs:
         run: |
           docker-compose exec -T web ./vendor/bin/phpcs -s
 
+      - name: PhpStan
+        run: |
+          docker-compose exec -T web ./vendor/bin/phpstan -v
+
       - name: Drupal site install
         run: |
           docker-compose exec -T web ./vendor/bin/run drupal:site-install
