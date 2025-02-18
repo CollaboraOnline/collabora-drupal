@@ -26,6 +26,7 @@ function collabora_online_requirements(string $phase): array {
   }
 
   // The Collabora Online settings key is set.
+  /** @var array $cool_settings */
   $cool_settings = \Drupal::configFactory()->get('collabora_online.settings')->get('cool');
   if (
     empty($cool_settings['key_id']) ||

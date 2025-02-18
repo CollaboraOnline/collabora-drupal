@@ -45,6 +45,7 @@ class ConfigForm extends ConfigFormBase {
    */
   public function buildForm(array $form, FormStateInterface $form_state): array {
     $config = $this->config(static::SETTINGS);
+    /** @var array $cool_settings */
     $cool_settings = $config->get('cool');
 
     $form['server'] = [
