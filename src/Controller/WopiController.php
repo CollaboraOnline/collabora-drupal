@@ -259,9 +259,8 @@ User ID: @user_id',
     $new_file = $this->entityTypeManager->getStorage('file')->create([
       'uri' => $new_file_uri,
     ]);
-    // The user id field always exists for files.
-    // If no owner is set, it will be 0 or '0', but not NULL.
-    assert($file->getOwnerId() !== NULL);
+    // Parameter and return docs on entity owner methods are inconsistent.
+    // @phpstan-ignore argument.type
     $new_file->setOwnerId($file->getOwnerId());
     // Preserve the original file name, no matter the uri was renamed.
     $new_file->setFilename($file->getFilename());
