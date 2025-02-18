@@ -39,10 +39,9 @@ class JwtTranscoder extends JwtTranscoderBase {
    * {@inheritdoc}
    */
   protected function getKey(): string {
-    /** @var array $cool_settings */
-    $cool_settings = $this->configFactory->get('collabora_online.settings')->get('cool');
     /** @var string $key_id */
-    $key_id = $cool_settings['key_id'] ?? '';
+    $key_id = $this->configFactory->get('collabora_online.settings')
+      ->get('cool.key_id') ?? '';
     if (!$key_id) {
       throw new CollaboraJwtKeyException('No key was chosen for use in Collabora.');
     }
