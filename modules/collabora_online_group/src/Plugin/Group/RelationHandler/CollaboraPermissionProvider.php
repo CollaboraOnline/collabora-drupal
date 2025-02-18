@@ -25,6 +25,7 @@ class CollaboraPermissionProvider extends GroupMediaPermissionProvider {
    * {@inheritdoc}
    */
   public function buildPermissions(): array {
+    assert($this->parent !== NULL);
     $permissions = $this->parent->buildPermissions();
 
     /* @see \Drupal\group\Plugin\Group\RelationHandlerDefault\PermissionProvider::buildPermissions() */
@@ -77,6 +78,7 @@ class CollaboraPermissionProvider extends GroupMediaPermissionProvider {
       }
     }
 
+    assert($this->parent !== NULL);
     return $this->parent->getPermission($operation, $target, $scope);
   }
 
