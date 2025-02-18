@@ -75,6 +75,7 @@ class WopiController implements ContainerInjectionInterface {
    *   The response with file contents.
    */
   protected function wopiCheckFileInfo(FileInterface $file, UserInterface $user, bool $can_write): Response {
+    assert($file->getChangedTime() !== NULL);
     $response_data = [
       'BaseFileName' => $file->getFilename(),
       'Size' => $file->getSize(),
@@ -111,6 +112,7 @@ class WopiController implements ContainerInjectionInterface {
    * @see \Drupal\system\FileDownloadController::download()
    */
   protected function wopiGetFile(FileInterface $file): Response {
+    assert($file->getFileUri() !== NULL);
     if (!is_file($file->getFileUri())) {
       throw new NotFoundHttpException('The file is missing in the file system.');
     }
@@ -158,6 +160,7 @@ class WopiController implements ContainerInjectionInterface {
       $request_time - $file->getCreatedTime() <= $new_file_interval
     ) {
       // Replace file with new content.
+      assert($file->getFileUri() !== NULL);
       $this->fileSystem->saveData(
         $new_file_content,
         $file->getFileUri(),
@@ -181,6 +184,7 @@ User ID: @user_id',
         ],
       );
 
+      assert($file->getChangedTime() !== NULL);
       return new JsonResponse(
         [
           'LastModifiedTime' => DateTimeHelper::format($file->getChangedTime()),
@@ -215,6 +219,7 @@ User ID: @user_id',
       ],
     );
 
+    assert($new_file->getChangedTime() !== NULL);
     return new JsonResponse(
       [
         'LastModifiedTime' => DateTimeHelper::format($new_file->getChangedTime()),
@@ -237,6 +242,7 @@ User ID: @user_id',
    *   This may have a different uri, but will have the same filename.
    */
   protected function createNewFileEntity(FileInterface $file, string $new_file_content): FileInterface {
+    assert($file->getFileUri() !== NULL);
     // The current file uri may have a number suffix like "_0".
     // For the new file uri, start with the clean file name, to avoid repeated
     // suffixes like "_0_0_0".
@@ -253,6 +259,9 @@ User ID: @user_id',
     $new_file = $this->entityTypeManager->getStorage('file')->create([
       'uri' => $new_file_uri,
     ]);
+    // The user id field always exists for files.
+    // If no owner is set, it will be 0 or '0', but not NULL.
+    assert($file->getOwnerId() !== NULL);
     $new_file->setOwnerId($file->getOwnerId());
     // Preserve the original file name, no matter the uri was renamed.
     $new_file->setFilename($file->getFilename());
