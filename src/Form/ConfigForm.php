@@ -59,6 +59,20 @@ E.g. 'https://collabora.example.com' or 'http://localhost:9980/'.",
       '#required' => TRUE,
     ];
 
+    $form['discovery_cache_ttl'] = [
+      '#type' => 'number',
+      '#title' => $this->t('Discovery cache TTL'),
+      '#description' => $this->t(
+        "Duration after which the cached discovery.xml needs to be refreshed.<br>
+A value of 0 effectively disables this cache.<br>
+If the proof check is enabled (see below), and Collabora is configured to periodically change the proof keys, then this cache TTL must be shorter than the proof key duration.",
+      ),
+      '#field_suffix' => $this->t('seconds'),
+      '#default_value' => $cool_settings['discovery_cache_ttl'] ?? 3600,
+      '#min' => 0,
+      '#required' => TRUE,
+    ];
+
     $form['wopi_base'] = [
       '#type' => 'url',
       '#title' => $this->t('WOPI host URL'),
@@ -130,6 +144,7 @@ This applies equally to autosave, the editor\'s save button, and the close butto
   public function submitForm(array &$form, FormStateInterface $form_state): void {
     $this->config(static::SETTINGS)
       ->set('cool.server', $form_state->getValue('server'))
+      ->set('cool.discovery_cache_ttl', $form_state->getValue('discovery_cache_ttl'))
       ->set('cool.wopi_base', $form_state->getValue('wopi_base'))
       ->set('cool.key_id', $form_state->getValue('key_id'))
       ->set('cool.access_token_ttl', $form_state->getValue('access_token_ttl'))
