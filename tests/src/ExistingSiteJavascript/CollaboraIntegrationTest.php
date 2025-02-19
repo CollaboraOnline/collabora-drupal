@@ -63,19 +63,30 @@ class CollaboraIntegrationTest extends ExistingSiteSelenium2DriverTestBase {
       'administer media',
     ]);
     $this->drupalLogin($user);
-    $media = $this->createDocumentMedia('Shopping list', 'shopping-list', 'Chocolate, pickles');
+    $media = $this->createDocumentMedia(
+      'Shopping list',
+      'shopping-list',
+      'Chocolate, pickles',
+      'odt',
+    );
 
     $this->drupalGet('/cool/edit/' . $media->id());
 
     $this->getSession()->switchToIFrame('collabora-online-viewer');
     $this->assertCollaboraDocumentCanvas();
-    $this->assertCollaboraDocumentName('shopping-list.txt');
+    $this->assertCollaboraDocumentName('shopping-list.odt');
     $this->assertCollaboraWordCountString('2 words, 18 characters');
 
     // Verify the edit mode.
     // The button is always present when in edit mode, but it is only
     // visible on a mobile / touch device.
     $this->assertWaitForElement('#mobile-edit-button');
+
+    // Switch to 'File' menu where 'Rename' button should be.
+    $assert_session = $this->assertSession();
+    $assert_session->buttonExists('File')->click();
+    // Button actually exists, but is not visible.
+    $this->assertFalse($assert_session->buttonExists('Rename')->isVisible());
   }
 
   /**
@@ -135,22 +146,22 @@ class CollaboraIntegrationTest extends ExistingSiteSelenium2DriverTestBase {
   }
 
   /**
-   * Creates a media entity with an attached *.txt file.
-   *
-   * The *.txt format is enough to test the basic functionality.
+   * Creates a media entity with an attached file.
    *
    * @param string $media_name
    *   Media label.
    * @param string $file_basename
    *   File name without the extension.
    * @param string $text_content
-   *   Content for the attached *.txt file.
+   *   Content for the attached file.
+   * @param string $file_extension
+   *   The extension for the attached file.
    *
    * @return \Drupal\media\MediaInterface
    *   New media entity.
    */
-  protected function createDocumentMedia(string $media_name, string $file_basename, string $text_content): MediaInterface {
-    $file_uri = 'public://' . $file_basename . '.txt';
+  protected function createDocumentMedia(string $media_name, string $file_basename, string $text_content, string $file_extension = 'txt'): MediaInterface {
+    $file_uri = 'public://' . $file_basename . '.' . $file_extension;
     file_put_contents($file_uri, $text_content);
     $file = File::create([
       'uri' => $file_uri,

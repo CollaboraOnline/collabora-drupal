@@ -84,6 +84,8 @@ class WopiController implements ContainerInjectionInterface {
       'UserCanWrite' => $can_write,
       'IsAdminUser' => $user->hasPermission('administer collabora instance'),
       'IsAnonymousUser' => $user->isAnonymous(),
+      // We don't support file renaming for the moment.
+      'SupportsRename' => FALSE,
     ];
 
     $user_picture = $user->user_picture?->entity;
