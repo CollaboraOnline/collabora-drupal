@@ -1,6 +1,9 @@
 cool:
   # The address of the COOL server.
   server: https://localhost:9980/
+  # Cache the discovery.xml for 1h by default.
+  # This assumes that a new proof key is generated once per hour or less.
+  discovery_cache_ttl: 3600
   # The WOPI base
   wopi_base: https://localhost/
   # The JWT key id.
