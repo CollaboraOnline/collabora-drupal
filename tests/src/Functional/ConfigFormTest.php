@@ -149,8 +149,7 @@ class ConfigFormTest extends BrowserTestBase {
     $assert_session->fieldExists('Access Token Expiration')->setValue('text');
     $assert_session->fieldExists('Create new file on save after…')->setValue('text');
     $assert_session->buttonExists('Save configuration')->press();
-    $assert_session->statusMessageContains('Discovery cache TTL must be higher than or equal to 0.
-', 'error');
+    $assert_session->statusMessageContains('Discovery cache TTL must be higher than or equal to 0.', 'error');
     $assert_session->statusMessageContains('The URL /internal is not valid.', 'error');
     $assert_session->statusMessageContains('The URL any-other-value is not valid.', 'error');
     $assert_session->statusMessageContains('Access Token Expiration must be a number.', 'error');
