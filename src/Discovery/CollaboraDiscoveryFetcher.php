@@ -31,7 +31,7 @@ use Symfony\Component\ErrorHandler\ErrorHandler;
  */
 class CollaboraDiscoveryFetcher implements CollaboraDiscoveryFetcherInterface {
 
-  public const DEFAULT_CID = 'collabora_online.discovery';
+  public const CID = 'collabora_online.discovery';
 
   public function __construct(
     #[Autowire(service: 'logger.channel.collabora_online')]
@@ -40,8 +40,6 @@ class CollaboraDiscoveryFetcher implements CollaboraDiscoveryFetcherInterface {
     protected readonly ClientInterface $httpClient,
     #[Autowire(service: 'cache.default')]
     protected readonly CacheBackendInterface $cache,
-    #[Autowire(value: self::DEFAULT_CID)]
-    protected readonly string $cid,
     protected readonly TimeInterface $time,
   ) {}
 
@@ -98,7 +96,7 @@ class CollaboraDiscoveryFetcher implements CollaboraDiscoveryFetcherInterface {
    *   The client url cannot be retrieved.
    */
   protected function getDiscoveryXml(): string {
-    $cached = $this->cache->get($this->cid);
+    $cached = $this->cache->get(static::CID);
     if ($cached) {
       return $cached->data;
     }
@@ -118,7 +116,7 @@ class CollaboraDiscoveryFetcher implements CollaboraDiscoveryFetcherInterface {
     $expire = $max_age + $this->time->getRequestTime();
 
     $this->cache->set(
-      $this->cid,
+      static::CID,
       $xml,
       $expire,
       $config->getCacheTags(),

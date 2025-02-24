@@ -135,7 +135,7 @@ class DiscoveryFetcherTest extends KernelTestBase {
    */
   public function testGetDiscoveryIsCached(): void {
     $fetcher = $this->getFetcher();
-    $load_cache = fn () => \Drupal::cache()->get(CollaboraDiscoveryFetcher::DEFAULT_CID);
+    $load_cache = fn () => \Drupal::cache()->get(CollaboraDiscoveryFetcher::CID);
     // Initially the cache is cold.
     $this->assertFalse($load_cache());
 
