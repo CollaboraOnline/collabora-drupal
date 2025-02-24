@@ -141,22 +141,15 @@ class RequirementsTest extends CollaboraKernelTestBase {
    */
   protected function createMockHttpClient(string|null &$file = NULL): void {
     $original_client = $this->container->get('http_client');
-    $http_client_get = function (...$args) use (&$file, $original_client) {
-      if ($file === NULL) {
-        return $original_client->get(...$args);
-      }
-      $xml = file_get_contents($file);
-      return new Response(
-        200,
-        [],
-        $xml,
-      );
-    };
     $client = $this->createMock(Client::class);
     $client->method('get')
       ->willReturnCallback(
-        function (...$args) use (&$http_client_get): Response {
-          return $http_client_get(...$args);
+        function (...$args) use (&$file, $original_client): Response {
+          if ($file === NULL) {
+            return $original_client->get(...$args);
+          }
+          $xml = file_get_contents($file);
+          return new Response(200, [], $xml);
         },
       );
     $this->container->set('http_client', $client);
