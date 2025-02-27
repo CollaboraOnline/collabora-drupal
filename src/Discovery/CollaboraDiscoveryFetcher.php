@@ -102,9 +102,7 @@ class CollaboraDiscoveryFetcher implements CollaboraDiscoveryFetcherInterface {
     }
     $config = $this->configFactory->get('collabora_online.settings');
 
-    $disable_checks = (bool) $config->get('cool.disable_cert_check');
-    $discovery_url = $this->getDiscoveryUrl($config);
-    $xml = $this->loadDiscoveryXml($discovery_url, $disable_checks);
+    $xml = $this->loadDiscoveryXml($config);
 
     /** @var non-negative-int $max_age */
     $max_age = $config->get('cool.discovery_cache_ttl') ?? 3600;
@@ -127,10 +125,8 @@ class CollaboraDiscoveryFetcher implements CollaboraDiscoveryFetcherInterface {
   /**
    * Loads the contents of discovery.xml from the Collabora server.
    *
-   * @param string $discovery_url
-   *   Discovery URL.
-   * @param bool $disable_checks
-   *   TRUE to disable SSL checks.
+   * @param \Drupal\Core\Config\ImmutableConfig $config
+   *    Configuration for this module.
    *
    * @return string
    *   The full contents of discovery.xml.
@@ -138,7 +134,10 @@ class CollaboraDiscoveryFetcher implements CollaboraDiscoveryFetcherInterface {
    * @throws \Drupal\collabora_online\Exception\CollaboraNotAvailableException
    *   The client url cannot be retrieved.
    */
-  protected function loadDiscoveryXml(string $discovery_url, bool $disable_checks): string {
+  protected function loadDiscoveryXml(ImmutableConfig $config): string {
+    $config = $this->configFactory->get('collabora_online.settings');
+    $disable_checks = (bool) $config->get('cool.disable_cert_check');
+    $discovery_url = $this->getDiscoveryUrl($config);
     try {
       $response = $this->httpClient->get($discovery_url, [
         RequestOptions::VERIFY => !$disable_checks,
