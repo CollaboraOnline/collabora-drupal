@@ -346,34 +346,4 @@ class DiscoveryFetcherTest extends KernelTestBase {
     return $fetcher;
   }
 
-  /**
-   * Invokes a callback and asserts that it throws an exception.
-   *
-   * @param class-string $class
-   *   Expected exception class.
-   * @param string $message
-   *   Expected exception message.
-   * @param \Closure $callback
-   *   Callback to call.
-   * @param list<mixed> $args
-   *   Arguments to pass to the callback.
-   */
-  protected function assertExceptionWhenCalled(
-    string $class,
-    string $message,
-    \Closure $callback,
-    array $args = [],
-  ): void {
-    try {
-      $callback(...$args);
-      $this->fail('Exception was not thrown.');
-    }
-    catch (\Exception $e) {
-      if (!$e instanceof CollaboraNotAvailableException) {
-        throw $e;
-      }
-      $this->assertSame($message, $e->getMessage());
-    }
-  }
-
 }
