@@ -14,8 +14,8 @@ declare(strict_types=1);
 
 namespace Drupal\Tests\collabora_online\Kernel\Controller;
 
-use Drupal\collabora_online\Discovery\CollaboraDiscoveryFetcherInterface;
-use Drupal\collabora_online\Discovery\CollaboraDiscoveryInterface;
+use Drupal\collabora_online\Discovery\DiscoveryFetcherInterface;
+use Drupal\collabora_online\Discovery\DiscoveryInterface;
 use Drupal\collabora_online\Exception\CollaboraNotAvailableException;
 use Drupal\collabora_online\Jwt\JwtTranscoderInterface;
 use Drupal\Core\Logger\RfcLogLevel;
@@ -39,7 +39,7 @@ class ViewerControllerTest extends WopiControllerTestBase {
   /**
    * Callback to replace CollaboraDiscoveryFetcher->getDiscovery().
    *
-   * @var \Closure(): \Drupal\collabora_online\Discovery\CollaboraDiscoveryInterface
+   * @var \Closure(): \Drupal\collabora_online\Discovery\DiscoveryInterface
    */
   protected \Closure $mockGetDiscovery;
 
@@ -52,14 +52,14 @@ class ViewerControllerTest extends WopiControllerTestBase {
     $this->mockWopiClientUrl = 'http://collabora.test:9980/browser/61cf2b4/cool.html';
 
     // Set a mock discovery with custom proof keys.
-    $mock_discovery = $this->createMock(CollaboraDiscoveryInterface::class);
+    $mock_discovery = $this->createMock(DiscoveryInterface::class);
     $mock_discovery->method('getWopiClientURL')
       ->willReturnCallback(fn () => $this->mockWopiClientUrl);
     $this->mockGetDiscovery = fn () => $mock_discovery;
 
-    $mock_discovery_fetcher = $this->createMock(CollaboraDiscoveryFetcherInterface::class);
+    $mock_discovery_fetcher = $this->createMock(DiscoveryFetcherInterface::class);
     $mock_discovery_fetcher->method('getDiscovery')->willReturnCallback(fn () => ($this->mockGetDiscovery)());
-    $this->container->set(CollaboraDiscoveryFetcherInterface::class, $mock_discovery_fetcher);
+    $this->container->set(DiscoveryFetcherInterface::class, $mock_discovery_fetcher);
 
     $this->user = $this->createUser([
       'access content',

@@ -12,7 +12,7 @@
 
 declare(strict_types=1);
 
-use Drupal\collabora_online\Discovery\CollaboraDiscoveryFetcherInterface;
+use Drupal\collabora_online\Discovery\DiscoveryFetcherInterface;
 use Drupal\collabora_online\Exception\CollaboraNotAvailableException;
 
 /**
@@ -39,8 +39,8 @@ function collabora_online_requirements(string $phase): array {
   }
 
   // Check if Collabora Online server is configured and can be reached.
-  /** @var \Drupal\collabora_online\Discovery\CollaboraDiscoveryFetcherInterface $fetcher */
-  $fetcher = \Drupal::service(CollaboraDiscoveryFetcherInterface::class);
+  /** @var \Drupal\collabora_online\Discovery\DiscoveryFetcherInterface $fetcher */
+  $fetcher = \Drupal::service(DiscoveryFetcherInterface::class);
   try {
     $discovery = $fetcher->getDiscovery();
   }

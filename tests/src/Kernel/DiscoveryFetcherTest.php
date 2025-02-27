@@ -14,8 +14,8 @@ declare(strict_types=1);
 
 namespace Drupal\Tests\collabora_online\Kernel;
 
-use Drupal\collabora_online\Discovery\CollaboraDiscoveryFetcher;
-use Drupal\collabora_online\Discovery\CollaboraDiscoveryFetcherInterface;
+use Drupal\collabora_online\Discovery\DiscoveryFetcher;
+use Drupal\collabora_online\Discovery\DiscoveryFetcherInterface;
 use Drupal\collabora_online\Exception\CollaboraNotAvailableException;
 use Drupal\Core\Cache\CacheTagsInvalidatorInterface;
 use Drupal\Core\Logger\RfcLogLevel;
@@ -27,7 +27,7 @@ use GuzzleHttp\Exception\TransferException;
 use GuzzleHttp\Psr7\Response;
 
 /**
- * @coversDefaultClass \Drupal\collabora_online\Discovery\CollaboraDiscoveryFetcher
+ * @coversDefaultClass \Drupal\collabora_online\Discovery\DiscoveryFetcher
  */
 class DiscoveryFetcherTest extends KernelTestBase {
 
@@ -135,7 +135,7 @@ class DiscoveryFetcherTest extends KernelTestBase {
    */
   public function testGetDiscoveryIsCached(): void {
     $fetcher = $this->getFetcher();
-    $load_cache = fn () => \Drupal::cache()->get(CollaboraDiscoveryFetcher::CID);
+    $load_cache = fn () => \Drupal::cache()->get(DiscoveryFetcher::CID);
     // Initially the cache is cold.
     $this->assertFalse($load_cache());
 
@@ -250,7 +250,7 @@ class DiscoveryFetcherTest extends KernelTestBase {
     catch (CollaboraNotAvailableException $e) {
       $this->assertSame('The discovery.xml file seems to be empty.', $e->getMessage());
     }
-    $cache_record = \Drupal::cache()->get(CollaboraDiscoveryFetcher::CID);
+    $cache_record = \Drupal::cache()->get(DiscoveryFetcher::CID);
     $this->assertFalse($cache_record);
   }
 
@@ -266,7 +266,7 @@ class DiscoveryFetcherTest extends KernelTestBase {
     catch (CollaboraNotAvailableException $e) {
       $this->assertMatchesRegularExpression('#^Error in the retrieved discovery.xml file: #', $e->getMessage());
     }
-    $cache_record = \Drupal::cache()->get(CollaboraDiscoveryFetcher::CID);
+    $cache_record = \Drupal::cache()->get(DiscoveryFetcher::CID);
     $this->assertFalse($cache_record);
   }
 
@@ -274,7 +274,7 @@ class DiscoveryFetcherTest extends KernelTestBase {
    * Tests behavior if the cache contains bad XML.
    */
   public function testBadValueInCache(): void {
-    \Drupal::cache()->set(CollaboraDiscoveryFetcher::CID, 'bad xml in cache');
+    \Drupal::cache()->set(DiscoveryFetcher::CID, 'bad xml in cache');
     try {
       $this->getFetcher()->getDiscovery();
       $this->fail('Expected exception was not thrown.');
@@ -283,7 +283,7 @@ class DiscoveryFetcherTest extends KernelTestBase {
       $this->assertMatchesRegularExpression('#^Error in the retrieved discovery.xml file: #', $e->getMessage());
     }
     // The cache record is unchanged.
-    $cache_record = \Drupal::cache()->get(CollaboraDiscoveryFetcher::CID);
+    $cache_record = \Drupal::cache()->get(DiscoveryFetcher::CID);
     $this->assertIsObject($cache_record);
     $this->assertSame('bad xml in cache', $cache_record->data);
   }
@@ -337,12 +337,12 @@ class DiscoveryFetcherTest extends KernelTestBase {
   /**
    * Gets the discovery fetcher from the container.
    *
-   * @return \Drupal\collabora_online\Discovery\CollaboraDiscoveryFetcherInterface
+   * @return \Drupal\collabora_online\Discovery\DiscoveryFetcherInterface
    *   The discovery fetcher service.
    */
-  protected function getFetcher(): CollaboraDiscoveryFetcherInterface {
-    $fetcher = \Drupal::service(CollaboraDiscoveryFetcherInterface::class);
-    $this->assertInstanceOf(CollaboraDiscoveryFetcherInterface::class, $fetcher);
+  protected function getFetcher(): DiscoveryFetcherInterface {
+    $fetcher = \Drupal::service(DiscoveryFetcherInterface::class);
+    $this->assertInstanceOf(DiscoveryFetcherInterface::class, $fetcher);
     return $fetcher;
   }
 

@@ -14,8 +14,8 @@ declare(strict_types=1);
 
 namespace Drupal\Tests\collabora_online\Kernel\Controller;
 
-use Drupal\collabora_online\Discovery\CollaboraDiscoveryFetcherInterface;
-use Drupal\collabora_online\Discovery\CollaboraDiscoveryInterface;
+use Drupal\collabora_online\Discovery\DiscoveryFetcherInterface;
+use Drupal\collabora_online\Discovery\DiscoveryInterface;
 use Drupal\collabora_online\Exception\CollaboraNotAvailableException;
 use Drupal\collabora_online\Util\DotNetTime;
 use Drupal\Core\Logger\RfcLogLevel;
@@ -63,7 +63,7 @@ class WopiControllerProofTest extends WopiControllerTestBase {
   /**
    * Callback to replace CollaboraDiscoveryFetcher->getDiscovery().
    *
-   * @var \Closure(): \Drupal\collabora_online\Discovery\CollaboraDiscoveryInterface
+   * @var \Closure(): \Drupal\collabora_online\Discovery\DiscoveryInterface
    */
   protected \Closure $mockGetDiscovery;
 
@@ -74,16 +74,16 @@ class WopiControllerProofTest extends WopiControllerTestBase {
     parent::setUp();
 
     // Set a mock discovery with custom proof keys.
-    $mock_discovery = $this->createMock(CollaboraDiscoveryInterface::class);
+    $mock_discovery = $this->createMock(DiscoveryInterface::class);
     $mock_discovery->method('getProofKey')->willReturnReference($this->wopiProofKey);
     $mock_discovery->method('getProofKeyOld')->willReturnReference($this->wopiProofKeyOld);
     $this->mockGetDiscovery = fn () => $mock_discovery;
 
-    $mock_discovery_fetcher = $this->createMock(CollaboraDiscoveryFetcherInterface::class);
+    $mock_discovery_fetcher = $this->createMock(DiscoveryFetcherInterface::class);
     $mock_discovery_fetcher->method('getDiscovery')->willReturnCallback(
       fn () => ($this->mockGetDiscovery)(),
     );
-    $this->container->set(CollaboraDiscoveryFetcherInterface::class, $mock_discovery_fetcher);
+    $this->container->set(DiscoveryFetcherInterface::class, $mock_discovery_fetcher);
   }
 
   /**

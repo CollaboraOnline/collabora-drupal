@@ -17,7 +17,7 @@ namespace Drupal\collabora_online\Discovery;
 /**
  * Value object to get values from the discovery.xml.
  */
-class CollaboraDiscovery implements CollaboraDiscoveryInterface {
+class Discovery implements DiscoveryInterface {
 
   /**
    * Constructor.

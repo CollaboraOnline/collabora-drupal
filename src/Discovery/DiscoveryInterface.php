@@ -17,7 +17,7 @@ namespace Drupal\collabora_online\Discovery;
 /**
  * Service to get a WOPI client URL for a given MIME type.
  */
-interface CollaboraDiscoveryInterface {
+interface DiscoveryInterface {
 
   /**
    * Gets the URL for the WOPI client.

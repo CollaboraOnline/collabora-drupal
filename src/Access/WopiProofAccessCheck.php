@@ -14,7 +14,7 @@ declare(strict_types=1);
 
 namespace Drupal\collabora_online\Access;
 
-use Drupal\collabora_online\Discovery\CollaboraDiscoveryFetcherInterface;
+use Drupal\collabora_online\Discovery\DiscoveryFetcherInterface;
 use Drupal\collabora_online\Exception\CollaboraNotAvailableException;
 use Drupal\collabora_online\Util\DotNetTime;
 use Drupal\Component\Datetime\TimeInterface;
@@ -41,7 +41,7 @@ use Symfony\Component\HttpFoundation\Request;
 class WopiProofAccessCheck implements AccessInterface {
 
   public function __construct(
-    protected readonly CollaboraDiscoveryFetcherInterface $discoveryFetcher,
+    protected readonly DiscoveryFetcherInterface $discoveryFetcher,
     #[Autowire(service: 'logger.channel.collabora_online')]
     protected readonly LoggerInterface $logger,
     protected readonly ConfigFactoryInterface $configFactory,

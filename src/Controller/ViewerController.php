@@ -14,7 +14,7 @@ declare(strict_types=1);
 
 namespace Drupal\collabora_online\Controller;
 
-use Drupal\collabora_online\Discovery\CollaboraDiscoveryFetcherInterface;
+use Drupal\collabora_online\Discovery\DiscoveryFetcherInterface;
 use Drupal\collabora_online\Exception\CollaboraNotAvailableException;
 use Drupal\collabora_online\Jwt\JwtTranscoderInterface;
 use Drupal\Core\Config\ConfigFactoryInterface;
@@ -40,7 +40,7 @@ class ViewerController implements ContainerInjectionInterface {
   use StringTranslationTrait;
 
   public function __construct(
-    protected readonly CollaboraDiscoveryFetcherInterface $discoveryFetcher,
+    protected readonly DiscoveryFetcherInterface $discoveryFetcher,
     protected readonly JwtTranscoderInterface $jwtTranscoder,
     protected readonly RendererInterface $renderer,
     #[Autowire('logger.channel.collabora_online')]

@@ -17,17 +17,17 @@ namespace Drupal\collabora_online\Discovery;
 /**
  * Creates a WOPI discovery value object.
  */
-interface CollaboraDiscoveryFetcherInterface {
+interface DiscoveryFetcherInterface {
 
   /**
    * Gets a discovery value object.
    *
-   * @return \Drupal\collabora_online\Discovery\CollaboraDiscoveryInterface
+   * @return \Drupal\collabora_online\Discovery\DiscoveryInterface
    *   Discovery value object.
    *
    * @throws \Drupal\collabora_online\Exception\CollaboraNotAvailableException
    *   Fetching the discovery.xml failed, or the result is not valid xml.
    */
-  public function getDiscovery(): CollaboraDiscoveryInterface;
+  public function getDiscovery(): DiscoveryInterface;
 
 }

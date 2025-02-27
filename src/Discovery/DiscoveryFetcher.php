@@ -29,7 +29,7 @@ use Symfony\Component\ErrorHandler\ErrorHandler;
 /**
  * Creates a discovery value object.
  */
-class CollaboraDiscoveryFetcher implements CollaboraDiscoveryFetcherInterface {
+class DiscoveryFetcher implements DiscoveryFetcherInterface {
 
   public const CID = 'collabora_online.discovery';
 
@@ -46,9 +46,9 @@ class CollaboraDiscoveryFetcher implements CollaboraDiscoveryFetcherInterface {
   /**
    * {@inheritdoc}
    */
-  public function getDiscovery(): CollaboraDiscoveryInterface {
+  public function getDiscovery(): DiscoveryInterface {
     $parsed_xml = $this->getDiscoveryParsedXml();
-    return new CollaboraDiscovery($parsed_xml);
+    return new Discovery($parsed_xml);
   }
 
   /**
@@ -132,7 +132,7 @@ class CollaboraDiscoveryFetcher implements CollaboraDiscoveryFetcherInterface {
    * Loads the contents of discovery.xml from the Collabora server.
    *
    * @param \Drupal\Core\Config\ImmutableConfig $config
-   *    Configuration for this module.
+   *   Configuration for this module.
    *
    * @return string
    *   The full contents of discovery.xml.

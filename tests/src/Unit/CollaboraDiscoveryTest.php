@@ -4,13 +4,13 @@ declare(strict_types=1);
 
 namespace Drupal\Tests\collabora_online\Unit;
 
-use Drupal\collabora_online\Discovery\CollaboraDiscovery;
-use Drupal\collabora_online\Discovery\CollaboraDiscoveryInterface;
+use Drupal\collabora_online\Discovery\Discovery;
+use Drupal\collabora_online\Discovery\DiscoveryInterface;
 use Drupal\Tests\UnitTestCase;
 use Symfony\Component\ErrorHandler\ErrorHandler;
 
 /**
- * @coversDefaultClass \Drupal\collabora_online\Discovery\CollaboraDiscovery
+ * @coversDefaultClass \Drupal\collabora_online\Discovery\Discovery
  */
 class CollaboraDiscoveryTest extends UnitTestCase {
 
@@ -74,10 +74,10 @@ class CollaboraDiscoveryTest extends UnitTestCase {
    * @param string $file
    *   A test xml file.
    *
-   * @return \Drupal\collabora_online\Discovery\CollaboraDiscoveryInterface
+   * @return \Drupal\collabora_online\Discovery\DiscoveryInterface
    *   Discovery instance.
    */
-  protected function getDiscoveryFromFile(string $file): CollaboraDiscoveryInterface {
+  protected function getDiscoveryFromFile(string $file): DiscoveryInterface {
     $xml = file_get_contents($file);
     return $this->getDiscoveryFromXml($xml);
   }
@@ -88,15 +88,15 @@ class CollaboraDiscoveryTest extends UnitTestCase {
    * @param string $xml
    *   Explicit XML content.
    *
-   * @return \Drupal\collabora_online\Discovery\CollaboraDiscoveryInterface
+   * @return \Drupal\collabora_online\Discovery\DiscoveryInterface
    *   Discovery instance.
    */
-  protected function getDiscoveryFromXml(string $xml): CollaboraDiscoveryInterface {
+  protected function getDiscoveryFromXml(string $xml): DiscoveryInterface {
     $parsed_xml = ErrorHandler::call(
       fn () => simplexml_load_string($xml),
     );
     $this->assertNotFalse($parsed_xml, "XML: '$xml'");
-    return new CollaboraDiscovery($parsed_xml);
+    return new Discovery($parsed_xml);
   }
 
 }
