@@ -47,8 +47,7 @@ class CollaboraDiscoveryFetcher implements CollaboraDiscoveryFetcherInterface {
    * {@inheritdoc}
    */
   public function getDiscovery(): CollaboraDiscoveryInterface {
-    $xml = $this->getDiscoveryXml();
-    $parsed_xml = $this->parseXml($xml);
+    $parsed_xml = $this->getDiscoveryParsedXml();
     return new CollaboraDiscovery($parsed_xml);
   }
 
@@ -89,26 +88,31 @@ class CollaboraDiscoveryFetcher implements CollaboraDiscoveryFetcherInterface {
   /**
    * Gets the contents of discovery.xml from the Collabora server.
    *
-   * @return string
-   *   The full contents of discovery.xml.
+   * @return \SimpleXMLElement
+   *   The parsed contents of discovery.xml.
    *
    * @throws \Drupal\collabora_online\Exception\CollaboraNotAvailableException
    *   The client url cannot be retrieved.
    */
-  protected function getDiscoveryXml(): string {
+  protected function getDiscoveryParsedXml(): \SimpleXMLElement {
     $cached = $this->cache->get(static::CID);
     if ($cached) {
-      return $cached->data;
+      return $this->parseXml($cached->data);
     }
     $config = $this->configFactory->get('collabora_online.settings');
 
     $xml = $this->loadDiscoveryXml($config);
 
+    // Parse the XML.
+    // If this causes an exception, the code below will not be executed, and
+    // nothing written to the cache.
+    $parsed_xml = $this->parseXml($xml);
+
     /** @var non-negative-int $max_age */
     $max_age = $config->get('cool.discovery_cache_ttl') ?? 3600;
     if ($max_age === 0) {
       // The discovery cache is disabled.
-      return $xml;
+      return $parsed_xml;
     }
 
     $expire = $max_age + $this->time->getRequestTime();
@@ -119,7 +123,7 @@ class CollaboraDiscoveryFetcher implements CollaboraDiscoveryFetcherInterface {
       $expire,
       $config->getCacheTags(),
     );
-    return $xml;
+    return $parsed_xml;
   }
 
   /**

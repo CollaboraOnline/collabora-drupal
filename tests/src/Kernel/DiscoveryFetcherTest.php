@@ -243,9 +243,15 @@ class DiscoveryFetcherTest extends KernelTestBase {
    */
   public function testBlankXml(): void {
     $this->xml = '';
-    $this->expectException(CollaboraNotAvailableException::class);
-    $this->expectExceptionMessage('The discovery.xml file seems to be empty.');
-    $this->getFetcher()->getDiscovery();
+    try {
+      $this->getFetcher()->getDiscovery();
+      $this->fail('Expected exception was not thrown.');
+    }
+    catch (CollaboraNotAvailableException $e) {
+      $this->assertSame('The discovery.xml file seems to be empty.', $e->getMessage());
+    }
+    $cache_record = \Drupal::cache()->get(CollaboraDiscoveryFetcher::CID);
+    $this->assertFalse($cache_record);
   }
 
   /**
@@ -253,9 +259,33 @@ class DiscoveryFetcherTest extends KernelTestBase {
    */
   public function testBrokenXml(): void {
     $this->xml = 'This file does not contain valid xml.';
-    $this->expectException(CollaboraNotAvailableException::class);
-    $this->expectExceptionMessageMatches('#^Error in the retrieved discovery.xml file: #');
-    $this->getFetcher()->getDiscovery();
+    try {
+      $this->getFetcher()->getDiscovery();
+      $this->fail('Expected exception was not thrown.');
+    }
+    catch (CollaboraNotAvailableException $e) {
+      $this->assertMatchesRegularExpression('#^Error in the retrieved discovery.xml file: #', $e->getMessage());
+    }
+    $cache_record = \Drupal::cache()->get(CollaboraDiscoveryFetcher::CID);
+    $this->assertFalse($cache_record);
+  }
+
+  /**
+   * Tests behavior if the cache contains bad XML.
+   */
+  public function testBadValueInCache(): void {
+    \Drupal::cache()->set(CollaboraDiscoveryFetcher::CID, 'bad xml in cache');
+    try {
+      $this->getFetcher()->getDiscovery();
+      $this->fail('Expected exception was not thrown.');
+    }
+    catch (CollaboraNotAvailableException $e) {
+      $this->assertMatchesRegularExpression('#^Error in the retrieved discovery.xml file: #', $e->getMessage());
+    }
+    // The cache record is unchanged.
+    $cache_record = \Drupal::cache()->get(CollaboraDiscoveryFetcher::CID);
+    $this->assertIsObject($cache_record);
+    $this->assertSame('bad xml in cache', $cache_record->data);
   }
 
   /**
