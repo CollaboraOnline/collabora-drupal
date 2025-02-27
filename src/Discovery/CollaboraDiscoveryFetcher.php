@@ -138,7 +138,7 @@ class CollaboraDiscoveryFetcher implements CollaboraDiscoveryFetcherInterface {
    * @throws \Drupal\collabora_online\Exception\CollaboraNotAvailableException
    *   The client url cannot be retrieved.
    */
-  public function loadDiscoveryXml(string $discovery_url, bool $disable_checks): string {
+  protected function loadDiscoveryXml(string $discovery_url, bool $disable_checks): string {
     try {
       $response = $this->httpClient->get($discovery_url, [
         RequestOptions::VERIFY => !$disable_checks,
