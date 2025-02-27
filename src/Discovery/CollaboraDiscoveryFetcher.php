@@ -68,6 +68,7 @@ class CollaboraDiscoveryFetcher implements CollaboraDiscoveryFetcherInterface {
       // Avoid errors from XML parsing hitting the regular error handler.
       // An alternative would be libxml_use_internal_errors(), but then we would
       // have to deal with the results from libxml_get_errors().
+      /** @var \SimpleXMLElement|false $parsed_xml */
       $parsed_xml = ErrorHandler::call(
         fn () => simplexml_load_string($xml),
       );
@@ -97,6 +98,7 @@ class CollaboraDiscoveryFetcher implements CollaboraDiscoveryFetcherInterface {
   protected function getDiscoveryParsedXml(): \SimpleXMLElement {
     $cached = $this->cache->get(static::CID);
     if ($cached) {
+      assert(is_string($cached->data));
       return $this->parseXml($cached->data);
     }
     $config = $this->configFactory->get('collabora_online.settings');
@@ -176,6 +178,7 @@ class CollaboraDiscoveryFetcher implements CollaboraDiscoveryFetcherInterface {
    *   The WOPI server url is misconfigured.
    */
   protected function getDiscoveryUrl(ImmutableConfig $config): string {
+    /** @var string $wopi_client_server */
     $wopi_client_server = $config->get('cool.server');
     if (!$wopi_client_server) {
       throw new CollaboraNotAvailableException('The configured Collabora Online server address is empty.');
