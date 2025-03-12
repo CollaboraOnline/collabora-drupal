@@ -12,7 +12,7 @@ phpunit:
     - !reference [.with-database]
     - !reference [.with-chrome]
     - !reference [.with-chrome-legacy]
-    - name: collabora/code
+    - name: collabora/code:24.04.11.3.1
       alias: 'collabora.test'
       variables:
         username: admin
