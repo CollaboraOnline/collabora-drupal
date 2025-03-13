@@ -216,17 +216,21 @@ class WopiControllerTest extends WopiControllerTestBase {
     $request->headers->add($request_headers);
 
     $request_time = \Drupal::time()->getRequestTime();
-    $this->asertSame(
-      [
-        'LastModifiedTime' => DateTimeHelper::format($request_time),
-      ],
-      $this->assertJsonResponseOk($request),
-    );
+    $response_data = $this->assertJsonResponseOk($request);
 
     $media = Media::load($this->media->id());
     $file = $this->loadCurrentMediaFile();
 
+    $this->assertSame([
+      'LastModifiedTime' => DateTimeHelper::format($file->getChangedTime()),
+    ], $response_data);
+
     // File entity and content are updated.
+    // The changed timestamp in $file is filled from TestTime->getRequestTime(),
+    // which should always produce the same result during one request/process,
+    // but does not, due to a bug in datetime_testing.
+    // See https://www.drupal.org/project/datetime_testing/issues/3513073
+    $this->assertLessThanOrEqual(1, abs($request_time - $file->getChangedTime()));
     $this->assertSame($request_time, $file->getChangedTime());
     $actual_file_content = file_get_contents($file->getFileUri());
     $this->assertSame($new_file_content, $actual_file_content);
