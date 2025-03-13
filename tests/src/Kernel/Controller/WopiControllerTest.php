@@ -71,11 +71,11 @@ class WopiControllerTest extends WopiControllerTestBase {
     ];
 
     $request = $this->createRequest();
-    $this->assertJsonResponseOk($expected_response_data, $request);
+    $this->assertSame($expected_response_data, $this->assertJsonResponseOk($request));
 
     $request = $this->createRequest(write: TRUE);
     $expected_response_data['UserCanWrite'] = TRUE;
-    $this->assertJsonResponseOk($expected_response_data, $request);
+    $this->assertSame($expected_response_data, $this->assertJsonResponseOk($request));
 
     // Create a user picture, and attach it to the user.
     $user_picture_file = $this->createUserPicture($this->user);
@@ -89,7 +89,7 @@ class WopiControllerTest extends WopiControllerTestBase {
     $expected_response_data['UserExtraInfo']['avatar'] = 'http://localhost/' . $user_picture_realpath;
 
     $request = $this->createRequest();
-    $this->assertJsonResponseOk($expected_response_data, $request);
+    $this->assertSame($expected_response_data, $this->assertJsonResponseOk($request));
   }
 
   /**
@@ -216,11 +216,11 @@ class WopiControllerTest extends WopiControllerTestBase {
     $request->headers->add($request_headers);
 
     $request_time = \Drupal::time()->getRequestTime();
-    $this->assertJsonResponseOk(
+    $this->asertSame(
       [
         'LastModifiedTime' => DateTimeHelper::format($request_time),
       ],
-      $request,
+      $this->assertJsonResponseOk($request),
     );
 
     $media = Media::load($this->media->id());
@@ -326,12 +326,11 @@ User ID: @user_id',
     $wopi_changed_time = \DateTimeImmutable::createFromFormat('U', (string) ($this->file->getChangedTime() + 1000));
     $request->headers->set('x-cool-wopi-timestamp', $wopi_changed_time->format(\DateTimeInterface::ATOM));
 
-    $this->assertJsonResponse(
-      Response::HTTP_CONFLICT,
+    $this->assertSame(
       [
         'COOLStatusCode' => 1010,
       ],
-      $request,
+      $this->assertJsonResponse(Response::HTTP_CONFLICT, $request),
     );
     $this->assertLogMessage(
       RfcLogLevel::ERROR,
