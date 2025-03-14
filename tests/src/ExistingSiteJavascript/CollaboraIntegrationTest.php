@@ -82,6 +82,21 @@ class CollaboraIntegrationTest extends ExistingSiteSelenium2DriverTestBase {
     // visible on a mobile / touch device.
     $this->assertWaitForElement('#mobile-edit-button');
 
+    // Detect if Collabora shows a welcome dialog.
+    if ($this->getCurrentPage()->find('css', '[name=iframe-welcome-form]')) {
+      // The contents of the welcome dialog are in an iframe.
+      $this->getSession()->switchToIFrame('iframe-welcome-form');
+      // Click the close button of the welcome dialog.
+      // The close button itself has dimensions 0x0 and is regarded as not
+      // clickable by Selenium. It contains a ::before pseudo-element with
+      // non-zero dimensions which would receive the click.
+      // To not have to think about this, just click with js.
+      $this->getSession()->executeScript("document.querySelector('div#welcome-close').click();");
+      // Switch back to the previous iframe.
+      $this->getSession()->switchToIFrame(NULL);
+      $this->getSession()->switchToIFrame('collabora-online-viewer');
+    }
+
     // Switch to 'File' menu where 'Rename' button should be.
     $assert_session = $this->assertSession();
     $assert_session->buttonExists('File')->click();
