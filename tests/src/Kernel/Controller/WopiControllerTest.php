@@ -71,11 +71,11 @@ class WopiControllerTest extends WopiControllerTestBase {
     ];
 
     $request = $this->createRequest();
-    $this->assertJsonResponseOk($expected_response_data, $request);
+    $this->assertSame($expected_response_data, $this->assertJsonResponseOk($request));
 
     $request = $this->createRequest(write: TRUE);
     $expected_response_data['UserCanWrite'] = TRUE;
-    $this->assertJsonResponseOk($expected_response_data, $request);
+    $this->assertSame($expected_response_data, $this->assertJsonResponseOk($request));
 
     // Create a user picture, and attach it to the user.
     $user_picture_file = $this->createUserPicture($this->user);
@@ -89,7 +89,7 @@ class WopiControllerTest extends WopiControllerTestBase {
     $expected_response_data['UserExtraInfo']['avatar'] = 'http://localhost/' . $user_picture_realpath;
 
     $request = $this->createRequest();
-    $this->assertJsonResponseOk($expected_response_data, $request);
+    $this->assertSame($expected_response_data, $this->assertJsonResponseOk($request));
   }
 
   /**
@@ -216,17 +216,21 @@ class WopiControllerTest extends WopiControllerTestBase {
     $request->headers->add($request_headers);
 
     $request_time = \Drupal::time()->getRequestTime();
-    $this->assertJsonResponseOk(
-      [
-        'LastModifiedTime' => DateTimeHelper::format($request_time),
-      ],
-      $request,
-    );
+    $response_data = $this->assertJsonResponseOk($request);
 
     $media = Media::load($this->media->id());
     $file = $this->loadCurrentMediaFile();
 
+    $this->assertSame([
+      'LastModifiedTime' => DateTimeHelper::format($file->getChangedTime()),
+    ], $response_data);
+
     // File entity and content are updated.
+    // The changed timestamp in $file is filled from TestTime->getRequestTime(),
+    // which should always produce the same result during one request/process,
+    // but does not, due to a bug in datetime_testing.
+    // See https://www.drupal.org/project/datetime_testing/issues/3513073
+    $this->assertLessThanOrEqual(1, abs($request_time - $file->getChangedTime()));
     $this->assertSame($request_time, $file->getChangedTime());
     $actual_file_content = file_get_contents($file->getFileUri());
     $this->assertSame($new_file_content, $actual_file_content);
@@ -326,12 +330,11 @@ User ID: @user_id',
     $wopi_changed_time = \DateTimeImmutable::createFromFormat('U', (string) ($this->file->getChangedTime() + 1000));
     $request->headers->set('x-cool-wopi-timestamp', $wopi_changed_time->format(\DateTimeInterface::ATOM));
 
-    $this->assertJsonResponse(
-      Response::HTTP_CONFLICT,
+    $this->assertSame(
       [
         'COOLStatusCode' => 1010,
       ],
-      $request,
+      $this->assertJsonResponse(Response::HTTP_CONFLICT, $request),
     );
     $this->assertLogMessage(
       RfcLogLevel::ERROR,

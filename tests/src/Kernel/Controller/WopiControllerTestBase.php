@@ -208,15 +208,16 @@ abstract class WopiControllerTestBase extends CollaboraKernelTestBase {
   /**
    * Asserts a successful json response given a request.
    *
-   * @param array $expected_data
-   *   The expected response JSON data.
    * @param \Symfony\Component\HttpFoundation\Request $request
    *   The request to perform.
    * @param string $message
    *   Message to distinguish this from other assertions.
+   *
+   * @return array
+   *   Response data, parsed from json.
    */
-  protected function assertJsonResponseOk(array $expected_data, Request $request, string $message = ''): void {
-    $this->assertJsonResponse(Response::HTTP_OK, $expected_data, $request, $message);
+  protected function assertJsonResponseOk(Request $request, string $message = ''): array {
+    return $this->assertJsonResponse(Response::HTTP_OK, $request, $message);
   }
 
   /**
@@ -224,14 +225,15 @@ abstract class WopiControllerTestBase extends CollaboraKernelTestBase {
    *
    * @param int $expected_code
    *   The expected response status code.
-   * @param array $expected_data
-   *   The expected response JSON data.
    * @param \Symfony\Component\HttpFoundation\Request $request
    *   The request to perform.
    * @param string $message
    *   Message to distinguish this from other assertions.
+   *
+   * @return array
+   *   The response data, parsed from json.
    */
-  protected function assertJsonResponse(int $expected_code, array $expected_data, Request $request, string $message = ''): void {
+  protected function assertJsonResponse(int $expected_code, Request $request, string $message = ''): array {
     $response = $this->handleRequest($request);
     $content = $response->getContent();
     $this->assertIsString($content);
@@ -240,7 +242,7 @@ abstract class WopiControllerTestBase extends CollaboraKernelTestBase {
     $this->assertEquals('application/json', $response->headers->get('Content-Type'), $extended_message);
     $data = Json::decode($content);
     $this->assertNotNull($data, $extended_message);
-    $this->assertSame($expected_data, $data, $message);
+    return $data;
   }
 
   /**
