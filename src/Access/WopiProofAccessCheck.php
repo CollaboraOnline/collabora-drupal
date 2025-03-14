@@ -14,7 +14,8 @@ declare(strict_types=1);
 
 namespace Drupal\collabora_online\Access;
 
-use Drupal\collabora_online\Cool\CollaboraDiscoveryInterface;
+use Drupal\collabora_online\Discovery\DiscoveryFetcherInterface;
+use Drupal\collabora_online\Exception\CollaboraNotAvailableException;
 use Drupal\collabora_online\Util\DotNetTime;
 use Drupal\Component\Datetime\TimeInterface;
 use Drupal\Core\Access\AccessResult;
@@ -40,7 +41,7 @@ use Symfony\Component\HttpFoundation\Request;
 class WopiProofAccessCheck implements AccessInterface {
 
   public function __construct(
-    protected readonly CollaboraDiscoveryInterface $discovery,
+    protected readonly DiscoveryFetcherInterface $discoveryFetcher,
     #[Autowire(service: 'logger.channel.collabora_online')]
     protected readonly LoggerInterface $logger,
     protected readonly ConfigFactoryInterface $configFactory,
@@ -127,7 +128,16 @@ class WopiProofAccessCheck implements AccessInterface {
    *   An access result without cache metadata.
    */
   protected function checkProof(Request $request): AccessResult {
-    $keys = $this->getKeys();
+    try {
+      $keys = $this->getKeys();
+    }
+    catch (CollaboraNotAvailableException $e) {
+      $log_message = "Failure in WOPI proof check:<br>\n"
+        . Error::DEFAULT_ERROR_MESSAGE;
+      $log_args = Error::decodeException($e);
+      $this->logger->error($log_message, $log_args);
+      return AccessResult::forbidden('Cannot get discovery for proof keys.');
+    }
     if (!isset($keys['current'])) {
       return AccessResult::forbidden('Missing or incomplete WOPI proof keys.');
     }
@@ -189,14 +199,18 @@ class WopiProofAccessCheck implements AccessInterface {
    * @return array<'current'|'old', \phpseclib3\Crypt\RSA\PublicKey>
    *   Current and old public key, or just the current if they are the same, or
    *   empty array if none found.
+   *
+   * @throws \Drupal\collabora_online\Exception\CollaboraNotAvailableException
+   *   The discovery cannot be loaded.
    */
   protected function getKeys(): array {
+    $discovery = $this->discoveryFetcher->getDiscovery();
     // Get current and old key.
     // Remove empty values.
     // If both are the same, keep only the current one.
     $public_keys = array_unique(array_filter([
-      'current' => $this->discovery->getProofKey(),
-      'old' => $this->discovery->getProofKeyOld(),
+      'current' => $discovery->getProofKey(),
+      'old' => $discovery->getProofKeyOld(),
     ]));
     $key_objects = [];
     foreach ($public_keys as $key_name => $key_str) {

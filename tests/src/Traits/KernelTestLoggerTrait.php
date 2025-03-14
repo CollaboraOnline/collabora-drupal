@@ -98,13 +98,62 @@ trait KernelTestLoggerTrait {
   }
 
   /**
+   * Skips log messages that are not relevant to the current test.
+   *
+   * @param int|null $level
+   *   Only skip messages with the given level.
+   * @param string|null $channel
+   *   Only skip messages with the given channel.
+   * @param string|null $message
+   *   Only skip messages with the given message.
+   * @param string|null $regex
+   *   Only skip messages where the message matches a regular expression.
+   * @param array $context
+   *   Only skip message with specific context values.
+   */
+  protected function skipLogMessages(
+    ?int $level = NULL,
+    ?string $channel = NULL,
+    ?string $message = NULL,
+    ?string $regex = NULL,
+    array $context = [],
+  ): void {
+    while ($record = reset($this->logger->records)) {
+      if ($level !== NULL && $record['level'] != $level) {
+        break;
+      }
+      if ($channel !== NULL && ($record['context']['channel'] ?? NULL) !== $channel) {
+        break;
+      }
+      if ($message !== NULL && $record['message'] !== $message) {
+        break;
+      }
+      if ($regex !== NULL && !preg_match($regex, $record['message'])) {
+        break;
+      }
+      foreach ($context as $key => $value) {
+        if ($record['context'][$key] ?? NULL !== $value) {
+          break;
+        }
+      }
+      array_shift($this->logger->records);
+    }
+  }
+
+  /**
    * Asserts that the log does not have any further messages.
    */
   protected function assertNoFurtherLogMessages(string $message = ''): void {
+    if (!$this->logger->records) {
+      $this->addToAssertionCount(1);
+      return;
+    }
+    $record = reset($this->logger->records);
+    unset($record['context']['backtrace']);
     if ($message !== '') {
       $message .= "\n";
     }
-    $this->assertSame([], $this->logger->records, $message . 'No further log records expected.');
+    $this->assertNull($record, $message . 'No further log records expected.');
   }
 
 }

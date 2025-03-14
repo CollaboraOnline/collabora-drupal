@@ -4,14 +4,13 @@ declare(strict_types=1);
 
 namespace Drupal\Tests\collabora_online\Unit;
 
-use Drupal\collabora_online\Cool\CollaboraDiscovery;
-use Drupal\collabora_online\Cool\CollaboraDiscoveryFetcherInterface;
-use Drupal\collabora_online\Cool\CollaboraDiscoveryInterface;
-use Drupal\collabora_online\Exception\CollaboraNotAvailableException;
+use Drupal\collabora_online\Discovery\Discovery;
+use Drupal\collabora_online\Discovery\DiscoveryInterface;
 use Drupal\Tests\UnitTestCase;
+use Symfony\Component\ErrorHandler\ErrorHandler;
 
 /**
- * @coversDefaultClass \Drupal\collabora_online\Cool\CollaboraDiscovery
+ * @coversDefaultClass \Drupal\collabora_online\Discovery\Discovery
  */
 class CollaboraDiscoveryTest extends UnitTestCase {
 
@@ -32,9 +31,9 @@ class CollaboraDiscoveryTest extends UnitTestCase {
       $discovery->getWopiClientURL('text/spreadsheet'),
     );
     // Test unknown mime type.
-    $this->expectException(CollaboraNotAvailableException::class);
-    $this->expectExceptionMessage('The requested mime type is not handled.');
-    $discovery->getWopiClientURL('text/unknown');
+    $this->assertNull(
+      $discovery->getWopiClientURL('text/unknown'),
+    );
   }
 
   /**
@@ -70,66 +69,15 @@ class CollaboraDiscoveryTest extends UnitTestCase {
   }
 
   /**
-   * Tests error behavior for blank xml content.
-   *
-   * @covers ::getWopiClientURL
-   * @covers ::getProofKey
-   * @covers ::getProofKeyOld
-   *
-   * @dataProvider provideAllMethodNames
-   */
-  public function testBlankXml(string $method): void {
-    $discovery = $this->getDiscoveryFromXml('');
-
-    $this->expectException(CollaboraNotAvailableException::class);
-    $this->expectExceptionMessage('The discovery.xml file is empty.');
-    $discovery->$method();
-  }
-
-  /**
-   * Tests error behavior for malformed xml content.
-   *
-   * @covers ::getWopiClientURL
-   * @covers ::getProofKey
-   * @covers ::getProofKeyOld
-   *
-   * @dataProvider provideAllMethodNames
-   */
-  public function testBrokenXml(string $method): void {
-    $xml = 'This file does not contain valid xml.';
-    $discovery = $this->getDiscoveryFromXml($xml);
-
-    $this->expectException(CollaboraNotAvailableException::class);
-    $this->expectExceptionMessageMatches('#^Error in the retrieved discovery.xml file: #');
-    $discovery->$method();
-  }
-
-  /**
-   * Provides all methods as callbacks.
-   *
-   * This is used for tests where each method will throw the same exception.
-   *
-   * @return list<array{string}>
-   *   Argument tuples with method names.
-   */
-  public static function provideAllMethodNames(): array {
-    return [
-      'getWopiClientURL' => ['getWopiClientURL'],
-      'getProofKey' => ['getProofKey'],
-      'getProofKeyOld' => ['getProofKeyOld'],
-    ];
-  }
-
-  /**
    * Gets a discovery instance based on a test xml file.
    *
    * @param string $file
    *   A test xml file.
    *
-   * @return \Drupal\collabora_online\Cool\CollaboraDiscoveryInterface
+   * @return \Drupal\collabora_online\Discovery\DiscoveryInterface
    *   Discovery instance.
    */
-  protected function getDiscoveryFromFile(string $file): CollaboraDiscoveryInterface {
+  protected function getDiscoveryFromFile(string $file): DiscoveryInterface {
     $xml = file_get_contents($file);
     return $this->getDiscoveryFromXml($xml);
   }
@@ -140,13 +88,15 @@ class CollaboraDiscoveryTest extends UnitTestCase {
    * @param string $xml
    *   Explicit XML content.
    *
-   * @return \Drupal\collabora_online\Cool\CollaboraDiscoveryInterface
+   * @return \Drupal\collabora_online\Discovery\DiscoveryInterface
    *   Discovery instance.
    */
-  protected function getDiscoveryFromXml(string $xml): CollaboraDiscoveryInterface {
-    $fetcher = $this->createMock(CollaboraDiscoveryFetcherInterface::class);
-    $fetcher->method('getDiscoveryXml')->willReturn($xml);
-    return new CollaboraDiscovery($fetcher);
+  protected function getDiscoveryFromXml(string $xml): DiscoveryInterface {
+    $parsed_xml = ErrorHandler::call(
+      fn () => simplexml_load_string($xml),
+    );
+    $this->assertNotFalse($parsed_xml, "XML: '$xml'");
+    return new Discovery($parsed_xml);
   }
 
 }
