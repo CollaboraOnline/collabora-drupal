@@ -33,8 +33,9 @@ class DateTimeHelper {
    */
   public static function format(int $timestamp, string $format = 'c'): string {
     // If the input is in timestamp format, the timezone is always UTC.
-    return \DateTimeImmutable::createFromFormat('U', (string) $timestamp)
-      ->format($format);
+    $datetime = \DateTimeImmutable::createFromFormat('U', (string) $timestamp);
+    assert($datetime !== FALSE);
+    return $datetime->format($format);
   }
 
 }
