@@ -368,6 +368,30 @@ User ID: @user_id',
   }
 
   /**
+   * Tests different routes using a non-string 'token' query parameter.
+   *
+   * This can only happen if the requests comes from a source that is not
+   * Collabora Online, or if an unexpected change was introduced in a new
+   * version of Collabora Online.
+   *
+   * @covers ::wopiCheckFileInfo
+   * @covers ::wopiGetFile
+   * @covers ::wopiPutFile
+   */
+  public function testNonStringToken(): void {
+    $requests = $this->createRequests();
+    foreach ($requests as $name => $request) {
+      // Replace the token with a value that is not in the JWT format.
+      $request->query->set('access_token', ['not a string']);
+      $this->assertAccessDeniedResponse(
+        'Expected a string access token, found array.',
+        $request,
+        $name,
+      );
+    }
+  }
+
+  /**
    * Tests different routes using an invalid token.
    *
    * @covers ::wopiCheckFileInfo
