@@ -80,7 +80,7 @@ function collabora_online_theme($existing, $type, $theme, $path) {
  * This is used to add the menu entry in the Media content to
  * open the viewer/editor directly.
  */
-function collabora_online_entity_operation(EntityInterface $entity) {
+function collabora_online_entity_operation_(EntityInterface $entity) {
   if (($entity->getEntityTypeId() != "media") ||
     ($entity->getSource()->getPluginId() != "file")) {
     return [];
