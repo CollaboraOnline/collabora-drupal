@@ -96,6 +96,11 @@ function collabora_online_entity_operation(EntityInterface $entity) {
   /** @var \Drupal\collabora_online\MediaHelperInterface $media_helper */
   $media_helper = \Drupal::service(MediaHelperInterface::class);
   $file = $media_helper->getFileForMedia($media);
+  if ($file === NULL) {
+    // The media does not have a file attached.
+    // Do not provide the Collabora operations.
+    return [];
+  }
   $type = $file->getMimeType();
 
   if ($type == NULL) {
