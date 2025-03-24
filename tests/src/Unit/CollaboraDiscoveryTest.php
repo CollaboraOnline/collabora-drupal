@@ -34,6 +34,24 @@ class CollaboraDiscoveryTest extends UnitTestCase {
     $this->assertNull(
       $discovery->getWopiClientURL('text/unknown'),
     );
+    $this->assertSame(
+      'http://csv.collabora.test:9980/browser/61cf2b4/cool.html?',
+      $discovery->getWopiClientURL('text/csv', 'edit'),
+    );
+    $this->assertSame(
+      'http://view.csv.collabora.test:9980/browser/61cf2b4/cool.html?',
+      $discovery->getWopiClientURL('text/csv', 'view'),
+    );
+    // Test the default MIME type 'text/plain' which has only 'edit' action in
+    // the example file, but no 'view' action.
+    $this->assertNull($discovery->getWopiClientURL(action: 'edit'));
+    $this->assertNotNull($discovery->getWopiClientURL(action: 'view'));
+    // Test a MIME type with no action name specified.
+    // This does not occur in the known discovery.xml, but we still want a
+    // well-defined behavior in that case.
+    $this->assertNull($discovery->getWopiClientURL('image/png', 'edit'));
+    $this->assertNull($discovery->getWopiClientURL('image/png', 'view'));
+    $this->assertNotNull($discovery->getWopiClientURL('image/png'));
   }
 
   /**
