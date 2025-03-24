@@ -12,11 +12,13 @@
 
 use Drupal\collabora_online\CollaboraUrl;
 use Drupal\collabora_online\Cool\CoolUtils;
+use Drupal\collabora_online\Exception\CollaboraNotAvailableException;
 use Drupal\collabora_online\MediaHelperInterface;
 use Drupal\Core\Access\AccessResult;
 use Drupal\Core\Access\AccessResultInterface;
 use Drupal\Core\Entity\EntityInterface;
 use Drupal\Core\Session\AccountInterface;
+use Drupal\Core\Utility\Error;
 use Drupal\media\MediaInterface;
 
 /**
@@ -116,15 +118,19 @@ function collabora_online_entity_operation(EntityInterface $entity): array {
     ],
   ];
 
-  if (
-    CoolUtils::canEditMimeType($type) &&
-    $media->access('edit in collabora')
-  ) {
-    $entries['collabora_online_edit'] = [
-      'title' => t("Edit in Collabora Online"),
-      'weight' => 50,
-      'url' => CollaboraUrl::editMedia($media),
-    ];
+  if ($media->access('edit in collabora')) {
+    try {
+      if (CoolUtils::canEditMimeType($type)) {
+        $entries['collabora_online_edit'] = [
+          'title' => t("Edit in Collabora Online"),
+          'weight' => 50,
+          'url' => CollaboraUrl::editMedia($media),
+        ];
+      }
+    }
+    catch (CollaboraNotAvailableException $e) {
+      Error::logException(\Drupal::logger('cool'), $e);
+    }
   }
 
   return $entries;
