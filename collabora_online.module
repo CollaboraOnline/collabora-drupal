@@ -11,7 +11,7 @@
  */
 
 use Drupal\collabora_online\CollaboraUrl;
-use Drupal\collabora_online\Cool\CoolUtils;
+use Drupal\collabora_online\Discovery\DiscoveryFetcherInterface;
 use Drupal\collabora_online\Exception\CollaboraNotAvailableException;
 use Drupal\collabora_online\MediaHelperInterface;
 use Drupal\Core\Access\AccessResult;
@@ -119,8 +119,12 @@ function collabora_online_entity_operation(EntityInterface $entity): array {
   ];
 
   if ($media->access('edit in collabora')) {
+    /** @var \Drupal\collabora_online\Discovery\DiscoveryFetcherInterface $discovery_fetcher */
+    $discovery_fetcher = \Drupal::service(DiscoveryFetcherInterface::class);
     try {
-      if (CoolUtils::canEditMimeType($type)) {
+      $discovery = $discovery_fetcher->getDiscovery();
+      $wopi_client_edit_url = $discovery->getWopiClientURL($type, 'edit');
+      if ($wopi_client_edit_url !== NULL) {
         $entries['collabora_online_edit'] = [
           'title' => t("Edit in Collabora Online"),
           'weight' => 50,
