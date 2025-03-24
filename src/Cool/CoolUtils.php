@@ -12,19 +12,12 @@
 
 namespace Drupal\collabora_online\Cool;
 
+use Drupal\collabora_online\Discovery\DiscoveryFetcherInterface;
+
 /**
  * Class with various static methods.
  */
 class CoolUtils {
-
-  /**
-   * List of read only formats. Currently limited to the one Drupal accept.
-   */
-  const READ_ONLY = [
-    'application/x-iwork-keynote-sffkey' => TRUE,
-    'application/x-iwork-pages-sffpages' => TRUE,
-    'application/x-iwork-numbers-sffnumbers' => TRUE,
-  ];
 
   /**
    * Determines if a MIME type is supported for editing.
@@ -35,9 +28,19 @@ class CoolUtils {
    * @return bool
    *   TRUE if the MIME type is supported for editing.
    *   FALSE if the MIME type can only be opened as read-only.
+   *
+   * @throws \Drupal\collabora_online\Exception\CollaboraNotAvailableException
+   *   The discovery.xml is not available.
    */
   public static function canEditMimeType(string $mimetype) {
-    return !array_key_exists($mimetype, static::READ_ONLY);
+    if (!$mimetype) {
+      return FALSE;
+    }
+    /** @var \Drupal\collabora_online\Discovery\DiscoveryFetcherInterface $discovery_fetcher */
+    $discovery_fetcher = \Drupal::service(DiscoveryFetcherInterface::class);
+    $discovery = $discovery_fetcher->getDiscovery();
+    $wopi_client_edit_url = $discovery->getWopiClientURL($mimetype, 'edit');
+    return $wopi_client_edit_url !== NULL;
   }
 
 }
