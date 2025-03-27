@@ -46,9 +46,8 @@ class MediaHelper implements MediaHelperInterface {
    * {@inheritdoc}
    */
   public function setMediaSource(MediaInterface $media, FileInterface $file): void {
-    // @phpstan-ignore property.notFound
-    $media_type = $media->bundle->entity;
     /** @var \Drupal\media\MediaTypeInterface $media_type */
+    $media_type = $media->get('bundle')->entity;
     $source_field = $media->getSource()->getSourceFieldDefinition($media_type);
     if ($source_field === NULL) {
       // Throw an unhandled exception for now.
