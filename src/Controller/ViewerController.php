@@ -70,7 +70,14 @@ class ViewerController implements ContainerInjectionInterface {
     try {
       // @todo Get client url for the correct MIME type.
       $discovery = $this->discoveryFetcher->getDiscovery();
-      $wopi_client_url = $discovery->getWopiClientURL();
+      $wopi_client_url = $edit
+        ? $discovery->getWopiClientURL('edit')
+        : ($discovery->getWopiClientURL('view')
+          // With the typical discovery.xml from Collabora, some MIME types that
+          // are viewable have an 'edit' or 'view_comment' action but no 'view'
+          // action.
+          ?? $discovery->getWopiClientURL('edit')
+          ?? $discovery->getWopiClientURL('view_comment'));
     }
     catch (CollaboraNotAvailableException $e) {
       $this->logger->warning(
