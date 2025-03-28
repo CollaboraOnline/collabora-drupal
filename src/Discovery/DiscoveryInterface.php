@@ -33,7 +33,7 @@ interface DiscoveryInterface {
    *   The WOPI client URL, or NULL if none provided for the MIME type and
    *   operation.
    */
-  public function getWopiClientURL(string $action = 'view', string $mimetype = 'text/plain'): ?string;
+  public function getWopiClientURL(string $action, string $mimetype = 'text/plain'): ?string;
 
   /**
    * Gets the public key used for proofing.

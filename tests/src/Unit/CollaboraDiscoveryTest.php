@@ -25,7 +25,7 @@ class CollaboraDiscoveryTest extends UnitTestCase {
     $discovery = $this->getDiscoveryFromFile($file);
     $this->assertSame(
       'http://collabora.test:9980/browser/61cf2b4/cool.html?',
-      $discovery->getWopiClientURL(),
+      $discovery->getWopiClientURL('view'),
     );
     $this->assertSame(
       'http://spreadsheet.collabora.test:9980/browser/61cf2b4/cool.html?',
