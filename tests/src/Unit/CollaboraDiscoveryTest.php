@@ -29,12 +29,10 @@ class CollaboraDiscoveryTest extends UnitTestCase {
     );
     $this->assertSame(
       'http://spreadsheet.collabora.test:9980/browser/61cf2b4/cool.html?',
-      $discovery->getWopiClientURL('text/spreadsheet'),
+      $discovery->getWopiClientURL('text/spreadsheet', 'edit'),
     );
     // Test unknown mime type.
-    $this->assertNull(
-      $discovery->getWopiClientURL('text/unknown'),
-    );
+    $this->assertNull($discovery->getWopiClientURL('text/unknown', 'view'));
     $this->assertSame(
       'http://csv.collabora.test:9980/browser/61cf2b4/cool.html?',
       $discovery->getWopiClientURL('text/csv', 'edit'),
@@ -52,7 +50,6 @@ class CollaboraDiscoveryTest extends UnitTestCase {
     // well-defined behavior in that case.
     $this->assertNull($discovery->getWopiClientURL('image/png', 'edit'));
     $this->assertNull($discovery->getWopiClientURL('image/png', 'view'));
-    $this->assertNotNull($discovery->getWopiClientURL('image/png'));
   }
 
   /**
@@ -80,11 +77,6 @@ class CollaboraDiscoveryTest extends UnitTestCase {
           $this->assertSame($known_url, $url);
           $type_supported_actions[] = $action;
         }
-      }
-      $null_url = $discovery->getWopiClientURL($mimetype);
-      $this->assertSame($null_url === NULL, $type_supported_actions === []);
-      if ($null_url !== NULL) {
-        $this->assertSame($known_url, $null_url);
       }
       sort($type_supported_actions);
       $supported_action_types[implode(',', $type_supported_actions)][] = $mimetype;
