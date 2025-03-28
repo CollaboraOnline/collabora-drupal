@@ -29,27 +29,27 @@ class CollaboraDiscoveryTest extends UnitTestCase {
     );
     $this->assertSame(
       'http://spreadsheet.collabora.test:9980/browser/61cf2b4/cool.html?',
-      $discovery->getWopiClientURL('text/spreadsheet', 'edit'),
+      $discovery->getWopiClientURL('edit', 'text/spreadsheet'),
     );
     // Test unknown mime type.
-    $this->assertNull($discovery->getWopiClientURL('text/unknown', 'view'));
+    $this->assertNull($discovery->getWopiClientURL('view', 'text/unknown'));
     $this->assertSame(
       'http://csv.collabora.test:9980/browser/61cf2b4/cool.html?',
-      $discovery->getWopiClientURL('text/csv', 'edit'),
+      $discovery->getWopiClientURL('edit', 'text/csv'),
     );
     $this->assertSame(
       'http://view.csv.collabora.test:9980/browser/61cf2b4/cool.html?',
-      $discovery->getWopiClientURL('text/csv', 'view'),
+      $discovery->getWopiClientURL('view', 'text/csv'),
     );
     // Test the default MIME type 'text/plain' which has only 'edit' action in
     // the example file, but no 'view' action.
-    $this->assertNull($discovery->getWopiClientURL(action: 'edit'));
-    $this->assertNotNull($discovery->getWopiClientURL(action: 'view'));
+    $this->assertNull($discovery->getWopiClientURL('edit'));
+    $this->assertNotNull($discovery->getWopiClientURL('view'));
     // Test a MIME type with no action name specified.
     // This does not occur in the known discovery.xml, but we still want a
     // well-defined behavior in that case.
-    $this->assertNull($discovery->getWopiClientURL('image/png', 'edit'));
-    $this->assertNull($discovery->getWopiClientURL('image/png', 'view'));
+    $this->assertNull($discovery->getWopiClientURL('edit', 'image/png'));
+    $this->assertNull($discovery->getWopiClientURL('view', 'image/png'));
   }
 
   /**
@@ -72,7 +72,7 @@ class CollaboraDiscoveryTest extends UnitTestCase {
     foreach ($mimetypes as $mimetype) {
       $type_supported_actions = [];
       foreach (['edit', 'view_comment', 'view'] as $action) {
-        $url = $discovery->getWopiClientURL($mimetype, $action);
+        $url = $discovery->getWopiClientURL($action, $mimetype);
         if ($url !== NULL) {
           $this->assertSame($known_url, $url);
           $type_supported_actions[] = $action;

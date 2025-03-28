@@ -22,18 +22,18 @@ interface DiscoveryInterface {
   /**
    * Gets the URL for the WOPI client.
    *
-   * @param string $mimetype
-   *   Mime type for which to get the WOPI client URL.
-   *   This refers to config entries in the discovery.xml file.
    * @param string $action
    *   Name of the action/operation for which to get the url.
    *   Typical values are 'view', 'edit' or 'view_comment'.
+   * @param string $mimetype
+   *   Mime type for which to get the WOPI client URL.
+   *   This refers to config entries in the discovery.xml file.
    *
    * @return string|null
    *   The WOPI client URL, or NULL if none provided for the MIME type and
    *   operation.
    */
-  public function getWopiClientURL(string $mimetype = 'text/plain', string $action = 'view'): ?string;
+  public function getWopiClientURL(string $action = 'view', string $mimetype = 'text/plain'): ?string;
 
   /**
    * Gets the public key used for proofing.

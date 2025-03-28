@@ -123,7 +123,7 @@ function collabora_online_entity_operation(EntityInterface $entity): array {
     $discovery_fetcher = \Drupal::service(DiscoveryFetcherInterface::class);
     try {
       $discovery = $discovery_fetcher->getDiscovery();
-      $wopi_client_edit_url = $discovery->getWopiClientURL($type, 'edit');
+      $wopi_client_edit_url = $discovery->getWopiClientURL('edit', $type);
       if ($wopi_client_edit_url !== NULL) {
         $entries['collabora_online_edit'] = [
           'title' => t("Edit in Collabora Online"),
