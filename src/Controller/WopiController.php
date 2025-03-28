@@ -75,6 +75,7 @@ class WopiController implements ContainerInjectionInterface {
    *   The response with file contents.
    */
   protected function wopiCheckFileInfo(FileInterface $file, UserInterface $user, bool $can_write): Response {
+    assert($file->getChangedTime() !== NULL);
     $response_data = [
       'BaseFileName' => $file->getFilename(),
       'Size' => $file->getSize(),
@@ -88,9 +89,14 @@ class WopiController implements ContainerInjectionInterface {
       'SupportsRename' => FALSE,
     ];
 
-    $user_picture = $user->user_picture?->entity;
-    if ($user_picture) {
-      $response_data['UserExtraInfo']['avatar'] = $this->fileUrlGenerator->generateAbsoluteString($user_picture->getFileUri());
+    if ($user->hasField('user_picture')) {
+      $user_picture = $user->get('user_picture')->entity;
+      if (
+        $user_picture instanceof FileInterface &&
+        $user_picture->getFileUri() !== NULL
+      ) {
+        $response_data['UserExtraInfo']['avatar'] = $this->fileUrlGenerator->generateAbsoluteString($user_picture->getFileUri());
+      }
     }
 
     return new JsonResponse(
@@ -112,6 +118,7 @@ class WopiController implements ContainerInjectionInterface {
    * @see \Drupal\system\FileDownloadController::download()
    */
   protected function wopiGetFile(FileInterface $file): Response {
+    assert($file->getFileUri() !== NULL);
     if (!is_file($file->getFileUri())) {
       throw new NotFoundHttpException('The file is missing in the file system.');
     }
@@ -159,6 +166,7 @@ class WopiController implements ContainerInjectionInterface {
       $request_time - $file->getCreatedTime() <= $new_file_interval
     ) {
       // Replace file with new content.
+      assert($file->getFileUri() !== NULL);
       $this->fileSystem->saveData(
         $new_file_content,
         $file->getFileUri(),
@@ -182,6 +190,7 @@ User ID: @user_id',
         ],
       );
 
+      assert($file->getChangedTime() !== NULL);
       return new JsonResponse(
         [
           'LastModifiedTime' => DateTimeHelper::format($file->getChangedTime()),
@@ -216,6 +225,7 @@ User ID: @user_id',
       ],
     );
 
+    assert($new_file->getChangedTime() !== NULL);
     return new JsonResponse(
       [
         'LastModifiedTime' => DateTimeHelper::format($new_file->getChangedTime()),
@@ -238,6 +248,7 @@ User ID: @user_id',
    *   This may have a different uri, but will have the same filename.
    */
   protected function createNewFileEntity(FileInterface $file, string $new_file_content): FileInterface {
+    assert($file->getFileUri() !== NULL);
     // The current file uri may have a number suffix like "_0".
     // For the new file uri, start with the clean file name, to avoid repeated
     // suffixes like "_0_0_0".
@@ -250,10 +261,12 @@ User ID: @user_id',
       FileExists::Rename,
     );
 
-    /** @var \Drupal\file\FileInterface|null $new_file */
+    /** @var \Drupal\file\FileInterface $new_file */
     $new_file = $this->entityTypeManager->getStorage('file')->create([
       'uri' => $new_file_uri,
     ]);
+    // Parameter and return docs on entity owner methods are inconsistent.
+    // @phpstan-ignore argument.type
     $new_file->setOwnerId($file->getOwnerId());
     // Preserve the original file name, no matter the uri was renamed.
     $new_file->setFilename($file->getFilename());
@@ -285,7 +298,10 @@ User ID: @user_id',
       return NULL;
     }
     $wopi_datetime = \DateTimeImmutable::createFromFormat(\DateTimeInterface::ATOM, $wopi_time_atom);
-    $file_datetime = \DateTimeImmutable::createFromFormat('U', $file->getChangedTime());
+    $file_datetime = \DateTimeImmutable::createFromFormat('U', (string) $file->getChangedTime());
+
+    assert($wopi_datetime !== FALSE);
+    assert($file_datetime !== FALSE);
 
     if ($wopi_datetime == $file_datetime) {
       return NULL;
@@ -353,6 +369,10 @@ User ID: @user_id',
     $token = $request->get('access_token');
     if ($token === NULL) {
       throw new AccessDeniedHttpException('Missing access token.');
+    }
+    if (!is_string($token)) {
+      // A malformed request could have a non-string value for access_token.
+      throw new AccessDeniedHttpException(sprintf('Expected a string access token, found %s.', gettype($token)));
     }
     $jwt_payload = $this->verifyTokenForMedia($token, $media);
 

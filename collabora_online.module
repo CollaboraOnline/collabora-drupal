@@ -10,8 +10,8 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
-use Drupal\collabora_online\Cool\CoolUtils;
 use Drupal\collabora_online\CollaboraUrl;
+use Drupal\collabora_online\Cool\CoolUtils;
 use Drupal\collabora_online\MediaHelperInterface;
 use Drupal\Core\Access\AccessResult;
 use Drupal\Core\Access\AccessResultInterface;
@@ -32,8 +32,7 @@ use Drupal\media\MediaInterface;
  * If you change this method, clear theme registry and routing table
  * 'drush cc theme-registry' and 'drush cc router'.
  */
-function collabora_online_theme($existing, $type, $theme, $path) {
-
+function collabora_online_theme(): array {
   return [
     'collabora_online' => [
       'render element' => 'children',
@@ -80,16 +79,18 @@ function collabora_online_theme($existing, $type, $theme, $path) {
  * This is used to add the menu entry in the Media content to
  * open the viewer/editor directly.
  */
-function collabora_online_entity_operation(EntityInterface $entity) {
-  if (($entity->getEntityTypeId() != "media") ||
-    ($entity->getSource()->getPluginId() != "file")) {
+function collabora_online_entity_operation(EntityInterface $entity): array {
+  if ($entity->getEntityTypeId() !== 'media') {
     return [];
   }
 
   /** @var \Drupal\media\MediaInterface $media */
   $media = $entity;
 
-  if (!$media->access('preview in collabora')) {
+  if (
+    $media->getSource()->getPluginId() !== 'file' ||
+    !$media->access('preview in collabora')
+  ) {
     return [];
   }
 
@@ -115,7 +116,10 @@ function collabora_online_entity_operation(EntityInterface $entity) {
     ],
   ];
 
-  if (CoolUtils::canEdit($file) && $media->access('edit in collabora')) {
+  if (
+    CoolUtils::canEditMimeType($type) &&
+    $media->access('edit in collabora')
+  ) {
     $entries['collabora_online_edit'] = [
       'title' => t("Edit in Collabora Online"),
       'weight' => 50,
@@ -151,8 +155,8 @@ function collabora_online_media_access(MediaInterface $media, string $operation,
         $access_result = AccessResult::allowed();
       }
       else {
-        $access_result = AccessResult::neutral()
-          ->setReason("The user has the '$preview_own_permission' permission, but is not the owner of the media item.");
+        $access_result = AccessResult::neutral();
+        $access_result->setReason("The user has the '$preview_own_permission' permission, but is not the owner of the media item.");
       }
       return $access_result
         ->cachePerUser()
@@ -171,8 +175,8 @@ function collabora_online_media_access(MediaInterface $media, string $operation,
       // Use '==' because Drupal sometimes loads integers as strings.
       $is_owner = ($account->id() && $account->id() == $media->getOwnerId());
       if (!$is_owner) {
-        $access_result = AccessResult::neutral()
-          ->setReason("The user has the '$edit_own_permission' permission, but is not the owner of the media item.");
+        $access_result = AccessResult::neutral();
+        $access_result->setReason("The user has the '$edit_own_permission' permission, but is not the owner of the media item.");
       }
       else {
         $access_result = AccessResult::allowed();

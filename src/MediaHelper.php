@@ -46,7 +46,19 @@ class MediaHelper implements MediaHelperInterface {
    * {@inheritdoc}
    */
   public function setMediaSource(MediaInterface $media, FileInterface $file): void {
-    $field_name = $media->getSource()->getSourceFieldDefinition($media->bundle->entity)->getName();
+    /** @var \Drupal\media\MediaTypeInterface $media_type */
+    $media_type = $media->get('bundle')->entity;
+    $source_field = $media->getSource()->getSourceFieldDefinition($media_type);
+    if ($source_field === NULL) {
+      // Throw an unhandled exception for now.
+      // @todo Throw a handled exception, and catch it in the calling code.
+      throw new \InvalidArgumentException(sprintf(
+        'The media type %s of media %s is not supported, because it does not have a source field.',
+        $media_type->id(),
+        $media->id(),
+      ));
+    }
+    $field_name = $source_field->getName();
     $media->set($field_name, $file);
   }
 

@@ -16,6 +16,7 @@ namespace Drupal\collabora_online_group\Plugin\Group\RelationHandler;
 
 use Drupal\Core\Access\AccessResultInterface;
 use Drupal\Core\Entity\EntityInterface;
+use Drupal\Core\Entity\EntityPublishedInterface;
 use Drupal\Core\Session\AccountInterface;
 use Drupal\group\Plugin\Group\RelationHandler\AccessControlInterface;
 use Drupal\group\Plugin\Group\RelationHandler\AccessControlTrait;
@@ -45,10 +46,18 @@ class CollaboraAccessControl extends AccessControl {
     // Add support for unpublished operation: preview in collabora.
     $check_published = $operation === 'preview in collabora' && $this->implementsPublishedInterface;
 
-    if ($check_published && !$entity->isPublished()) {
-      $operation .= ' unpublished';
+    if ($check_published) {
+      // The $this->implementsPublishedInterface property indicates that
+      // entities of this type implement EntityPublishedInterface.
+      /* @see \Drupal\group\Plugin\Group\RelationHandlerDefault\AccessControl::entityAccess() */
+      assert($entity instanceof EntityPublishedInterface);
+
+      if (!$entity->isPublished()) {
+        $operation .= ' unpublished';
+      }
     }
 
+    assert($this->parent !== NULL);
     return $this->parent->entityAccess($entity, $operation, $account, $return_as_object);
   }
 

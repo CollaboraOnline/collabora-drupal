@@ -1,0 +1,16 @@
+parameters:
+  level: 9
+  treatPhpDocTypesAsCertain: false
+  paths:
+    - .
+  excludePaths:
+    # For now do not check tests.
+    - tests
+    - modules/collabora_online_group/tests
+    - vendor
+    - web
+  ignoreErrors:
+    # Allow 'new static()', which is common and accepted in Drupal.
+    - "#^Unsafe usage of new static\\(\\).$#"
+    # Allow to omit `<mixed>` as iterable or generic type qualifier.
+    - identifier: missingType.iterableValue

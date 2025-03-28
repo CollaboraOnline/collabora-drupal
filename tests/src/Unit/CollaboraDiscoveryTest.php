@@ -92,6 +92,7 @@ class CollaboraDiscoveryTest extends UnitTestCase {
    *   Discovery instance.
    */
   protected function getDiscoveryFromXml(string $xml): DiscoveryInterface {
+    /** @var \SimpleXMLElement|false $parsed_xml */
     $parsed_xml = ErrorHandler::call(
       fn () => simplexml_load_string($xml),
     );

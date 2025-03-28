@@ -72,6 +72,13 @@ jobs:
         run: |
           docker-compose exec -T web ./vendor/bin/phpcs -s
 
+      - name: PhpStan
+        run: |
+          # PhpStan behaves slightly differently in PHP 8.1.
+          if [ ${{ matrix.php }} != 8.1 ]; then
+            docker-compose exec -T web ./vendor/bin/phpstan -v
+          fi
+
       - name: Drupal site install
         run: |
           docker-compose exec -T web ./vendor/bin/run drupal:site-install

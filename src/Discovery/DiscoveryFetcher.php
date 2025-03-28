@@ -145,6 +145,8 @@ class DiscoveryFetcher implements DiscoveryFetcherInterface {
     $disable_checks = (bool) $config->get('cool.disable_cert_check');
     $discovery_url = $this->getDiscoveryUrl($config);
     try {
+      // The ->get() method is not part of the interface.
+      // @phpstan-ignore method.notFound
       $response = $this->httpClient->get($discovery_url, [
         RequestOptions::VERIFY => !$disable_checks,
       ]);

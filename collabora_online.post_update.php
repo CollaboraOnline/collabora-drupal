@@ -17,6 +17,7 @@ declare(strict_types=1);
  */
 function collabora_online_post_update_add_wopi_proof_setting(): void {
   $config = \Drupal::configFactory()->getEditable('collabora_online.settings');
+  /** @var array $cool_settings */
   $cool_settings = $config->get('cool') ?? [];
   $cool_settings['wopi_proof'] ??= TRUE;
   $config->set('cool', $cool_settings);
