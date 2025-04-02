@@ -17,6 +17,7 @@ namespace Drupal\collabora_online\Controller;
 use Drupal\collabora_online\Discovery\DiscoveryFetcherInterface;
 use Drupal\collabora_online\Exception\CollaboraNotAvailableException;
 use Drupal\collabora_online\Jwt\JwtTranscoderInterface;
+use Drupal\collabora_online\MediaHelperInterface;
 use Drupal\Core\Config\ConfigFactoryInterface;
 use Drupal\Core\DependencyInjection\AutowireTrait;
 use Drupal\Core\DependencyInjection\ContainerInjectionInterface;
@@ -43,6 +44,7 @@ class ViewerController implements ContainerInjectionInterface {
     protected readonly DiscoveryFetcherInterface $discoveryFetcher,
     protected readonly JwtTranscoderInterface $jwtTranscoder,
     protected readonly RendererInterface $renderer,
+    protected readonly MediaHelperInterface $mediaHelper,
     #[Autowire('logger.channel.collabora_online')]
     protected readonly LoggerInterface $logger,
     protected readonly ConfigFactoryInterface $configFactory,
@@ -67,10 +69,27 @@ class ViewerController implements ContainerInjectionInterface {
    *   Response suitable for iframe, without the usual page decorations.
    */
   public function editor(MediaInterface $media, Request $request, $edit = FALSE): Response {
+    $file = $this->mediaHelper->getFileForMedia($media);
+    // Treat "no file" and "file without MIME type" the same.
+    $mimetype = $file?->getMimeType();
+    if ($mimetype === NULL) {
+      return new Response(
+        (string) $this->t('The Collabora Online editor/viewer is not available for media without a file attached.'),
+        Response::HTTP_BAD_REQUEST,
+        ['content-type' => 'text/plain'],
+      );
+    }
     try {
-      // @todo Get client url for the correct MIME type.
       $discovery = $this->discoveryFetcher->getDiscovery();
-      $wopi_client_url = $discovery->getWopiClientURL();
+
+      $wopi_client_url = $edit
+        ? $discovery->getWopiClientURL($mimetype, 'edit')
+        : ($discovery->getWopiClientURL($mimetype, 'view')
+          // With the typical discovery.xml from Collabora, some MIME types that
+          // are viewable have an 'edit' or 'view_comment' action but no 'view'
+          // action.
+          ?? $discovery->getWopiClientURL($mimetype, 'edit')
+          ?? $discovery->getWopiClientURL($mimetype, 'view_comment'));
     }
     catch (CollaboraNotAvailableException $e) {
       $this->logger->warning(

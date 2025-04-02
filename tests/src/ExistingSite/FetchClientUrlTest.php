@@ -41,7 +41,7 @@ class FetchClientUrlTest extends ExistingSiteBase {
     /** @var \Drupal\collabora_online\Discovery\DiscoveryFetcherInterface $discovery_fetcher */
     $discovery_fetcher = \Drupal::service(DiscoveryFetcherInterface::class);
     $discovery = $discovery_fetcher->getDiscovery();
-    $client_url = $discovery->getWopiClientURL();
+    $client_url = $discovery->getWopiClientURL('text/plain', 'edit');
     $this->assertNotNull($client_url);
     // The protocol, domain and port are known when this test runs in the
     // docker-compose setup.

@@ -32,16 +32,11 @@ class Discovery implements DiscoveryInterface {
   /**
    * {@inheritdoc}
    */
-  public function getWopiClientURL(string $mimetype = 'text/plain', ?string $action = NULL): ?string {
+  public function getWopiClientURL(string $mimetype, string $action): ?string {
     $result = $this->parsedXml->xpath(sprintf(
-      '/wopi-discovery/net-zone/app[@name=\'%s\']/action%s',
+      "/wopi-discovery/net-zone/app[@name='%s']/action[@name='%s']",
       $mimetype,
-      match ($action) {
-        'edit',
-        'view',
-        'view_comment' => "[@name='$action']",
-        NULL => '',
-      }
+      $action,
     ));
     if (empty($result[0]['urlsrc'][0])) {
       return NULL;

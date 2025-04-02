@@ -117,7 +117,7 @@ class DiscoveryFetcherTest extends KernelTestBase {
     $discovery = $fetcher->getDiscovery();
     $this->assertSame(
       'http://collabora.test:9980/browser/61cf2b4/cool.html?',
-      $discovery->getWopiClientURL(),
+      $discovery->getWopiClientURL('text/plain', 'view'),
     );
     $this->assertSame(
       [
