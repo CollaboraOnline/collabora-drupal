@@ -17,3 +17,8 @@ cool.previewer:
   header: true
   dependencies:
     - core/drupal
+
+iframe:
+  css:
+    component:
+      css/collabora-iframe.css: {}
