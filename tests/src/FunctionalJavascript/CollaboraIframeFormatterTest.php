@@ -100,19 +100,21 @@ class CollaboraIframeFormatterTest extends WebDriverTestBase {
    *   Expected width of the iframe.
    */
   protected function assertIframeDimensions(int $expected_width): void {
-    // Check rendered width, height and position with javascript.
-    $js_eval = $this->getSession()->evaluateScript(...);
-    $select_iframe = "document.querySelector('iframe')";
+    [$iframe_box, $parent_box] = $this->getSession()->evaluateScript(<<<JS
+[
+  document.querySelector('iframe').getBoundingClientRect(),
+  document.querySelector('iframe').parentElement.getBoundingClientRect(),
+]
+JS);
 
-    $iframe_width = $js_eval("$select_iframe.clientWidth");
-    $this->assertSame($expected_width, $iframe_width);
-    $this->assertSame($iframe_width, $js_eval("$select_iframe.parentElement.clientWidth"));
+    // The iframe size and position is exactly as its parent element.
+    $this->assertSame($parent_box, $iframe_box);
 
-    // The iframe height should be the same as its parent element.
-    $iframe_height = $js_eval("$select_iframe.clientHeight");
-    $this->assertSame($iframe_height, $js_eval("$select_iframe.clientHeight"));
-    // The ratio of width and height should match the aspect ratio 5 / 2.
-    $this->assertEqualsWithDelta(2.5, $iframe_width / $iframe_height, .01);
+    // The iframe width is as expected.
+    $this->assertSame($expected_width, $iframe_box['width']);
+
+    // The aspect ratio is as configured.
+    $this->assertEqualsWithDelta(2.5, $iframe_box['width'] / $iframe_box['height'], .01);
   }
 
 }
