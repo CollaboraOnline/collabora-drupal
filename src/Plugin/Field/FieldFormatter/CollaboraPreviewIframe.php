@@ -92,7 +92,6 @@ class CollaboraPreviewIframe extends CollaboraFileFormatterBase {
     // The aspect_ratio setting can be '' during views preview, when the schema
     // normalization to string|null has not been applied yet.
     if ($aspect_ratio_setting !== NULL && $aspect_ratio_setting !== '') {
-      assert((bool) preg_match('#^[1-9]\d* / [1-9]\d*$#', $aspect_ratio_setting));
       $iframe['#attributes']['style'] = 'aspect-ratio: ' . $aspect_ratio_setting;
     }
     $iframe['#attached']['library'][] = 'collabora_online/iframe';
