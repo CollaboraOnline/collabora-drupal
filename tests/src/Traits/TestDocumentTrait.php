@@ -14,8 +14,6 @@ declare(strict_types=1);
 
 namespace Drupal\Tests\collabora_online\Traits;
 
-use Drupal\file\Entity\File;
-use Drupal\media\Entity\Media;
 use Drupal\media\MediaInterface;
 use Drupal\Tests\RandomGeneratorTrait;
 
@@ -25,6 +23,7 @@ use Drupal\Tests\RandomGeneratorTrait;
 trait TestDocumentTrait {
 
   use RandomGeneratorTrait;
+  use MediaCreationTrait;
 
   /**
    * A media entity to test with.
@@ -51,16 +50,9 @@ trait TestDocumentTrait {
    * This must be called before ->visitMediaPage().
    */
   protected function createTestDocument(): void {
-    file_put_contents('public://file.txt', $this->randomString());
-    $file = File::create(['uri' => 'public://test.txt']);
-    $file->save();
-
-    $this->media = Media::create([
+    $this->media = $this->createMediaEntity('document', [
       'name' => 'Test document',
-      'bundle' => 'document',
-      'field_media_file' => $file->id(),
     ]);
-    $this->media->save();
   }
 
   /**
