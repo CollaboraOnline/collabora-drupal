@@ -25,13 +25,13 @@ use Drupal\media\MediaInterface;
  * Provides a field formatter with a preview iframe.
  */
 #[FieldFormatter(
-  id: 'collabora_preview_iframe',
-  label: new TranslatableMarkup('Collabora Online preview iframe'),
+  id: 'collabora_preview_embed',
+  label: new TranslatableMarkup('Collabora Online preview embed'),
   field_types: [
     'file',
   ],
 )]
-class CollaboraPreviewIframe extends CollaboraFileFormatterBase {
+class CollaboraPreviewEmbed extends CollaboraFileFormatterBase {
 
   /**
    * {@inheritdoc}

@@ -64,7 +64,7 @@ class FieldFormatterSettingsTest extends BrowserTestBase {
   /**
    * Tests the configuration for the Collabora settings form.
    *
-   * @covers \Drupal\collabora_online\Plugin\Field\FieldFormatter\CollaboraPreviewIframe::settingsForm
+   * @covers \Drupal\collabora_online\Plugin\Field\FieldFormatter\CollaboraPreviewEmbed::settingsForm
    */
   public function testIframeFormatterSettingsForm(): void {
     $assert_session = $this->assertSession();
@@ -74,9 +74,9 @@ class FieldFormatterSettingsTest extends BrowserTestBase {
     $select = $assert_session->selectExists('Plugin for Field with attached file', $tr);
     $this->assertSame('file_default', $select->getValue());
 
-    $select->selectOption('Collabora Online preview iframe');
+    $select->selectOption('Collabora Online preview embed');
     $assert_session->buttonExists('Save')->press();
-    $this->assertFormatter('collabora_preview_iframe', ['aspect_ratio' => NULL]);
+    $this->assertFormatter('collabora_preview_embed', ['aspect_ratio' => NULL]);
 
     $assert_session->elementExists('css', '#edit-fields-field-media-file-settings-edit', $tr)->press();
     $aspect_ratio_field = $assert_session->fieldExists('Iframe aspect ratio', $tr);
@@ -89,7 +89,7 @@ class FieldFormatterSettingsTest extends BrowserTestBase {
     $aspect_ratio_field->setValue('17 / 11');
     $assert_session->buttonExists('Update', $tr)->press();
     $assert_session->buttonExists('Save')->press();
-    $this->assertFormatter('collabora_preview_iframe', ['aspect_ratio' => '17 / 11']);
+    $this->assertFormatter('collabora_preview_embed', ['aspect_ratio' => '17 / 11']);
   }
 
 }

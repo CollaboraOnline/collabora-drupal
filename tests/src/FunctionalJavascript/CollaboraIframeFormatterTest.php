@@ -20,7 +20,7 @@ use Drupal\Tests\collabora_online\Traits\MediaFormatterTrait;
 use Drupal\Tests\collabora_online\Traits\TestDocumentTrait;
 
 /**
- * @coversDefaultClass \Drupal\collabora_online\Plugin\Field\FieldFormatter\CollaboraPreviewIframe
+ * @coversDefaultClass \Drupal\collabora_online\Plugin\Field\FieldFormatter\CollaboraPreviewEmbed
  */
 class CollaboraIframeFormatterTest extends WebDriverTestBase {
 
@@ -53,7 +53,7 @@ class CollaboraIframeFormatterTest extends WebDriverTestBase {
       ->set('label', 'Field with attached file')
       ->save();
 
-    $this->setFormatter('collabora_preview_iframe', [
+    $this->setFormatter('collabora_preview_embed', [
       'aspect_ratio' => '5 / 2',
     ]);
 

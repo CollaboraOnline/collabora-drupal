@@ -42,9 +42,9 @@ key.type.collabora_jwt_hs:
   # configuration schema.
   type: sequence
 
-field.formatter.settings.collabora_preview_iframe:
+field.formatter.settings.collabora_preview_embed:
   type: mapping
-  label: 'Collabora Online preview iframe formatter settings'
+  label: 'Collabora Online preview embed formatter settings'
   mapping:
     aspect_ratio:
       type: string
