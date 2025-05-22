@@ -52,7 +52,7 @@ class CollaboraPreviewIframe extends CollaboraFileFormatterBase {
       '@aspect_ratio' => match ($aspect_ratio) {
         // The value can temporarily be '' instead of NULL.
         // It will be replaced with NULL on save, thanks to the schema.
-        NULL, '' => $this->t('Default (3 / 2, overridable with CSS)'),
+        NULL, '' => $this->t('Default (3 / 2)'),
         default => $aspect_ratio,
       },
     ]);
