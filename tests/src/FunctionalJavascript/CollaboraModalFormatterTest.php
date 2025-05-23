@@ -192,54 +192,57 @@ class CollaboraModalFormatterTest extends WebDriverTestBase {
     $iframe = $assert_session->waitForElementVisible('css', '.ui-dialog.cool-modal-preview > .ui-dialog-titlebar + .ui-dialog-content > iframe.cool-iframe');
     $this->assertSame('/cool/view/' . $media->id(), $iframe->getAttribute('src'));
 
-    $js_eval = $this->getSession()->evaluateScript(...);
-    $selectors = [
-      'dialog' => 'div.ui-dialog',
-      'titlebar' => 'div.ui-dialog-titlebar',
-      'content' => 'div.ui-dialog-content',
-      'iframe' => 'iframe',
-    ];
-    $boxes = array_map($this->getBoundingRectangle(...), $selectors);
-
-    $viewport_width = $js_eval('window.innerWidth');
-    $viewport_height = $js_eval('window.innerHeight');
-
+    [
+      $viewport_width,
+      $viewport_height,
+      $dialog_rect,
+      $titlebar_rect,
+      $content_rect,
+      $iframe_rect,
+    ] = $this->getSession()->evaluateScript(<<<JS
+[
+  window.innerWidth,
+  window.innerHeight,
+  document.querySelector('.ui-dialog.cool-modal-preview').getBoundingClientRect(),
+  document.querySelector('.ui-dialog-titlebar').getBoundingClientRect(),
+  document.querySelector('.ui-dialog-content').getBoundingClientRect(),
+  document.querySelector('iframe.cool-iframe').getBoundingClientRect(),
+]
+JS);
     $this->assertNoJsConsoleLogs();
+
     if ($expected_dialog_width !== NULL) {
-      if (!isset($boxes['dialog']['width'])) {
-        $this->assertSame('?', [$boxes, $boxes['dialog'], $boxes['dialog']['width']]);
-      }
       // The dialog has the expected width.
       // Allow for padding and 'box-sizing: content-box'.
-      $this->assertNumberInRange($expected_dialog_width, 12, $boxes['dialog']['width']);
+      $this->assertNumberInRange($expected_dialog_width, 12, $dialog_rect['width']);
     }
     else {
       // The dialog width is relative to the viewport.
       // Allow for padding and 'box-sizing: content-box'.
-      $this->assertNumberInRange($viewport_width * .92 - 1, 12, $boxes['dialog']['width']);
+      $this->assertNumberInRange($viewport_width * .92 - 1, 12, $dialog_rect['width']);
     }
     // The dialog height is a percentage of the viewport height.
     // Allow for padding and 'box-sizing: content-box'.
-    $this->assertLessThanOrEqual($viewport_height - 20, $boxes['dialog']['height']);
-    $this->assertGreaterThanOrEqual($viewport_height * .8, $boxes['dialog']['height']);
+    $this->assertLessThanOrEqual($viewport_height - 20, $dialog_rect['height']);
+    $this->assertGreaterThanOrEqual($viewport_height * .8, $dialog_rect['height']);
 
     // The dialog is centered in the viewport.
-    $this->assertEqualsWithDelta($boxes['dialog']['left'], $viewport_width - $boxes['dialog']['right'], 2);
-    $this->assertEqualsWithDelta($boxes['dialog']['top'], $viewport_height - $boxes['dialog']['bottom'], 2);
+    $this->assertEqualsWithDelta($dialog_rect['left'], $viewport_width - $dialog_rect['right'], 2);
+    $this->assertEqualsWithDelta($dialog_rect['top'], $viewport_height - $dialog_rect['bottom'], 2);
 
     // Assert horizontal positioning of child elements.
-    $this->assertNumberInRange($boxes['dialog']['left'], 6, $boxes['content']['left']);
-    $this->assertNumberInRange($boxes['dialog']['right'], -6, $boxes['content']['right']);
-    $this->assertSame($boxes['content']['left'], $boxes['titlebar']['left']);
-    $this->assertSame($boxes['content']['right'], $boxes['titlebar']['right']);
+    $this->assertNumberInRange($dialog_rect['left'], 6, $content_rect['left']);
+    $this->assertNumberInRange($dialog_rect['right'], -6, $content_rect['right']);
+    $this->assertSame($content_rect['left'], $titlebar_rect['left']);
+    $this->assertSame($content_rect['right'], $titlebar_rect['right']);
 
     // Assert vertical positioning of child elements.
-    $this->assertNumberInRange($boxes['dialog']['top'], 6, $boxes['titlebar']['top']);
-    $this->assertNumberInRange($boxes['titlebar']['bottom'], 4, $boxes['content']['top']);
-    $this->assertNumberInRange($boxes['dialog']['bottom'], -6, $boxes['content']['bottom']);
+    $this->assertNumberInRange($dialog_rect['top'], 6, $titlebar_rect['top']);
+    $this->assertNumberInRange($titlebar_rect['bottom'], 4, $content_rect['top']);
+    $this->assertNumberInRange($dialog_rect['bottom'], -6, $content_rect['bottom']);
 
     // The iframe has the same dimensions and position as its parent.
-    $this->assertSame($boxes['content'], $boxes['iframe']);
+    $this->assertSame($content_rect, $iframe_rect);
 
     return $iframe;
   }
