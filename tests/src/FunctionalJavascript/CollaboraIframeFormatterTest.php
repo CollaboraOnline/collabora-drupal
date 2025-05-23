@@ -16,16 +16,18 @@ namespace Drupal\Tests\collabora_online\FunctionalJavascript;
 
 use Drupal\field\Entity\FieldConfig;
 use Drupal\FunctionalJavascriptTests\WebDriverTestBase;
+use Drupal\Tests\collabora_online\Traits\MediaCreationTrait;
 use Drupal\Tests\collabora_online\Traits\MediaFormatterTrait;
-use Drupal\Tests\collabora_online\Traits\TestDocumentTrait;
+use Drupal\Tests\RandomGeneratorTrait;
 
 /**
  * @coversDefaultClass \Drupal\collabora_online\Plugin\Field\FieldFormatter\CollaboraPreviewEmbed
  */
 class CollaboraIframeFormatterTest extends WebDriverTestBase {
 
+  use RandomGeneratorTrait;
+  use MediaCreationTrait;
   use MediaFormatterTrait;
-  use TestDocumentTrait;
 
   /**
    * {@inheritdoc}
@@ -46,7 +48,12 @@ class CollaboraIframeFormatterTest extends WebDriverTestBase {
   protected function setUp(): void {
     parent::setUp();
 
-    $this->enableStandaloneMediaPage();
+    // Enable standalone media page.
+    \Drupal::configFactory()
+      ->getEditable('media.settings')
+      ->set('standalone_url', TRUE)
+      ->save(TRUE);
+    $this->container->get('router.builder')->rebuild();
 
     // Set a more distinctive field name.
     FieldConfig::load('media.document.field_media_file')
@@ -56,22 +63,29 @@ class CollaboraIframeFormatterTest extends WebDriverTestBase {
     $this->setFormatter('collabora_preview_embed', [
       'aspect_ratio' => '5 / 2',
     ]);
-
-    $this->createTestDocument();
   }
 
   /**
    * Tests the display of the iframe formatter.
    */
   public function testIframeFormatterDisplay(): void {
+    $media = $this->createMediaEntity('document', [
+      'name' => 'Test document',
+    ]);
     // A user with insufficient permissions can see the media, but not the
     // preview button.
     $account = $this->drupalCreateUser([
       'access content',
     ]);
     $this->drupalLogin($account);
-    $this->visitMediaPage();
+    $this->drupalGet($media->toUrl());
     $assert_session = $this->assertSession();
+    $this->assertSame(
+      'Test document | Drupal',
+      $assert_session->elementExists('css', 'title')
+        ->getHtml(),
+    );
+    $assert_session->pageTextContains('Test document');
     $assert_session->pageTextNotContains('Field with attached file');
     $assert_session->elementNotExists('css', 'iframe');
 
@@ -81,12 +95,12 @@ class CollaboraIframeFormatterTest extends WebDriverTestBase {
       'preview document in collabora',
     ]);
     $this->drupalLogin($account);
-    $this->visitMediaPage();
+    $this->drupalGet($media->toUrl());
     $assert_session->pageTextContains('Field with attached file');
     $iframe = $assert_session->elementExists('css', 'iframe.cool-iframe');
 
     // Assert iframe attributes and dimensions.
-    $this->assertSame('/cool/view/' . $this->media->id(), $iframe->getAttribute('src'));
+    $this->assertSame('/cool/view/' . $media->id(), $iframe->getAttribute('src'));
     $this->assertSame('aspect-ratio: 5 / 2', $iframe->getAttribute('style'));
     $this->assertIframeDimensions(1000);
   }
