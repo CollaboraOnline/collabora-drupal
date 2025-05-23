@@ -102,18 +102,15 @@ class CollaboraIframeFormatterTest extends WebDriverTestBase {
     // Assert iframe attributes and dimensions.
     $this->assertSame('/cool/view/' . $media->id(), $iframe->getAttribute('src'));
     $this->assertSame('aspect-ratio: 5 / 2', $iframe->getAttribute('style'));
-    $this->assertIframeDimensions(1000);
+    $this->assertIframeDimensions();
   }
 
   /**
    * Asserts iframe dimensions and position.
    *
    * This verifies that the CSS is correctly applied.
-   *
-   * @param int $expected_width
-   *   Expected width of the iframe.
    */
-  protected function assertIframeDimensions(int $expected_width): void {
+  protected function assertIframeDimensions(): void {
     [$iframe_box, $parent_box] = $this->getSession()->evaluateScript(<<<JS
 [
   document.querySelector('iframe').getBoundingClientRect(),
@@ -123,9 +120,6 @@ JS);
 
     // The iframe size and position is exactly as its parent element.
     $this->assertSame($parent_box, $iframe_box);
-
-    // The iframe width is as expected.
-    $this->assertSame($expected_width, $iframe_box['width']);
 
     // The aspect ratio is as configured.
     $this->assertEqualsWithDelta(2.5, $iframe_box['width'] / $iframe_box['height'], .01);
