@@ -17,8 +17,10 @@ namespace Drupal\Tests\collabora_online\FunctionalJavascript;
 use Behat\Mink\Element\NodeElement;
 use Drupal\field\Entity\FieldConfig;
 use Drupal\FunctionalJavascriptTests\WebDriverTestBase;
+use Drupal\media\MediaInterface;
+use Drupal\Tests\collabora_online\Traits\MediaCreationTrait;
 use Drupal\Tests\collabora_online\Traits\MediaFormatterTrait;
-use Drupal\Tests\collabora_online\Traits\TestDocumentTrait;
+use Drupal\Tests\RandomGeneratorTrait;
 
 /**
  * @coversDefaultClass \Drupal\collabora_online\Plugin\Field\FieldFormatter\CollaboraPreviewModal
@@ -26,7 +28,8 @@ use Drupal\Tests\collabora_online\Traits\TestDocumentTrait;
 class CollaboraModalFormatterTest extends WebDriverTestBase {
 
   use MediaFormatterTrait;
-  use TestDocumentTrait;
+  use RandomGeneratorTrait;
+  use MediaCreationTrait;
 
   /**
    * {@inheritdoc}
@@ -47,6 +50,7 @@ class CollaboraModalFormatterTest extends WebDriverTestBase {
   protected function setUp(): void {
     parent::setUp();
 
+    // Enable standalone media page.
     \Drupal::configFactory()
       ->getEditable('media.settings')
       ->set('standalone_url', TRUE)
@@ -61,23 +65,30 @@ class CollaboraModalFormatterTest extends WebDriverTestBase {
     $this->setFormatter('collabora_preview_modal', [
       'max_width' => 750,
     ]);
-
-    $this->createTestDocument();
   }
 
   /**
    * Tests the display of the modal formatter.
    */
   public function testModalFormatterDisplay(): void {
+    $media = $this->createMediaEntity('document', [
+      'name' => 'Test document',
+    ]);
     // A user with insufficient permissions can see the media, but not the
     // preview button.
     $account = $this->drupalCreateUser([
       'access content',
     ]);
     $this->drupalLogin($account);
-    $expected_modal_url = '/cool/modal/' . $this->media->id();
-    $this->visitMediaPage();
+    $expected_modal_url = '/cool/modal/' . $media->id();
+    $this->drupalGet($media->toUrl());
     $assert_session = $this->assertSession();
+    $this->assertSame(
+      'Test document | Drupal',
+      $assert_session->elementExists('css', 'title')
+        ->getHtml(),
+    );
+    $assert_session->pageTextContains('Test document');
     $assert_session->pageTextNotContains('Field with attached file');
     $assert_session->pageTextNotContains('Preview');
     $assert_session->elementNotExists('css', "a[href='$expected_modal_url']");
@@ -88,9 +99,9 @@ class CollaboraModalFormatterTest extends WebDriverTestBase {
       'preview document in collabora',
     ]);
     $this->drupalLogin($account);
-    $this->visitMediaPage();
+    $this->drupalGet($media->toUrl());
     $assert_session->pageTextContains('Field with attached file');
-    $button = $this->assertPreviewButton();
+    $button = $this->assertPreviewButton($media);
 
     // No dialog or iframe exists (yet).
     $assert_session->elementNotExists('css', '.ui-dialog');
@@ -99,7 +110,7 @@ class CollaboraModalFormatterTest extends WebDriverTestBase {
 
     // Clicking the button opens the modal.
     $button->click();
-    $iframe = $this->assertModalWithIframe(750);
+    $iframe = $this->assertModalWithIframe($media, 750);
 
     // Clicking the close button closes the modal.
     $assert_session->elementExists('named', ['button', 'Close'], $iframe->getParent()->getParent())->click();
@@ -110,58 +121,47 @@ class CollaboraModalFormatterTest extends WebDriverTestBase {
 
     // Test with different themes.
     $this->setActiveTheme('claro');
-    $this->visitMediaPage();
-    $this->assertPreviewButton()->click();
-    $this->assertModalWithIframe(750);
+    $this->drupalGet($media->toUrl());
+    $this->assertPreviewButton($media)->click();
+    $this->assertModalWithIframe($media, 750);
 
     $this->setActiveTheme('olivero');
-    $this->visitMediaPage();
-    $this->assertPreviewButton()->click();
-    $this->assertModalWithIframe(750);
+    $this->drupalGet($media->toUrl());
+    $this->assertPreviewButton($media)->click();
+    $this->assertModalWithIframe($media, 750);
 
     // Test narrow viewport in different themes.
     $this->getSession()->resizeWindow(400, 800);
-    $this->visitMediaPage();
-    $this->assertPreviewButton()->click();
-    $this->assertModalWithIframe();
+    $this->drupalGet($media->toUrl());
+    $this->assertPreviewButton($media)->click();
+    $this->assertModalWithIframe($media);
 
     $this->setActiveTheme('claro');
-    $this->visitMediaPage();
-    $this->assertPreviewButton()->click();
-    $this->assertModalWithIframe();
+    $this->drupalGet($media->toUrl());
+    $this->assertPreviewButton($media)->click();
+    $this->assertModalWithIframe($media);
 
     $this->setActiveTheme('stark');
-    $this->visitMediaPage();
-    $this->assertPreviewButton()->click();
-    $this->assertModalWithIframe();
-  }
-
-  /**
-   * Visits the media page, and verifies that the media is shown.
-   */
-  protected function visitMediaPage(): void {
-    $this->drupalGet($this->media->toUrl());
-    $assert_session = $this->assertSession();
-    $this->assertSame(
-      'Test document | Drupal',
-      $assert_session->elementExists('css', 'title')
-        ->getHtml(),
-    );
-    $assert_session->pageTextContains('Test document');
+    $this->drupalGet($media->toUrl());
+    $this->assertPreviewButton($media)->click();
+    $this->assertModalWithIframe($media);
   }
 
   /**
    * Asserts that a preview button exists as expected, and returns it.
    *
+   * @param \Drupal\media\MediaInterface $media
+   *   The media entity being displayed.
+   *
    * @return \Behat\Mink\Element\NodeElement
    *   The preview button.
    */
-  protected function assertPreviewButton(): NodeElement {
+  protected function assertPreviewButton(MediaInterface $media): NodeElement {
     $assert_session = $this->assertSession();
     $button = $assert_session->elementExists('named', ['link', 'Preview']);
 
     // Assert button attributes.
-    $this->assertSame('/cool/modal/' . $this->media->id(), $button->getAttribute('href'));
+    $this->assertSame('/cool/modal/' . $media->id(), $button->getAttribute('href'));
     $this->assertTrue($button->hasClass('use-ajax'));
     $this->assertTrue($button->hasClass('button'));
     $this->assertTrue($button->hasClass('button--small'));
@@ -179,16 +179,18 @@ class CollaboraModalFormatterTest extends WebDriverTestBase {
   /**
    * Waits for the modal dialog, and asserts its properties.
    *
+   * @param \Drupal\media\MediaInterface $media
+   *   The media entity being displayed.
    * @param int|null $expected_dialog_width
    *   Expected dialog width in px, or NULL for auto-sized width.
    *
    * @return \Behat\Mink\Element\NodeElement
    *   The iframe element.
    */
-  protected function assertModalWithIframe(int|null $expected_dialog_width = NULL): NodeElement {
+  protected function assertModalWithIframe(MediaInterface $media, int|null $expected_dialog_width = NULL): NodeElement {
     $assert_session = $this->assertSession();
     $iframe = $assert_session->waitForElementVisible('css', '.ui-dialog.cool-modal-preview > .ui-dialog-titlebar + .ui-dialog-content > iframe.cool-iframe');
-    $this->assertSame('/cool/view/' . $this->media->id(), $iframe->getAttribute('src'));
+    $this->assertSame('/cool/view/' . $media->id(), $iframe->getAttribute('src'));
 
     $js_eval = $this->getSession()->evaluateScript(...);
     $selectors = [
