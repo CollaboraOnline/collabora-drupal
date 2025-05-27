@@ -19,6 +19,9 @@ use Drupal\media\MediaInterface;
 
 /**
  * Static methods to build urls.
+ *
+ * The main purpose is not having to remember route names and route parameter
+ * names, which then cannot be verified by static analysis.
  */
 class CollaboraUrl {
 
@@ -27,12 +30,14 @@ class CollaboraUrl {
    *
    * @param \Drupal\media\MediaInterface $media
    *   Media entity that holds the file to open in the viewer.
+   * @param array $options
+   *   See \Drupal\Core\Url::fromUri() for details.
    *
    * @return \Drupal\Core\Url
    *   Editor url to visit as full-page, or to embed in an iframe.
    */
-  public static function previewMedia(MediaInterface $media): Url {
-    return Url::fromRoute('collabora-online.view', ['media' => $media->id()]);
+  public static function previewMedia(MediaInterface $media, array $options = []): Url {
+    return Url::fromRoute('collabora-online.view', ['media' => $media->id()], $options);
   }
 
   /**
@@ -40,12 +45,14 @@ class CollaboraUrl {
    *
    * @param \Drupal\media\MediaInterface $media
    *   Media entity that holds the file to open in the editor.
+   * @param array $options
+   *   See \Drupal\Core\Url::fromUri() for details.
    *
    * @return \Drupal\Core\Url
    *   Editor url to visit as full-page, or to embed in an iframe.
    */
-  public static function editMedia(MediaInterface $media): Url {
-    return Url::fromRoute('collabora-online.edit', ['media' => $media->id()]);
+  public static function editMedia(MediaInterface $media, array $options = []): Url {
+    return Url::fromRoute('collabora-online.edit', ['media' => $media->id()], $options);
   }
 
 }
