@@ -184,15 +184,16 @@ class ViewerController implements ContainerInjectionInterface {
    *   The key to use by Collabora is empty or not configured.
    */
   protected function getViewerRender(MediaInterface $media, string $wopi_client, bool $can_write, ?Url $close_button_url): array {
-    /** @var array $cool_settings */
-    $cool_settings = $this->configFactory->get('collabora_online.settings')->get('cool');
+    $config = $this->configFactory->get('collabora_online.settings');
 
-    if (empty($cool_settings['wopi_base'])) {
+    /** @var string|null $wopi_base */
+    $wopi_base = $config->get('cool.wopi_base');
+    if (!$wopi_base) {
       throw new CollaboraNotAvailableException('The Collabora Online connection is not configured.');
     }
 
     // A trailing slash is optional in the configured URL.
-    $wopi_base = rtrim($cool_settings['wopi_base'], '/');
+    $wopi_base = rtrim($wopi_base, '/');
     $expire_timestamp = $this->getExpireTimestamp();
     $access_token = $this->jwtTranscoder->encode(
       [
@@ -210,7 +211,7 @@ class ViewerController implements ContainerInjectionInterface {
       '#accessToken' => $access_token,
       // Convert to milliseconds.
       '#accessTokenTtl' => $expire_timestamp * 1000,
-      '#allowfullscreen' => empty($cool_settings['allowfullscreen']) ? '' : 'allowfullscreen',
+      '#allowfullscreen' => !$config->get('cool.allowfullscreen') ? '' : 'allowfullscreen',
       '#closeButtonUrl' => $close_button_url?->toString(),
       '#attached' => [
         'library' => [
