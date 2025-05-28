@@ -17,6 +17,7 @@ namespace Drupal\collabora_online\Controller;
 use Drupal\collabora_online\Discovery\DiscoveryFetcherInterface;
 use Drupal\collabora_online\Exception\CollaboraNotAvailableException;
 use Drupal\collabora_online\Jwt\JwtTranscoderInterface;
+use Drupal\Component\Serialization\Json;
 use Drupal\Component\Utility\UrlHelper;
 use Drupal\Core\Config\ConfigFactoryInterface;
 use Drupal\Core\DependencyInjection\AutowireTrait;
@@ -194,6 +195,15 @@ class ViewerController implements ContainerInjectionInterface {
 
     // A trailing slash is optional in the configured URL.
     $wopi_base = rtrim($wopi_base, '/');
+    $wopi_url = $wopi_base . '/cool/wopi/files/' . $media->id();
+    $editor_url = Url::fromUri($wopi_client_url);
+    $query = $editor_url->getOption('query') ?? [];
+    $query['WOPISrc'] = $wopi_url;
+    if ($close_button_url !== NULL) {
+      $query['closebutton'] = 'true';
+    }
+    $editor_url->setOption('query', $query);
+
     $expire_timestamp = $this->getExpireTimestamp();
     $access_token = $this->jwtTranscoder->encode(
       [
@@ -204,15 +214,26 @@ class ViewerController implements ContainerInjectionInterface {
       $expire_timestamp,
     );
 
-    $render_array = [
-      '#theme' => 'collabora_online_full',
-      '#wopiClient' => $wopi_client_url,
-      '#wopiSrc' => urlencode($wopi_base . '/cool/wopi/files/' . $media->id()),
-      '#accessToken' => $access_token,
-      // Convert to milliseconds.
-      '#accessTokenTtl' => $expire_timestamp * 1000,
-      '#allowfullscreen' => !$config->get('cool.allowfullscreen') ? '' : 'allowfullscreen',
-      '#closeButtonUrl' => $close_button_url?->toString(),
+    $data = [
+      'action' => $editor_url->toString(),
+      'payload' => [
+        'access_token' => $access_token,
+        'access_token_ttl' => $expire_timestamp * 1000,
+      ],
+      'iframe_attributes' => [
+        // The attributes are applied with javascript, where '' produces an
+        // attribute without a value.
+        ...$config->get('cool.allowfullscreen') ? ['allowfullscreen' => ''] : [],
+      ],
+      'close_button_url' => $close_button_url?->toString(),
+    ];
+
+    $placeholder_div = [
+      '#type' => 'html_tag',
+      '#tag' => 'div',
+      '#attributes' => [
+        'data-collabora-online-editor' => Json::encode($data),
+      ],
       '#attached' => [
         'library' => [
           'collabora_online/cool.frame',
@@ -220,7 +241,12 @@ class ViewerController implements ContainerInjectionInterface {
       ],
     ];
 
-    return $render_array;
+    $html_wrapper = [
+      '#theme' => 'collabora_online_full',
+      'content' => $placeholder_div,
+    ];
+
+    return $html_wrapper;
   }
 
   /**
