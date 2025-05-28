@@ -231,7 +231,6 @@ class WopiControllerTest extends WopiControllerTestBase {
     // but does not, due to a bug in datetime_testing.
     // See https://www.drupal.org/project/datetime_testing/issues/3513073
     $this->assertLessThanOrEqual(1, abs($request_time - $file->getChangedTime()));
-    $this->assertSame($request_time, $file->getChangedTime());
     $actual_file_content = file_get_contents($file->getFileUri());
     $this->assertSame($new_file_content, $actual_file_content);
     $this->assertSame(strlen($new_file_content), $file->getSize());

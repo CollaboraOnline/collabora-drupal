@@ -17,6 +17,8 @@ namespace Drupal\collabora_online\Controller;
 use Drupal\collabora_online\Discovery\DiscoveryFetcherInterface;
 use Drupal\collabora_online\Exception\CollaboraNotAvailableException;
 use Drupal\collabora_online\Jwt\JwtTranscoderInterface;
+use Drupal\Component\Serialization\Json;
+use Drupal\Component\Utility\UrlHelper;
 use Drupal\Core\Config\ConfigFactoryInterface;
 use Drupal\Core\DependencyInjection\AutowireTrait;
 use Drupal\Core\DependencyInjection\ContainerInjectionInterface;
@@ -24,6 +26,7 @@ use Drupal\Core\Render\RendererInterface;
 use Drupal\Core\Session\AccountInterface;
 use Drupal\Core\StringTranslation\StringTranslationTrait;
 use Drupal\Core\StringTranslation\TranslationInterface;
+use Drupal\Core\Url;
 use Drupal\Core\Utility\Error;
 use Drupal\media\MediaInterface;
 use Psr\Log\LoggerInterface;
@@ -107,8 +110,10 @@ class ViewerController implements ContainerInjectionInterface {
       );
     }
 
+    $destination_url = $this->getDestinationUrl($request);
+
     try {
-      $render_array = $this->getViewerRender($media, $wopi_client_url, $edit);
+      $render_array = $this->getViewerRender($media, $wopi_client_url, $edit, $destination_url);
     }
     catch (CollaboraNotAvailableException $e) {
       $this->logger->warning(
@@ -126,15 +131,52 @@ class ViewerController implements ContainerInjectionInterface {
   }
 
   /**
+   * Reads the 'destination' parameter from a request.
+   *
+   * @param \Symfony\Component\HttpFoundation\Request $request
+   *   Incoming request, which or may not have a 'destination' query parameter.
+   *
+   * @return \Drupal\Core\Url|null
+   *   The 'destination' as a url, or NULL if no destination was provided, or it
+   *   was empty.
+   *
+   * @see \Drupal\Core\Form\ConfirmFormHelper::buildCancelLink()
+   * @see \Drupal\Core\EventSubscriber\RedirectResponseSubscriber::getDestinationAsAbsoluteUrl()
+   */
+  protected function getDestinationUrl(Request $request): ?Url {
+    $destination = (string) $request->query->get('destination');
+    if (
+      !$destination ||
+      UrlHelper::isExternal($destination) ||
+      // Instead of ltrim(), simply discard a destination with missing or
+      // unexpected leading slashes.
+      !str_starts_with($destination, '/') ||
+      str_starts_with($destination, '//')
+    ) {
+      return NULL;
+    }
+    $parsed = UrlHelper::parse($destination);
+    $options = [
+      'query' => $parsed['query'],
+      'fragment' => $parsed['fragment'],
+      'absolute' => TRUE,
+    ];
+    return Url::fromUserInput($parsed['path'], $options);
+  }
+
+  /**
    * Gets a render array for a cool viewer.
    *
    * @param \Drupal\media\MediaInterface $media
    *   The media entity to view / edit.
-   * @param string $wopi_client
+   * @param string $wopi_client_url
    *   The WOPI client url.
    * @param bool $can_write
    *   Whether this is a viewer (false) or an edit (true). Permissions will
    *   also be checked.
+   * @param \Drupal\Core\Url|null $close_button_url
+   *   Destination to redirect to when the editor is closed.
+   *   If this is NULL, no close button is shown.
    *
    * @return array
    *   A stub render element.
@@ -142,16 +184,26 @@ class ViewerController implements ContainerInjectionInterface {
    * @throws \Drupal\collabora_online\Exception\CollaboraNotAvailableException
    *   The key to use by Collabora is empty or not configured.
    */
-  protected function getViewerRender(MediaInterface $media, string $wopi_client, bool $can_write): array {
-    /** @var array $cool_settings */
-    $cool_settings = $this->configFactory->get('collabora_online.settings')->get('cool');
+  protected function getViewerRender(MediaInterface $media, string $wopi_client_url, bool $can_write, ?Url $close_button_url): array {
+    $config = $this->configFactory->get('collabora_online.settings');
 
-    if (empty($cool_settings['wopi_base'])) {
+    /** @var string|null $wopi_base */
+    $wopi_base = $config->get('cool.wopi_base');
+    if (!$wopi_base) {
       throw new CollaboraNotAvailableException('The Collabora Online connection is not configured.');
     }
 
     // A trailing slash is optional in the configured URL.
-    $wopi_base = rtrim($cool_settings['wopi_base'], '/');
+    $wopi_base = rtrim($wopi_base, '/');
+    $wopi_url = $wopi_base . '/cool/wopi/files/' . $media->id();
+    $editor_url = Url::fromUri($wopi_client_url);
+    $query = $editor_url->getOption('query') ?? [];
+    $query['WOPISrc'] = $wopi_url;
+    if ($close_button_url !== NULL) {
+      $query['closebutton'] = 'true';
+    }
+    $editor_url->setOption('query', $query);
+
     $expire_timestamp = $this->getExpireTimestamp();
     $access_token = $this->jwtTranscoder->encode(
       [
@@ -162,15 +214,26 @@ class ViewerController implements ContainerInjectionInterface {
       $expire_timestamp,
     );
 
-    $render_array = [
-      '#theme' => 'collabora_online_full',
-      '#wopiClient' => $wopi_client,
-      '#wopiSrc' => urlencode($wopi_base . '/cool/wopi/files/' . $media->id()),
-      '#accessToken' => $access_token,
-      // Convert to milliseconds.
-      '#accessTokenTtl' => $expire_timestamp * 1000,
-      '#allowfullscreen' => empty($cool_settings['allowfullscreen']) ? '' : 'allowfullscreen',
-      '#closebutton' => 'true',
+    $data = [
+      'action' => $editor_url->toString(),
+      'payload' => [
+        'access_token' => $access_token,
+        'access_token_ttl' => $expire_timestamp * 1000,
+      ],
+      'iframe_attributes' => [
+        // The attributes are applied with javascript, where '' produces an
+        // attribute without a value.
+        ...$config->get('cool.allowfullscreen') ? ['allowfullscreen' => ''] : [],
+      ],
+      'close_button_url' => $close_button_url?->toString(),
+    ];
+
+    $placeholder_div = [
+      '#type' => 'html_tag',
+      '#tag' => 'div',
+      '#attributes' => [
+        'data-collabora-online-editor' => Json::encode($data),
+      ],
       '#attached' => [
         'library' => [
           'collabora_online/cool.frame',
@@ -178,7 +241,12 @@ class ViewerController implements ContainerInjectionInterface {
       ],
     ];
 
-    return $render_array;
+    $html_wrapper = [
+      '#theme' => 'collabora_online_full',
+      'content' => $placeholder_div,
+    ];
+
+    return $html_wrapper;
   }
 
   /**

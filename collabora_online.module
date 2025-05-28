@@ -34,19 +34,6 @@ use Drupal\media\MediaInterface;
  */
 function collabora_online_theme(): array {
   return [
-    'collabora_online' => [
-      'render element' => 'children',
-      'template' => 'collabora-online',
-      'variables' => [
-        'accessToken' => 'test',
-        'accessTokenTtl' => '86400',
-        'iFrameStyle' => 'width:95%;',
-        'closebutton' => '',
-        'allowfullscreen' => '',
-        'wopiSrc' => 'http://localhost:9980/',
-        'wopiClient' => 'https://localhost:9980/',
-      ],
-    ],
     // This is the template for the field preview.
     'collabora_online_preview' => [
       'render element' => 'children',
@@ -59,15 +46,7 @@ function collabora_online_theme(): array {
     // This is the template for the complete page with embedding.
     'collabora_online_full' => [
       'template' => 'collabora-online-full',
-      'variables' => [
-        'accessToken' => 'test',
-        'accessTokenTtl' => '86400',
-        'iFrameStyle' => '',
-        'closebutton' => '',
-        'allowfullscreen' => '',
-        'wopiSrc' => '/wopi/files/123',
-        'wopiClient' => 'https://localhost:9980/',
-      ],
+      'render element' => 'element',
       'file' => 'collabora_online.theme.inc',
     ],
   ];
@@ -108,11 +87,14 @@ function collabora_online_entity_operation(EntityInterface $entity): array {
     return [];
   }
 
+  $options = [];
+  $options['query'] = \Drupal::destination()->getAsArray();
+
   $entries = [
     'collabora_online_view' => [
       'title' => t("View in Collabora Online"),
       'weight' => 50,
-      'url' => CollaboraUrl::previewMedia($media),
+      'url' => CollaboraUrl::previewMedia($media, $options),
     ],
   ];
 
@@ -123,7 +105,7 @@ function collabora_online_entity_operation(EntityInterface $entity): array {
     $entries['collabora_online_edit'] = [
       'title' => t("Edit in Collabora Online"),
       'weight' => 50,
-      'url' => CollaboraUrl::editMedia($media),
+      'url' => CollaboraUrl::editMedia($media, $options),
     ];
   }
 
