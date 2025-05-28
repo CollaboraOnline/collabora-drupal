@@ -19,7 +19,6 @@ use Drupal\Core\Url;
 use Drupal\file\Entity\File;
 use Drupal\media\Entity\Media;
 use Drupal\media\MediaInterface;
-use PHPUnit\Framework\Attributes\TestWith;
 use WebDriver\Exception\NoSuchElement;
 use weitzman\DrupalTestTraits\ExistingSiteSelenium2DriverTestBase;
 
@@ -115,13 +114,14 @@ class CollaboraIntegrationTest extends ExistingSiteSelenium2DriverTestBase {
 
   /**
    * Tests the editor close button redirect functionality.
+   *
+   * @testWith ["view", "/admin/structure"]
+   *           ["edit", "/admin/structure"]
+   *           ["edit", "/non/existing/path?x=y"]
+   *           ["edit", "malformed/path", false]
+   *           ["edit", "//multislash/path", false]
+   *           ["edit", "https://example.com/hello", false]
    */
-  #[TestWith(['view', '/admin/structure'])]
-  #[TestWith(['edit', '/admin/structure'])]
-  #[TestWith(['edit', '/non/existing/path?x=y'])]
-  #[TestWith(['edit', 'malformed/path', FALSE])]
-  #[TestWith(['edit', '//multislash/path', FALSE])]
-  #[TestWith(['edit', 'https://example.com/hello', FALSE])]
   public function testCloseButtonDestination(string $operation, string $destination, bool $expect_redirect = TRUE): void {
     $user = $this->createUser([
       'edit any document in collabora',
