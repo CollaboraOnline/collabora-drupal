@@ -17,6 +17,7 @@ namespace Drupal\collabora_online\Controller;
 use Drupal\collabora_online\Discovery\DiscoveryFetcherInterface;
 use Drupal\collabora_online\Exception\CollaboraNotAvailableException;
 use Drupal\collabora_online\Jwt\JwtTranscoderInterface;
+use Drupal\Component\Utility\UrlHelper;
 use Drupal\Core\Config\ConfigFactoryInterface;
 use Drupal\Core\DependencyInjection\AutowireTrait;
 use Drupal\Core\DependencyInjection\ContainerInjectionInterface;
@@ -24,6 +25,7 @@ use Drupal\Core\Render\RendererInterface;
 use Drupal\Core\Session\AccountInterface;
 use Drupal\Core\StringTranslation\StringTranslationTrait;
 use Drupal\Core\StringTranslation\TranslationInterface;
+use Drupal\Core\Url;
 use Drupal\Core\Utility\Error;
 use Drupal\media\MediaInterface;
 use Psr\Log\LoggerInterface;
@@ -107,8 +109,10 @@ class ViewerController implements ContainerInjectionInterface {
       );
     }
 
+    $destination_url = $this->getDestinationUrl($request);
+
     try {
-      $render_array = $this->getViewerRender($media, $wopi_client_url, $edit);
+      $render_array = $this->getViewerRender($media, $wopi_client_url, $edit, $destination_url);
     }
     catch (CollaboraNotAvailableException $e) {
       $this->logger->warning(
@@ -126,6 +130,40 @@ class ViewerController implements ContainerInjectionInterface {
   }
 
   /**
+   * Reads the 'destination' parameter from a request.
+   *
+   * @param \Symfony\Component\HttpFoundation\Request $request
+   *   Incoming request, which or may not have a 'destination' query parameter.
+   *
+   * @return \Drupal\Core\Url|null
+   *   The 'destination' as a url, or NULL if no destination was provided, or it
+   *   was empty.
+   *
+   * @see \Drupal\Core\Form\ConfirmFormHelper::buildCancelLink()
+   * @see \Drupal\Core\EventSubscriber\RedirectResponseSubscriber::getDestinationAsAbsoluteUrl()
+   */
+  protected function getDestinationUrl(Request $request): ?Url {
+    $destination = (string) $request->query->get('destination');
+    if (
+      !$destination ||
+      UrlHelper::isExternal($destination) ||
+      // Instead of ltrim(), simply discard a destination with missing or
+      // unexpected leading slashes.
+      !str_starts_with($destination, '/') ||
+      str_starts_with($destination, '//')
+    ) {
+      return NULL;
+    }
+    $parsed = UrlHelper::parse($destination);
+    $options = [
+      'query' => $parsed['query'],
+      'fragment' => $parsed['fragment'],
+      'absolute' => TRUE,
+    ];
+    return Url::fromUserInput($parsed['path'], $options);
+  }
+
+  /**
    * Gets a render array for a cool viewer.
    *
    * @param \Drupal\media\MediaInterface $media
@@ -135,6 +173,9 @@ class ViewerController implements ContainerInjectionInterface {
    * @param bool $can_write
    *   Whether this is a viewer (false) or an edit (true). Permissions will
    *   also be checked.
+   * @param \Drupal\Core\Url|null $close_button_url
+   *   Destination to redirect to when the editor is closed.
+   *   If this is NULL, no close button is shown.
    *
    * @return array
    *   A stub render element.
@@ -142,7 +183,7 @@ class ViewerController implements ContainerInjectionInterface {
    * @throws \Drupal\collabora_online\Exception\CollaboraNotAvailableException
    *   The key to use by Collabora is empty or not configured.
    */
-  protected function getViewerRender(MediaInterface $media, string $wopi_client, bool $can_write): array {
+  protected function getViewerRender(MediaInterface $media, string $wopi_client, bool $can_write, ?Url $close_button_url): array {
     /** @var array $cool_settings */
     $cool_settings = $this->configFactory->get('collabora_online.settings')->get('cool');
 
@@ -170,7 +211,7 @@ class ViewerController implements ContainerInjectionInterface {
       // Convert to milliseconds.
       '#accessTokenTtl' => $expire_timestamp * 1000,
       '#allowfullscreen' => empty($cool_settings['allowfullscreen']) ? '' : 'allowfullscreen',
-      '#closebutton' => 'true',
+      '#closeButtonUrl' => $close_button_url?->toString(),
       '#attached' => [
         'library' => [
           'collabora_online/cool.frame',
