@@ -7,8 +7,14 @@
     <app name="text/csv">
       <action default="true" ext="" name="edit" urlsrc="http://csv.collabora.test:9980/browser/61cf2b4/cool.html?"/>
     </app>
+    <app name="text/csv">
+      <action default="true" ext="" name="view" urlsrc="http://view.csv.collabora.test:9980/browser/61cf2b4/cool.html?"/>
+    </app>
     <app name="text/plain">
-      <action default="true" ext="" name="edit" urlsrc="http://collabora.test:9980/browser/61cf2b4/cool.html?"/>
+      <action default="true" ext="" name="view" urlsrc="http://collabora.test:9980/browser/61cf2b4/cool.html?"/>
+    </app>
+    <app name="image/png">
+      <action urlsrc="http://png.collabora.test:9980/browser/61cf2b4/cool.html?"/>
     </app>
   </net-zone>
 </wopi-discovery>
