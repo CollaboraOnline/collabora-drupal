@@ -168,7 +168,7 @@ class ViewerController implements ContainerInjectionInterface {
    *
    * @param \Drupal\media\MediaInterface $media
    *   The media entity to view / edit.
-   * @param string $wopi_client
+   * @param string $wopi_client_url
    *   The WOPI client url.
    * @param bool $can_write
    *   Whether this is a viewer (false) or an edit (true). Permissions will
@@ -183,7 +183,7 @@ class ViewerController implements ContainerInjectionInterface {
    * @throws \Drupal\collabora_online\Exception\CollaboraNotAvailableException
    *   The key to use by Collabora is empty or not configured.
    */
-  protected function getViewerRender(MediaInterface $media, string $wopi_client, bool $can_write, ?Url $close_button_url): array {
+  protected function getViewerRender(MediaInterface $media, string $wopi_client_url, bool $can_write, ?Url $close_button_url): array {
     $config = $this->configFactory->get('collabora_online.settings');
 
     /** @var string|null $wopi_base */
@@ -206,7 +206,7 @@ class ViewerController implements ContainerInjectionInterface {
 
     $render_array = [
       '#theme' => 'collabora_online_full',
-      '#wopiClient' => $wopi_client,
+      '#wopiClient' => $wopi_client_url,
       '#wopiSrc' => urlencode($wopi_base . '/cool/wopi/files/' . $media->id()),
       '#accessToken' => $access_token,
       // Convert to milliseconds.
