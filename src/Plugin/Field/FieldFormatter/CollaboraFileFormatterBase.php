@@ -24,6 +24,10 @@ use Drupal\media\MediaInterface;
 
 /**
  * Base class for Collabora Online field formatters.
+ *
+ * @template-extends EntityReferenceFormatterBase<\Drupal\file\FileInterface>
+ *
+ * @see ../../../../vendor/mglaman/phpstan-drupal/stubs/Drupal/Core/Field/Plugin/Field/FieldFormatter/EntityReferenceFormatterBase.stub
  */
 abstract class CollaboraFileFormatterBase extends EntityReferenceFormatterBase {
 
