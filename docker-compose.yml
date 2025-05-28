@@ -54,8 +54,7 @@ services:
         --o:ssl.enable=false \
         --o:storage.wopi.alias_groups[@mode]=groups \
         --o:storage.wopi.alias_groups.group[0].host=http://web.test \
-        --o:storage.wopi.alias_groups.group[0].host[@allow]=true \
-        --o:storage.wopi.alias_groups.group[0].alias[0]=http://localhost"
+        --o:storage.wopi.alias_groups.group[0].host[@allow]=true"
     # Manually generate the proof key, replicating the behavior of "coolconfig generate-proof-key".
     command:
       - sh
