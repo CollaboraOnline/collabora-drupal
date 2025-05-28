@@ -48,4 +48,17 @@ class CollaboraUrl {
     return Url::fromRoute('collabora-online.edit', ['media' => $media->id()]);
   }
 
+  /**
+   * Gets a url for a link that opens a modal preview.
+   *
+   * @param \Drupal\media\MediaInterface $media
+   *   Media entity that holds the file to preview.
+   *
+   * @return \Drupal\Core\Url
+   *   Link url.
+   */
+  public static function mediaModalPreview(MediaInterface $media): Url {
+    return Url::fromRoute('collabora-online.modal', ['media' => $media->id()]);
+  }
+
 }
