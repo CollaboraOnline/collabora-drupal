@@ -38,6 +38,7 @@ services:
       - VNC_NO_PASSWORD=1
     ports:
       - '7900:7900'
+    shm_size: 2g
 
   collabora:
     image: collabora/code:24.04.11.3.1
