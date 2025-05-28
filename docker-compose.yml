@@ -6,7 +6,6 @@ services:
       - "8080:8080"
     volumes:
       - .:/var/www/html
-      - ../collabora-drupal:/var/www/collabora-drupal
       # - $HOME/.composer/.auth.json:$HOME/.composer/.auth.json
     environment:
       DOCUMENT_ROOT: /var/www/html/web
