@@ -89,25 +89,24 @@ class CollaboraPreviewModal extends CollaboraFileFormatterBase {
       NULL, '' => 880,
       default => (int) $max_width_setting,
     };
-    $link = [
-      '#type' => 'link',
-      '#title' => $this->t('Preview'),
-      '#url' => $url,
-      '#attributes' => [
-        'class' => ['use-ajax', 'button', 'button--small'],
-        'data-dialog-type' => 'modal',
-        'data-dialog-options' => Json::encode([
-          'width' => $max_width,
-          'classes' => [
-            'ui-dialog' => 'cool-modal-preview',
-          ],
-        ]),
-      ],
-      '#attached' => ['library' => ['core/drupal.dialog.ajax']],
-    ];
     $element = [
       '#type' => 'container',
-      'link' => $link,
+      'link' => [
+        '#type' => 'link',
+        '#title' => $this->t('Preview'),
+        '#url' => $url,
+        '#attributes' => [
+          'class' => ['use-ajax', 'button', 'button--small'],
+          'data-dialog-type' => 'modal',
+          'data-dialog-options' => Json::encode([
+            'width' => $max_width,
+            'classes' => [
+              'ui-dialog' => 'cool-modal-preview',
+            ],
+          ]),
+        ],
+        '#attached' => ['library' => ['core/drupal.dialog.ajax']],
+      ],
     ];
     $element['#attached']['library'][] = 'collabora_online/modal_preview';
     return $element;
