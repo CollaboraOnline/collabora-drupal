@@ -91,7 +91,7 @@ class CollaboraPreviewModal extends CollaboraFileFormatterBase {
     };
     $link = [
       '#type' => 'link',
-      '#title' => 'Preview',
+      '#title' => $this->t('Preview'),
       '#url' => $url,
       '#attributes' => [
         'class' => ['use-ajax', 'button', 'button--small'],
