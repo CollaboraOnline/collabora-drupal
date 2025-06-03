@@ -89,7 +89,7 @@ class CollaboraPreviewModal extends CollaboraFileFormatterBase {
       NULL, '' => 880,
       default => (int) $max_width_setting,
     };
-    $element = [
+    return [
       '#type' => 'container',
       '#attached' => ['library' => ['collabora_online/modal_preview']],
       'link' => [
@@ -109,7 +109,6 @@ class CollaboraPreviewModal extends CollaboraFileFormatterBase {
         '#attached' => ['library' => ['core/drupal.dialog.ajax']],
       ],
     ];
-    return $element;
   }
 
 }
