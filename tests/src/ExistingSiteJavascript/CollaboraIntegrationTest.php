@@ -117,6 +117,7 @@ class CollaboraIntegrationTest extends ExistingSiteSelenium2DriverTestBase {
    */
   public function testCloseButtonDestination(): void {
     $user = $this->createUser([
+      'preview document in collabora',
       'edit any document in collabora',
       'administer media',
     ]);
