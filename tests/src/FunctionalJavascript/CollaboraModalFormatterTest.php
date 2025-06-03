@@ -162,11 +162,6 @@ class CollaboraModalFormatterTest extends WebDriverTestBase {
     // Assert button attributes.
     $this->assertSame('/cool/modal/' . $media->id(), $button->getAttribute('href'));
 
-    // Wait until the click handler is attached.
-    $this->getSession()->getPage()->waitFor(10, function () use ($button) {
-      return $button->getAttribute('data-once') === 'ajax';
-    });
-
     return $button;
   }
 
