@@ -16,27 +16,12 @@ namespace Drupal\collabora_online\Controller;
 
 use Drupal\collabora_online\CollaboraUrl;
 use Drupal\Component\Render\MarkupInterface;
-use Drupal\Core\DependencyInjection\AutowireTrait;
-use Drupal\Core\DependencyInjection\ContainerInjectionInterface;
-use Drupal\Core\Session\AccountInterface;
-use Drupal\Core\StringTranslation\StringTranslationTrait;
-use Drupal\Core\StringTranslation\TranslationInterface;
 use Drupal\media\MediaInterface;
 
 /**
  * Provides a route response for the modal dialog content.
  */
-class ModalController implements ContainerInjectionInterface {
-
-  use AutowireTrait;
-  use StringTranslationTrait;
-
-  public function __construct(
-    protected readonly AccountInterface $currentUser,
-    TranslationInterface $string_translation,
-  ) {
-    $this->setStringTranslation($string_translation);
-  }
+class ModalController {
 
   /**
    * Title callback for the modal preview.
