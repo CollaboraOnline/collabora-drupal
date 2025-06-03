@@ -91,6 +91,7 @@ class CollaboraPreviewModal extends CollaboraFileFormatterBase {
     };
     $element = [
       '#type' => 'container',
+      '#attached' => ['library' => ['collabora_online/modal_preview']],
       'link' => [
         '#type' => 'link',
         '#title' => $this->t('Preview'),
@@ -108,7 +109,6 @@ class CollaboraPreviewModal extends CollaboraFileFormatterBase {
         '#attached' => ['library' => ['core/drupal.dialog.ajax']],
       ],
     ];
-    $element['#attached']['library'][] = 'collabora_online/modal_preview';
     return $element;
   }
 
