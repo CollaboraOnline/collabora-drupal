@@ -178,6 +178,9 @@ class EntityOperationsTest extends CollaboraKernelTestBase {
    *   Shortnames for the operations found.
    */
   protected function assertAndGetOperations(EntityInterface $entity, string $message): array {
+    // Set a fake destination.
+    // This verifies that the destination is not hard-coded to the media list.
+    \Drupal::destination()->set('/path/to/rome');
     $list_builder = \Drupal::entityTypeManager()->getListBuilder($entity->getEntityTypeId());
     $operations = $list_builder->getOperations($entity);
     $operation_shortnames = [];
@@ -196,11 +199,11 @@ class EntityOperationsTest extends CollaboraKernelTestBase {
       $this->assertInstanceOf(Url::class, $url);
       if ($operation_shortname === 'preview') {
         $this->assertSame('View in Collabora Online', (string) $operation['title'], $message);
-        $this->assertSame('/cool/view/' . $entity->id(), $url->toString(), $message);
+        $this->assertSame('/cool/view/' . $entity->id() . '?destination=/path/to/rome', $url->toString(), $message);
       }
       else {
         $this->assertSame('Edit in Collabora Online', (string) $operation['title'], $message);
-        $this->assertSame('/cool/edit/' . $entity->id(), $url->toString(), $message);
+        $this->assertSame('/cool/edit/' . $entity->id() . '?destination=/path/to/rome', $url->toString(), $message);
       }
     }
     return $operation_shortnames;
