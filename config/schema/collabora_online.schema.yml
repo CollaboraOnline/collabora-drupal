@@ -54,6 +54,14 @@ field.formatter.settings.collabora_preview_embed:
           pattern: '#^[1-9]\d* / [1-9]\d*$#'
           message: "Please provide two numbers, separated by ' / '."
 
+field.formatter.settings.collabora_preview_modal:
+  type: mapping
+  label: 'Collabora Online preview modal formatter settings'
+  mapping:
+    max_width:
+      type: integer
+      label: 'Maximum dialog width'
+
 views.field.media_collabora_preview:
   type: views_field
   label: 'Collabora view link'
