@@ -6,12 +6,6 @@ services:
       - "8080:8080"
     volumes:
       - .:/var/www/html
-      # Store files outside the project directory, so that:
-      # - Removing volumes will destroy files and database alike, thus avoiding
-      #   orphan files.
-      # - Recursive file ownership changes in the project directory do not
-      #   affect files.
-      - files:/var/www/html/web/sites/default/files
     environment:
       DOCUMENT_ROOT: /var/www/html/web
       # By leaving these variables empty Docker Compose will set them to their host values.
@@ -71,4 +65,3 @@ services:
 
 volumes:
   mysql: # eslint-disable-line yml/no-empty-mapping-value
-  files: # eslint-disable-line yml/no-empty-mapping-value
