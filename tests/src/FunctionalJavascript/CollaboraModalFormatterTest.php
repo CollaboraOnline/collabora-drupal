@@ -157,8 +157,7 @@ class CollaboraModalFormatterTest extends WebDriverTestBase {
    *   The preview button.
    */
   protected function assertPreviewButton(MediaInterface $media): NodeElement {
-    $assert_session = $this->assertSession();
-    $button = $assert_session->elementExists('named', ['link', 'Preview']);
+    $button = $this->assertSession()->elementExists('named', ['link', 'Preview']);
 
     // Assert button attributes.
     $this->assertSame('/cool/modal/' . $media->id(), $button->getAttribute('href'));
