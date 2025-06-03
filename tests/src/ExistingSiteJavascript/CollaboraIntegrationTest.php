@@ -114,15 +114,8 @@ class CollaboraIntegrationTest extends ExistingSiteSelenium2DriverTestBase {
 
   /**
    * Tests the editor close button redirect functionality.
-   *
-   * @testWith ["view", "/admin/structure"]
-   *           ["edit", "/admin/structure"]
-   *           ["edit", "/non/existing/path?x=y"]
-   *           ["edit", "malformed/path", false]
-   *           ["edit", "//multislash/path", false]
-   *           ["edit", "https://example.com/hello", false]
    */
-  public function testCloseButtonDestination(string $operation, string $destination, bool $expect_redirect = TRUE): void {
+  public function testCloseButtonDestination(): void {
     $user = $this->createUser([
       'edit any document in collabora',
       'administer media',
@@ -134,6 +127,27 @@ class CollaboraIntegrationTest extends ExistingSiteSelenium2DriverTestBase {
       'Chocolate, pickles',
       'odt',
     );
+    $this->doTestCloseButtonDestination($media, 'view', '/admin/structure');
+    $this->doTestCloseButtonDestination($media, 'edit', '/admin/structure');
+    $this->doTestCloseButtonDestination($media, 'edit', '/non/existing/path?x=y');
+    $this->doTestCloseButtonDestination($media, 'edit', 'malformed/path', FALSE);
+    $this->doTestCloseButtonDestination($media, 'edit', '//multislash/path', FALSE);
+    $this->doTestCloseButtonDestination($media, 'edit', 'https://example.com/hello', FALSE);
+  }
+
+  /**
+   * Helper method to test the close button redirect functionality.
+   *
+   * @param \Drupal\media\MediaInterface $media
+   *   Media to open for preview or edit in Collabora.
+   * @param string $operation
+   *   One of 'view' or 'edit'.
+   * @param string $destination
+   *   Destination url to add as parameter to the editor url.
+   * @param bool $expect_redirect
+   *   TRUE if a close button and redirect is expected, FALSE if not.
+   */
+  protected function doTestCloseButtonDestination(MediaInterface $media, string $operation, string $destination, bool $expect_redirect = TRUE): void {
     // Visit a page with a destination parameter.
     // Such a page does have a close button.
     $this->drupalGet('/cool/' . $operation . '/' . $media->id(), ['query' => ['destination' => $destination]]);
