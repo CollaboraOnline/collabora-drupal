@@ -137,7 +137,6 @@ class CollaboraIntegrationTest extends ExistingSiteSelenium2DriverTestBase {
     // Visit a page with a destination parameter.
     // Such a page does have a close button.
     $this->drupalGet('/cool/' . $operation . '/' . $media->id(), ['query' => ['destination' => $destination]]);
-    $editor_url = $this->getUrl();
     $this->assertWaitForElement('iframe#collabora-online-viewer');
     $this->getSession()->switchToIFrame('collabora-online-viewer');
 
