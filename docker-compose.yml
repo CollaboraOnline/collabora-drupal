@@ -1,4 +1,3 @@
-version: '2'
 services:
   web:
     image: fpfis/httpd-php-dev:8.3
@@ -7,8 +6,6 @@ services:
       - "8080:8080"
     volumes:
       - .:/var/www/html
-      - ../collabora-drupal:/var/www/collabora-drupal
-      # - $HOME/.composer/.auth.json:$HOME/.composer/.auth.json
     environment:
       DOCUMENT_ROOT: /var/www/html/web
       # By leaving these variables empty Docker Compose will set them to their host values.
@@ -34,7 +31,8 @@ services:
   selenium:
     image: selenium/standalone-chrome:4.1.3-20220405
     environment:
-      - DISPLAY=:99
+      - SCREEN_WIDTH=1280
+      - SCREEN_HEIGHT=800
       - VNC_NO_PASSWORD=1
     ports:
       - '7900:7900'
@@ -55,8 +53,7 @@ services:
         --o:ssl.enable=false \
         --o:storage.wopi.alias_groups[@mode]=groups \
         --o:storage.wopi.alias_groups.group[0].host=http://web.test \
-        --o:storage.wopi.alias_groups.group[0].host[@allow]=true \
-        --o:storage.wopi.alias_groups.group[0].alias[0]=http://localhost"
+        --o:storage.wopi.alias_groups.group[0].host[@allow]=true"
     # Manually generate the proof key, replicating the behavior of "coolconfig generate-proof-key".
     command:
       - sh
