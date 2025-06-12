@@ -144,23 +144,15 @@ class ViewerController implements ContainerInjectionInterface {
    */
   protected function getDestinationUrl(Request $request): ?Url {
     $destination = (string) $request->query->get('destination');
-    if (
-      !$destination ||
-      UrlHelper::isExternal($destination) ||
-      // Instead of ltrim(), simply discard a destination with missing or
-      // unexpected leading slashes.
-      !str_starts_with($destination, '/') ||
-      str_starts_with($destination, '//')
-    ) {
+    if (!$destination || UrlHelper::isExternal($destination)) {
       return NULL;
     }
-    $parsed = UrlHelper::parse($destination);
-    $options = [
-      'query' => $parsed['query'],
-      'fragment' => $parsed['fragment'],
-      'absolute' => TRUE,
-    ];
-    return Url::fromUserInput($parsed['path'], $options);
+    try {
+      return Url::fromUserInput($destination)->setAbsolute();
+    }
+    catch (\Exception) {
+      return NULL;
+    }
   }
 
   /**
