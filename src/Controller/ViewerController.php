@@ -133,7 +133,7 @@ class ViewerController implements ContainerInjectionInterface {
    * Reads the 'destination' parameter from a request.
    *
    * @param \Symfony\Component\HttpFoundation\Request $request
-   *   Incoming request, which or may not have a 'destination' query parameter.
+   *   An HTTP request.
    *
    * @return \Drupal\Core\Url|null
    *   The 'destination' as a url, or NULL if no destination was provided, or it
