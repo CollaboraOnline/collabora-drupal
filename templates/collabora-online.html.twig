@@ -13,7 +13,7 @@
 
   <script type="text/ecmascript">
     // This is defined in the js/cool.js
-    const close_button_url = {{ closeButtonUrl|json_encode|raw }};
+    const close_button_url = "{{ closeButtonUrl|e('js') }}";
     const options = { close_button_url };
     loadDocument('{{ wopiClient }}', '{{ wopiSrc }}', options);
   </script>
