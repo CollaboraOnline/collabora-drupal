@@ -25,7 +25,7 @@ function postReady() {
   });
 }
 
-function receiveMessage(hasCloseButton, event) {
+function receiveMessage(close_button_url, event) {
   const msg = JSON.parse(event.data);
   if (!msg) {
     return;
@@ -39,14 +39,14 @@ function receiveMessage(hasCloseButton, event) {
       break;
 
     case 'UI_Close':
-      if (hasCloseButton) {
+      if (close_button_url) {
         if (msg.Values && msg.Values.EverModified) {
           const reply = { MessageId: 'Action_Close' };
           postMessage(reply);
         }
         if (window.parent.location === window.location) {
           // eslint-disable-next-line no-restricted-globals
-          history.back();
+          document.location.href = close_button_url;
         } else {
           /* we send back the UI_Close message to the parent frame. */
           window.parent.postMessage(event.data);
@@ -56,17 +56,15 @@ function receiveMessage(hasCloseButton, event) {
   }
 }
 
-function loadDocument(wopiClient, wopiSrc, options = null) {
-  let hasCloseButton = false;
+function loadDocument(wopiClient, wopiSrc, options = {}) {
   let wopiUrl = `${wopiClient}WOPISrc=${wopiSrc}`;
-  if (options && options.closebutton === true) {
+  if (options.close_button_url) {
     wopiUrl += '&closebutton=true';
-    hasCloseButton = true;
   }
 
   window.addEventListener(
     'message',
-    receiveMessage.bind(null, hasCloseButton),
+    receiveMessage.bind(null, options.close_button_url),
     false,
   );
 
