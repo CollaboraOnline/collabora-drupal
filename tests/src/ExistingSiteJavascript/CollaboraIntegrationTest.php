@@ -187,6 +187,8 @@ class CollaboraIntegrationTest extends ExistingSiteSelenium2DriverTestBase {
       // to $close_button->click() trigger a NoSuchElement exception.
       // By relying on this exception, we avoid any kind of race condition that
       // could lead to rare random test failures.
+      // @todo Find a reliable way to detect whether the button is clickable,
+      //   before actually clicking it.
       try {
         $close_button->click();
       }
