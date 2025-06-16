@@ -131,6 +131,7 @@ class CollaboraIntegrationTest extends ExistingSiteSelenium2DriverTestBase {
     $this->doTestCloseButtonDestination($media, 'view', '/admin/structure');
     $this->doTestCloseButtonDestination($media, 'edit', '/non/existing/path?x=y');
     $this->doTestCloseButtonDestination($media, 'edit', 'https://example.com/hello', FALSE);
+    $this->doTestCloseButtonDestination($media, 'edit', 'malformed/path', FALSE);
   }
 
   /**
