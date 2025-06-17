@@ -15,9 +15,11 @@ declare(strict_types=1);
 namespace Drupal\Tests\collabora_online\ExistingSiteJavascript;
 
 use Behat\Mink\Element\NodeElement;
+use Drupal\Core\Url;
 use Drupal\file\Entity\File;
 use Drupal\media\Entity\Media;
 use Drupal\media\MediaInterface;
+use WebDriver\Exception\NoSuchElement;
 use weitzman\DrupalTestTraits\ExistingSiteSelenium2DriverTestBase;
 
 /**
@@ -52,6 +54,9 @@ class CollaboraIntegrationTest extends ExistingSiteSelenium2DriverTestBase {
     // Verify the read-only mode.
     $readonly_indicator = $this->assertWaitForElement('.status-readonly-mode');
     $this->assertSame('Read-only', $readonly_indicator->getText());
+
+    // The close button is hidden.
+    $this->assertFalse($this->assertSession()->elementExists('css', '#closebutton')->isVisible());
   }
 
   /**
@@ -102,6 +107,102 @@ class CollaboraIntegrationTest extends ExistingSiteSelenium2DriverTestBase {
     $assert_session->buttonExists('File')->click();
     // Button actually exists, but is not visible.
     $this->assertFalse($assert_session->buttonExists('Rename')->isVisible());
+
+    // The close button is hidden.
+    $this->assertFalse($this->assertSession()->elementExists('css', '#closebutton')->isVisible());
+  }
+
+  /**
+   * Tests the editor close button redirect functionality.
+   */
+  public function testCloseButtonDestination(): void {
+    $user = $this->createUser([
+      'preview document in collabora',
+      'edit any document in collabora',
+      'administer media',
+    ]);
+    $this->drupalLogin($user);
+    $media = $this->createDocumentMedia(
+      'Shopping list',
+      'shopping-list',
+      'Chocolate, pickles',
+      'odt',
+    );
+    $this->doTestCloseButtonDestination($media, 'view', '/admin/structure');
+    $this->doTestCloseButtonDestination($media, 'edit', '/non/existing/path?x=y');
+    $this->doTestCloseButtonDestination($media, 'edit', 'https://example.com/hello', FALSE);
+    $this->doTestCloseButtonDestination($media, 'edit', 'malformed/path', FALSE);
+  }
+
+  /**
+   * Helper method to test the close button redirect functionality.
+   *
+   * @param \Drupal\media\MediaInterface $media
+   *   Media to open for preview or edit in Collabora.
+   * @param string $operation
+   *   One of 'view' or 'edit'.
+   * @param string $destination
+   *   Destination url to add as parameter to the editor url.
+   * @param bool $expect_redirect
+   *   TRUE if a close button and redirect is expected, FALSE if not.
+   */
+  protected function doTestCloseButtonDestination(MediaInterface $media, string $operation, string $destination, bool $expect_redirect = TRUE): void {
+    // Visit a page with a destination parameter.
+    // Such a page does have a close button.
+    $this->drupalGet('/cool/' . $operation . '/' . $media->id(), ['query' => ['destination' => $destination]]);
+    $this->assertWaitForElement('iframe#collabora-online-viewer');
+    $this->getSession()->switchToIFrame('collabora-online-viewer');
+
+    // Verify preview or edit mode, as above.
+    // This makes sure that we are not accidentally testing two cases with
+    // readonly mode, e.g. because of insufficient permissions, or because a
+    // file type is not supported for editing.
+    if ($operation === 'view') {
+      $readonly_indicator = $this->assertWaitForElement('.status-readonly-mode');
+      $this->assertSame('Read-only', $readonly_indicator->getText());
+    }
+    else {
+      $this->assertWaitForElement('#mobile-edit-button');
+    }
+
+    $close_button = $this->assertSession()->elementExists('css', '#closebutton');
+
+    // For a malformed or unsupported url, the close button is hidden.
+    if (!$expect_redirect) {
+      $this->assertFalse($close_button->isVisible());
+      return;
+    }
+
+    // There is a short phase in the editor load process when:
+    // - The close button is visible, with the correct position and dimensions.
+    // - All available "ready" indicators are positive.
+    // - A click can be successfully triggered with javascript element.click().
+    // - However, clicking it from this test with $element->click() has no
+    //   effect yet.
+    $this->assertTrue($close_button->isVisible());
+    $close_button->click();
+    // Repeat the click until the button disappears.
+    $this->getSession()->getPage()->waitFor(10000, function () use ($close_button, &$n) {
+      // On successful click, the user is redirected to the destination url.
+      // As a consequence, the close button disappears, and subsequent calls
+      // to $close_button->click() trigger a NoSuchElement exception.
+      // By relying on this exception, we avoid any kind of race condition that
+      // could lead to rare random test failures.
+      // @todo Find a reliable way to detect whether the button is clickable,
+      //   before actually clicking it.
+      try {
+        $close_button->click();
+      }
+      catch (NoSuchElement) {
+        return TRUE;
+      }
+      return FALSE;
+    });
+
+    $this->assertSame(
+      Url::fromUserInput($destination, ['absolute' => TRUE])->toString(),
+      $this->getUrl(),
+    );
   }
 
   /**

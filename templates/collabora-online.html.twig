@@ -13,11 +13,8 @@
 
   <script type="text/ecmascript">
     // This is defined in the js/cool.js
-    let closebutton = '{{ closebutton }}';
-    let options = null;
-    if (closebutton == 'true') {
-        options = { closebutton: true };
-    }
+    const close_button_url = "{{ closeButtonUrl|e('js') }}";
+    const options = { close_button_url };
     loadDocument('{{ wopiClient }}', '{{ wopiSrc }}', options);
   </script>
 </div>
