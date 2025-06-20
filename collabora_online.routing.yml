@@ -29,6 +29,15 @@ collabora-online.edit:
     media: \d+
     _entity_access: 'media.edit in collabora'
 
+collabora-online.settings-iframe:
+  path: '/cool/settings'
+  defaults:
+    _controller: 'Drupal\collabora_online\Controller\SettingsController::settings'
+    _title: 'Collabora Online Settings'
+  requirements:
+    # @todo Decide if this is the permission we want to use.
+    _permission: 'administer collabora instance'
+
 collabora-online.settings:
   path: '/admin/config/cool/settings'
   defaults:
