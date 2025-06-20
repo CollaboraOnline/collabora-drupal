@@ -84,3 +84,17 @@ collabora-online.wopi.save:
         type: string
       media:
         type: entity:media
+
+collabora-online.wopi.settings:
+  path: '/cool/wopi/settings'
+  defaults:
+    _controller: '\Drupal\collabora_online\Controller\WopiSettingsController::wopi'
+    action: 'info'
+  methods: [ GET ]
+  requirements:
+    _collabora_online_wopi_access: 'TRUE'
+    _format: 'collabora_online_wopi'
+  options:
+    parameters:
+      action:
+        type: string
