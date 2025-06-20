@@ -14,8 +14,10 @@ declare(strict_types=1);
 
 namespace Drupal\collabora_online\Form;
 
+use Drupal\Core\Cache\CacheableMetadata;
 use Drupal\Core\Form\ConfigFormBase;
 use Drupal\Core\Form\FormStateInterface;
+use Drupal\Core\Url;
 
 /**
  * Form to configure module settings for Collabora.
@@ -135,6 +137,29 @@ This applies equally to autosave, the editor\'s save button, and the close butto
       '#title' => $this->t('Allow COOL to use fullscreen mode.'),
       '#default_value' => $cool_settings['allowfullscreen'] ?? FALSE,
     ];
+
+    $settings_iframe_url = Url::fromRoute('collabora-online.settings-iframe');
+    // @todo Use dependency injection for this access check.
+    $settings_iframe_access = $settings_iframe_url->access(NULL, TRUE);
+    CacheableMetadata::createFromRenderArray($form)
+      ->addCacheableDependency($settings_iframe_access)
+      ->applyTo($form);
+    if ($settings_iframe_access->isAllowed()) {
+      $form['settings_iframe'] = [
+        '#type' => 'html_tag',
+        '#tag' => 'iframe',
+        '#attributes' => [
+          'src' => $settings_iframe_url->toString(),
+          'class' => ['cool-iframe'],
+        ],
+        '#attached' => ['library' => ['collabora_online/iframe']],
+      ];
+    }
+    else {
+      $form['settings_iframe'] = [
+        '#markup' => '(' . var_export($settings_iframe_access, TRUE) . ')',
+      ];
+    }
 
     return parent::buildForm($form, $form_state);
   }
