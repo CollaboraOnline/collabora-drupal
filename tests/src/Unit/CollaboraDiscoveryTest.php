@@ -37,6 +37,24 @@ class CollaboraDiscoveryTest extends UnitTestCase {
   }
 
   /**
+   * Tests getting the settings iframe url from the discovery.xml.
+   *
+   * @covers ::getSettingsIframeURL
+   */
+  public function testSettingsIframeUrl(): void {
+    $file = dirname(__DIR__, 2) . '/fixtures/discovery.settings.xml';
+    $discovery = $this->getDiscoveryFromFile($file);
+    $this->assertSame(
+      'http://collabora.test:9980/browser/3dc280be53/admin/adminIntegratorSettings.html',
+      $discovery->getSettingsIframeURL(),
+    );
+    // Test with a discovery.xml which has no such entry.
+    $file = dirname(__DIR__, 2) . '/fixtures/discovery.mimetypes.xml';
+    $discovery = $this->getDiscoveryFromFile($file);
+    $this->assertNull($discovery->getSettingsIframeURL());
+  }
+
+  /**
    * Tests reading proof keys from the discovery.xml.
    *
    * @covers ::getProofKey
