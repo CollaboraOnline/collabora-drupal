@@ -32,6 +32,14 @@ interface DiscoveryInterface {
   public function getWopiClientURL(string $mimetype = 'text/plain'): ?string;
 
   /**
+   * Gets the URL for the settings iframe.
+   *
+   * @return string|null
+   *   The settings iframe URL, or NULL if not supported.
+   */
+  public function getSettingsIframeURL(): ?string;
+
+  /**
    * Gets the public key used for proofing.
    *
    * @return string|null
