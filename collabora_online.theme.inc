@@ -18,3 +18,15 @@ function template_preprocess_collabora_online_full(array &$variables): void {
   $path_resolver = \Drupal::service(ExtensionPathResolver::class);
   $variables['module_path'] = $path_resolver->getPath('module', 'collabora_online');
 }
+
+/**
+ * Prepares variables for the 'collabora-online-settings-iframe' template.
+ *
+ * @param array $variables
+ *   Theme hook variables.
+ */
+function template_preprocess_collabora_online_settings_iframe(array &$variables): void {
+  /** @var \Drupal\Core\Extension\ExtensionPathResolver $path_resolver */
+  $path_resolver = \Drupal::service(ExtensionPathResolver::class);
+  $variables['module_path'] = $path_resolver->getPath('module', 'collabora_online');
+}
