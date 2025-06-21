@@ -70,6 +70,14 @@ function collabora_online_theme(): array {
       ],
       'file' => 'collabora_online.theme.inc',
     ],
+    'collabora_online_settings_iframe' => [
+      'template' => 'collabora-online-settings-iframe',
+      'variables' => [
+        'formActionUrl' => '',
+        'postData' => [],
+      ],
+      'file' => 'collabora_online.theme.inc',
+    ],
   ];
 }
 
