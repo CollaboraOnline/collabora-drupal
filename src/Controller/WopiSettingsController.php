@@ -18,7 +18,6 @@ use Drupal\Core\DependencyInjection\AutowireTrait;
 use Drupal\Core\DependencyInjection\ContainerInjectionInterface;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\StringTranslation\StringTranslationTrait;
-use Drupal\user\UserInterface;
 use Psr\Log\LoggerInterface;
 use Symfony\Component\DependencyInjection\Attribute\Autowire;
 use Symfony\Component\HttpFoundation\JsonResponse;
@@ -42,29 +41,6 @@ class WopiSettingsController implements ContainerInjectionInterface {
   ) {}
 
   /**
-   * Handles the WOPI 'info' request for a media entity.
-   *
-   * @param \Drupal\user\UserInterface $user
-   *   User entity from the uid in the JWT payload.
-   * @param string $type
-   *   The type.
-   *
-   * @return \Symfony\Component\HttpFoundation\Response
-   *   The response with file contents.
-   */
-  protected function wopiCheckFileInfo(UserInterface $user, string $type): Response {
-    $response_data = [
-      'kind' => $type,
-    ];
-
-    return new JsonResponse(
-      $response_data,
-      Response::HTTP_OK,
-      ['content-type' => 'application/json'],
-    );
-  }
-
-  /**
    * The WOPI entry point.
    *
    * @param \Symfony\Component\HttpFoundation\Request $request
@@ -76,10 +52,6 @@ class WopiSettingsController implements ContainerInjectionInterface {
    *   Response to be consumed by Collabora Online.
    */
   public function wopi(Request $request, string $action = 'info'): Response {
-    $type = $request->get('type');
-    if ($type === NULL) {
-      throw new AccessDeniedHttpException('Missing type.');
-    }
     $token = $request->get('access_token');
     if ($token === NULL) {
       throw new AccessDeniedHttpException('Missing access token.');
@@ -98,7 +70,11 @@ class WopiSettingsController implements ContainerInjectionInterface {
 
     switch ($action) {
       case 'info':
-        return $this->wopiCheckFileInfo($user, $type);
+        $type = $request->get('type');
+        if ($type === NULL) {
+          throw new AccessDeniedHttpException('Missing type.');
+        }
+        return new JsonResponse(['kind' => $type], headers: ['content-type' => 'application/json']);
     }
 
     return new Response(
