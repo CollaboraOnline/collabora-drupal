@@ -14,6 +14,7 @@ namespace Drupal\collabora_online\Controller;
 
 use Drupal\collabora_online\Exception\CollaboraJwtKeyException;
 use Drupal\collabora_online\Jwt\JwtTranscoderInterface;
+use Drupal\Component\Serialization\Yaml;
 use Drupal\Core\DependencyInjection\AutowireTrait;
 use Drupal\Core\DependencyInjection\ContainerInjectionInterface;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
@@ -75,6 +76,20 @@ class WopiSettingsController implements ContainerInjectionInterface {
           throw new AccessDeniedHttpException('Missing type.');
         }
         return new JsonResponse(['kind' => $type], headers: ['content-type' => 'application/json']);
+
+      case 'upload':
+        $this->logger->debug(
+          'Wopi settings upload:<br>
+<h3>Query</h3>
+<pre>@query</pre>
+<h3>Content</h3>
+<pre>@content</pre>',
+          [
+            '@query' => Yaml::encode(array_diff_key($request->query->all(), ['access_token' => TRUE])),
+            '@content' => $request->getContent(),
+          ],
+        );
+        return new JsonResponse([], headers: ['content-type' => 'application/json']);
     }
 
     return new Response(
