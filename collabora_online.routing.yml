@@ -92,7 +92,7 @@ collabora-online.wopi.settings:
     action: 'info'
   methods: [ GET ]
   requirements:
-    _collabora_online_wopi_access: 'TRUE'
+    _access: 'TRUE'
     _format: 'collabora_online_wopi'
   options:
     parameters:
