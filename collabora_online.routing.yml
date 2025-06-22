@@ -107,3 +107,17 @@ collabora-online.wopi.settings:
     parameters:
       action:
         type: string
+
+collabora-online.wopi.settings.upload:
+  path: '/cool/wopi/settings/upload'
+  defaults:
+    _controller: '\Drupal\collabora_online\Controller\WopiSettingsController::wopi'
+    action: 'upload'
+  methods: [ POST ]
+  requirements:
+    _access: 'TRUE'
+    _format: 'collabora_online_wopi'
+  options:
+    parameters:
+      action:
+        type: string
