@@ -105,8 +105,9 @@ class CollaboraIntegrationTest extends ExistingSiteSelenium2DriverTestBase {
     // Switch to 'File' menu where 'Rename' button should be.
     $assert_session = $this->assertSession();
     $assert_session->buttonExists('File')->click();
-    // Button actually exists, but is not visible.
-    $this->assertFalse($assert_session->buttonExists('Rename')->isVisible());
+    // The 'Rename' button (menu link) does not exist.
+    // (In older versions of Collabora it did exist, but was invisible.)
+    $assert_session->buttonNotExists('Rename');
 
     // The close button is hidden.
     $this->assertFalse($this->assertSession()->elementExists('css', '#closebutton')->isVisible());
