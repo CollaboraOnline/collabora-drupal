@@ -14,6 +14,7 @@ declare(strict_types=1);
 
 namespace Drupal\Tests\collabora_online\Functional;
 
+use Behat\Mink\Element\Element;
 use Drupal\Core\Url;
 use Drupal\key\Entity\Key;
 use Drupal\Tests\BrowserTestBase;
@@ -187,6 +188,33 @@ class ConfigFormTest extends BrowserTestBase {
       'id' => 'other_key',
       'label' => 'Other key',
     ])->save();
+  }
+
+  /**
+   * Helper function to get the options of a select field.
+   *
+   * This replaces the core method which is now deprecated.
+   *
+   * @param \Behat\Mink\Element\NodeElement|string $select
+   *   Name, ID, or Label of select field to assert.
+   * @param \Behat\Mink\Element\Element|null $container
+   *   (optional) Container element to check against. Defaults to current page.
+   *
+   * @return array<string, string>
+   *   Associative array of option keys and values.
+   */
+  protected function getOptions($select, ?Element $container = NULL) {
+    if (is_string($select)) {
+      $select = $this->assertSession()->selectExists($select, $container);
+    }
+    $options = [];
+    /** @var \Behat\Mink\Element\NodeElement $option */
+    foreach ($select->findAll('xpath', '//option') as $option) {
+      $label = $option->getText();
+      $value = $option->getAttribute('value') ?: $label;
+      $options[$value] = $label;
+    }
+    return $options;
   }
 
 }
