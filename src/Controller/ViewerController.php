@@ -221,6 +221,7 @@ class ViewerController implements ContainerInjectionInterface {
    *   Expiration timestamp in seconds, with millisecond accuracy.
    */
   protected function getExpireTimestamp(): float {
+    /** @var int $ttl_seconds */
     $ttl_seconds = $this->configFactory->get('collabora_online.settings')
       ->get('cool.access_token_ttl') ?? 0;
     // Set a fallback of 24 hours.

@@ -31,6 +31,7 @@ class MediaHelper implements MediaHelperInterface {
    * {@inheritdoc}
    */
   public function getFileForMedia(MediaInterface $media): ?FileInterface {
+    /** @var int|string|null $fid */
     $fid = $media->getSource()->getSourceFieldValue($media);
     if ($fid === NULL) {
       // The media entity does not have a file attached.

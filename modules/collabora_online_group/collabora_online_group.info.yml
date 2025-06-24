@@ -1,6 +1,10 @@
 name: Collabora Online Group
 description: Integrates Collabora Online with Group module
 package: Collabora Online
+# Make sure that the configuration from groupmedia/config/optional is present
+# when hook_install() runs.
+# See https://www.drupal.org/project/drupal/issues/3531920.
+container_rebuild_required: true
 dependencies:
   - collabora_online:collabora_online
   - groupmedia:groupmedia
