@@ -143,6 +143,8 @@ This applies equally to autosave, the editor\'s save button, and the close butto
       '#tag' => 'iframe',
       '#attributes' => [
         'src' => $settings_iframe_url->toString(),
+        'name' => 'settings-iframe-outer',
+        'id' => 'settings-iframe-outer',
         'class' => ['cool-iframe'],
       ],
       '#attached' => ['library' => ['collabora_online/iframe']],
