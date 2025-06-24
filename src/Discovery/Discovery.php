@@ -44,6 +44,18 @@ class Discovery implements DiscoveryInterface {
   /**
    * {@inheritdoc}
    */
+  public function getSettingsIframeURL(): ?string {
+    $result = $this->parsedXml->xpath('/wopi-discovery/net-zone/app[@name="Settings"]/action[@name="iframe"]');
+    if (empty($result[0]['urlsrc'][0])) {
+      return NULL;
+    }
+
+    return (string) $result[0]['urlsrc'][0];
+  }
+
+  /**
+   * {@inheritdoc}
+   */
   public function getProofKey(): ?string {
     $attribute = $this->parsedXml->xpath('/wopi-discovery/proof-key/@value')[0] ?? NULL;
     return $attribute?->__toString();

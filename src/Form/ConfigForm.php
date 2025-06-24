@@ -16,6 +16,7 @@ namespace Drupal\collabora_online\Form;
 
 use Drupal\Core\Form\ConfigFormBase;
 use Drupal\Core\Form\FormStateInterface;
+use Drupal\Core\Url;
 
 /**
  * Form to configure module settings for Collabora.
@@ -134,6 +135,19 @@ This applies equally to autosave, the editor\'s save button, and the close butto
       '#type' => 'checkbox',
       '#title' => $this->t('Allow COOL to use fullscreen mode.'),
       '#default_value' => $cool_settings['allowfullscreen'] ?? FALSE,
+    ];
+
+    $settings_iframe_url = Url::fromRoute('collabora-online.settings-iframe');
+    $form['settings_iframe'] = [
+      '#type' => 'html_tag',
+      '#tag' => 'iframe',
+      '#attributes' => [
+        'src' => $settings_iframe_url->toString(),
+        'name' => 'settings-iframe-outer',
+        'id' => 'settings-iframe-outer',
+        'class' => ['cool-iframe'],
+      ],
+      '#attached' => ['library' => ['collabora_online/iframe']],
     ];
 
     return parent::buildForm($form, $form_state);

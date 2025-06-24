@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <link href="{{ file_url(module_path ~ '/css/cool.css') }}" rel="stylesheet" />
+  </head>
+  <body class="cool-editor__body">
+    <div class="cool-frame">
+      <div style="display: none">
+        <form action="{{ formActionUrl }}" enctype="multipart/form-data" method="post" target="collabora-online-settings" id="collabora-submit-form">
+          {% for key, value in postData %}
+            <input name="{{ key }}" value="{{ value }}" type="hidden" />
+          {% endfor %}
+          <input type="submit" value="" />
+        </form>
+      </div>
+
+      <iframe id="collabora-online-settings" name="collabora-online-settings" class="cool-frame__iframe" allow="clipboard-read *; clipboard-write *">
+      </iframe>
+
+      <script type="text/ecmascript">
+        document.querySelector('form#collabora-submit-form').submit();
+      </script>
+    </div>
+  </body>
+</html>
