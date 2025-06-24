@@ -39,7 +39,8 @@ services:
     shm_size: 2g
 
   collabora:
-    image: collabora/code:24.04.11.3.1
+    image: collabora/code:latest
+    entrypoint: ""
     ports:
       - '9980:9980'
     networks:
