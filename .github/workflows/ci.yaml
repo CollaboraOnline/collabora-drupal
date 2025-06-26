@@ -26,7 +26,7 @@ jobs:
         run: |
           set -x
           # Set the php version in docker-compose.yml.
-          sed -i -e 's/httpd-php-dev:8.[0-9]/httpd-php-dev:${{ matrix.php }}/g' docker-compose.yml
+          sed -i -e 's/httpd-php:8.[0-9]-dev/httpd-php:${{ matrix.php }}-dev/g' docker-compose.yml
           # Report what was changed.
           git diff
 
