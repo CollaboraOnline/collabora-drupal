@@ -154,6 +154,21 @@ class CollaboraIntegrationTest extends ExistingSiteSelenium2DriverTestBase {
     $this->assertWaitForElement('iframe#collabora-online-viewer');
     $this->getSession()->switchToIFrame('collabora-online-viewer');
 
+    // Detect if Collabora shows a welcome dialog.
+    if ($this->getCurrentPage()->find('css', '[name=iframe-welcome-form]')) {
+      // The contents of the welcome dialog are in an iframe.
+      $this->getSession()->switchToIFrame('iframe-welcome-form');
+      // Click the close button of the welcome dialog.
+      // The close button itself has dimensions 0x0 and is regarded as not
+      // clickable by Selenium. It contains a ::before pseudo-element with
+      // non-zero dimensions which would receive the click.
+      // To not have to think about this, just click with js.
+      $this->getSession()->executeScript("document.querySelector('div#welcome-close').click();");
+      // Switch back to the previous iframe.
+      $this->getSession()->switchToIFrame(NULL);
+      $this->getSession()->switchToIFrame('collabora-online-viewer');
+    }
+
     // Verify preview or edit mode, as above.
     // This makes sure that we are not accidentally testing two cases with
     // readonly mode, e.g. because of insufficient permissions, or because a
