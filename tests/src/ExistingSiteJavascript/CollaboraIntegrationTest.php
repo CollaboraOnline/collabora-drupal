@@ -78,6 +78,8 @@ class CollaboraIntegrationTest extends ExistingSiteSelenium2DriverTestBase {
     $this->drupalGet('/cool/edit/' . $media->id());
 
     $this->getSession()->switchToIFrame('collabora-online-viewer');
+    $this->dismissWelcomeDialog();
+
     $this->assertCollaboraDocumentCanvas();
     $this->assertCollaboraDocumentName('shopping-list.odt');
     $this->assertCollaboraWordCountString('2 words, 18 characters');
@@ -86,21 +88,6 @@ class CollaboraIntegrationTest extends ExistingSiteSelenium2DriverTestBase {
     // The button is always present when in edit mode, but it is only
     // visible on a mobile / touch device.
     $this->assertWaitForElement('#mobile-edit-button');
-
-    // Detect if Collabora shows a welcome dialog.
-    if ($this->getCurrentPage()->find('css', '[name=iframe-welcome-form]')) {
-      // The contents of the welcome dialog are in an iframe.
-      $this->getSession()->switchToIFrame('iframe-welcome-form');
-      // Click the close button of the welcome dialog.
-      // The close button itself has dimensions 0x0 and is regarded as not
-      // clickable by Selenium. It contains a ::before pseudo-element with
-      // non-zero dimensions which would receive the click.
-      // To not have to think about this, just click with js.
-      $this->getSession()->executeScript("document.querySelector('div#welcome-close').click();");
-      // Switch back to the previous iframe.
-      $this->getSession()->switchToIFrame(NULL);
-      $this->getSession()->switchToIFrame('collabora-online-viewer');
-    }
 
     // Switch to 'File' menu where 'Rename' button should be.
     $assert_session = $this->assertSession();
@@ -153,21 +140,7 @@ class CollaboraIntegrationTest extends ExistingSiteSelenium2DriverTestBase {
     $this->drupalGet('/cool/' . $operation . '/' . $media->id(), ['query' => ['destination' => $destination]]);
     $this->assertWaitForElement('iframe#collabora-online-viewer');
     $this->getSession()->switchToIFrame('collabora-online-viewer');
-
-    // Detect if Collabora shows a welcome dialog.
-    if ($this->getCurrentPage()->find('css', '[name=iframe-welcome-form]')) {
-      // The contents of the welcome dialog are in an iframe.
-      $this->getSession()->switchToIFrame('iframe-welcome-form');
-      // Click the close button of the welcome dialog.
-      // The close button itself has dimensions 0x0 and is regarded as not
-      // clickable by Selenium. It contains a ::before pseudo-element with
-      // non-zero dimensions which would receive the click.
-      // To not have to think about this, just click with js.
-      $this->getSession()->executeScript("document.querySelector('div#welcome-close').click();");
-      // Switch back to the previous iframe.
-      $this->getSession()->switchToIFrame(NULL);
-      $this->getSession()->switchToIFrame('collabora-online-viewer');
-    }
+    $this->dismissWelcomeDialog();
 
     // Verify preview or edit mode, as above.
     // This makes sure that we are not accidentally testing two cases with
@@ -219,6 +192,30 @@ class CollaboraIntegrationTest extends ExistingSiteSelenium2DriverTestBase {
       Url::fromUserInput($destination, ['absolute' => TRUE])->toString(),
       $this->getUrl(),
     );
+  }
+
+  /**
+   * Dismisses the welcome dialog, if one exists.
+   *
+   * This method must only be called after switching to the
+   * 'collabora-online-viewer' iframe.
+   */
+  protected function dismissWelcomeDialog(): void {
+    if (!$this->getCurrentPage()->find('css', '[name=iframe-welcome-form]')) {
+      // No welcome dialog is present on the page.
+      return;
+    }
+    // The contents of the welcome dialog are in an iframe.
+    $this->getSession()->switchToIFrame('iframe-welcome-form');
+    // Click the close button of the welcome dialog.
+    // The close button itself has dimensions 0x0 and is regarded as not
+    // clickable by Selenium. It contains a ::before pseudo-element with
+    // non-zero dimensions which would receive the click.
+    // To not have to think about this, just click with js.
+    $this->getSession()->executeScript("document.querySelector('div#welcome-close').click();");
+    // Switch back to the previous iframe.
+    $this->getSession()->switchToIFrame(NULL);
+    $this->getSession()->switchToIFrame('collabora-online-viewer');
   }
 
   /**
