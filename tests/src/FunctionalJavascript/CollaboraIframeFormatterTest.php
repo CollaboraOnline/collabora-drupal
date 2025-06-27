@@ -14,6 +14,7 @@ declare(strict_types=1);
 
 namespace Drupal\Tests\collabora_online\FunctionalJavascript;
 
+use Drupal\Core\Url;
 use Drupal\field\Entity\FieldConfig;
 use Drupal\FunctionalJavascriptTests\WebDriverTestBase;
 use Drupal\Tests\collabora_online\Traits\MediaCreationTrait;
@@ -100,7 +101,7 @@ class CollaboraIframeFormatterTest extends WebDriverTestBase {
     $iframe = $assert_session->elementExists('css', 'iframe.cool-iframe');
 
     // Assert iframe attributes and dimensions.
-    $this->assertSame('/cool/view/' . $media->id(), $iframe->getAttribute('src'));
+    $this->assertSame(Url::fromUserInput('/cool/view/' . $media->id())->toString(), $iframe->getAttribute('src'));
     $this->assertSame('aspect-ratio: 5 / 2', $iframe->getAttribute('style'));
     $this->assertIframeDimensions();
   }

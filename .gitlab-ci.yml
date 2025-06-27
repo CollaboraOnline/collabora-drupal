@@ -12,7 +12,8 @@ phpunit:
     - !reference [.with-database]
     - !reference [.with-chrome]
     - !reference [.with-chrome-legacy]
-    - name: collabora/code:24.04.11.3.1
+    - name: collabora/code:latest
+      entrypoint: ["sh"]
       alias: 'collabora.test'
       variables:
         username: admin
@@ -23,7 +24,6 @@ phpunit:
           --o:storage.wopi.alias_groups.group[0].host=$DTT_BASE_URL
           --o:storage.wopi.alias_groups.group[0].host[@allow]=true
       command:
-        - sh
         - -c
         # Manually generate the proof key, replicating the behavior of "coolconfig generate-proof-key".
         # The coolconfig command can produce inconsistent results, as the service occasionally interrupts execution.
@@ -47,6 +47,6 @@ phpunit:
 
 variables:
   DTT_BASE_URL: $SIMPLETEST_BASE_URL
-  DTT_MINK_DRIVER_ARGS: $MINK_DRIVER_ARGS_WEBDRIVER
+  DTT_MINK_DRIVER_ARGS: $MINK_DRIVER_ARGS_WEBDRIVER_DEFAULT
   _SHOW_ENVIRONMENT_VARIABLES: '1'
   OPT_IN_TEST_PREVIOUS_MAJOR: '1'

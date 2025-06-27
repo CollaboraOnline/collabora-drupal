@@ -15,6 +15,7 @@ declare(strict_types=1);
 namespace Drupal\Tests\collabora_online\Traits;
 
 use Drupal\Core\Entity\Entity\EntityViewDisplay;
+use Drupal\Core\Test\RefreshVariablesTrait;
 
 /**
  * Trait with methods related to field formatters.
@@ -23,6 +24,8 @@ use Drupal\Core\Entity\Entity\EntityViewDisplay;
  * module are used.
  */
 trait MediaFormatterTrait {
+
+  use RefreshVariablesTrait;
 
   /**
    * Sets the formatter for the 'field_media_file' field.
@@ -51,7 +54,7 @@ trait MediaFormatterTrait {
    *   Expected settings for this formatter, or NULL to ignore.
    */
   protected function assertFormatter(string $formatter, array|null $settings = NULL): void {
-    \Drupal::configFactory()->clearStaticCache();
+    $this->refreshVariables();
     $actual = EntityViewDisplay::load('media.document.default')
       ->getComponent('field_media_file');
     $this->assertSame($formatter, $actual['type']);
