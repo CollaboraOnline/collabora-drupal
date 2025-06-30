@@ -1,0 +1,41 @@
+#!/bin/bash
+
+set -ex
+
+## Description: Install Drupal and enable the module
+## Usage: install
+## Example: "ddev install"
+
+vendor/bin/drush -y site:install minimal install_configure_form.enable_update_status_emails=NULL
+vendor/bin/drush -y pm:install toolbar field_ui
+vendor/bin/drush -y theme:enable olivero claro
+vendor/bin/drush -y config-set system.theme default olivero
+vendor/bin/drush -y config-set system.theme admin claro
+vendor/bin/drush -y pm:install collabora_online
+
+# Switch relevant settings to development mode.
+vendor/bin/drush -y config-set system.performance css.preprocess 0
+vendor/bin/drush -y config-set system.performance js.preprocess 0
+vendor/bin/drush -y config-set system.logging error_level verbose
+
+# Install and configure Collabora Online module.
+vendor/bin/drush -y config-set collabora_online.settings cool.server https://collabora-online.ddev.site:9980/
+vendor/bin/drush -y config-set collabora_online.settings cool.wopi_base https://collabora-online.ddev.site/
+vendor/bin/drush -y config-set collabora_online.settings cool.key_id collabora
+vendor/bin/drush -y config-set collabora_online.settings cool.disable_cert_check 1
+
+# Configure media module.
+vendor/bin/drush -y config-set media.settings standalone_url 1
+
+# Allow to enable tests modules.
+LINE='$settings["extension_discovery_scan_tests"] = TRUE;'
+FILE='web/sites/default/settings.php'
+grep -qF -- "$LINE" "$FILE" || echo "$LINE" >> "$FILE"
+
+# Enable the test module to import its configuration.
+# This is needed both for manual testing and evaluation, and for the
+# ExistingSite tests.
+vendor/bin/drush -y en collabora_online_test
+# In the current version, the test module provides nothing beyond
+# configuration, and can be uninstalled after it has done its job.
+vendor/bin/drush -y pmu collabora_online_test

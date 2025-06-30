@@ -1,0 +1,68 @@
+{
+    "name": "drupal/collabora_online",
+    "type": "drupal-module",
+    "description": "Collabora Online connector for Drupal",
+    "license": "MPL-2.0",
+    "authors": [
+        {
+            "name": "Hubert Figuière",
+            "email": "hub@collabora.com"
+        }
+    ],
+    "require": {
+        "php": ">=8.1",
+        "drupal/key": "^1.19",
+        "firebase/php-jwt": "^6.10",
+        "phpseclib/phpseclib": "^3.0",
+        "symfony/error-handler": "^6.4 || ^7.1"
+    },
+    "require-dev": {
+        "composer/installers": "^2",
+        "drupal/core-composer-scaffold": "^10.4 || ^11.1",
+        "drupal/core-dev": "^10.3 || ^11.0",
+        "drupal/core-recommended": "^10.3 || ^11.0",
+        "drupal/datetime_testing": "^1.0@beta",
+        "drupal/groupmedia": "^3 || ^4",
+        "drush/drush": "^12.4 || ^13.3",
+        "openeuropa/task-runner": "^2@alpha",
+        "openeuropa/task-runner-drupal-project-symlink": "^1.0.0-beta6",
+        "php-parallel-lint/php-parallel-lint": "^1.2",
+        "weitzman/drupal-test-traits": "^2.4"
+    },
+    "scripts": {
+        "post-install-cmd": "./vendor/bin/run drupal:site-setup",
+        "post-update-cmd": "./vendor/bin/run drupal:site-setup"
+    },
+    "repositories": [
+        {
+            "type": "composer",
+            "url": "https://packages.drupal.org/8"
+        }
+    ],
+    "extra": {
+        "drupal-scaffold": {
+            "locations": {
+                "web-root": "./web"
+            }
+        },
+        "installer-paths": {
+            "web/core": [
+                "type:drupal-core"
+            ],
+            "web/modules/contrib/{$name}": [
+                "type:drupal-module"
+            ]
+        }
+    },
+    "config": {
+        "sort-packages": true,
+        "allow-plugins": {
+            "composer/installers": true,
+            "drupal/core-composer-scaffold": true,
+            "php-http/discovery": false,
+            "phpstan/extension-installer": true,
+            "tbachert/spi": false,
+            "dealerdirect/phpcodesniffer-composer-installer": true
+        }
+    }
+}

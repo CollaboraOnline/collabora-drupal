@@ -1,0 +1,25 @@
+services:
+  code:
+    container_name: ddev-${DDEV_SITENAME}-code
+    image: collabora/code:latest
+    labels:
+      com.ddev.site-name: ${DDEV_SITENAME}
+      com.ddev.approot: ${DDEV_APPROOT}
+    external_links:
+      - ddev-router:${DDEV_SITENAME}.${DDEV_TLD}
+    expose:
+      - 9980
+    environment:
+      HTTPS_EXPOSE: 9980:9980
+      VIRTUAL_HOST: $DDEV_HOSTNAME
+      username: admin
+      password: admin
+      extra_params: --o:ssl.enable=false --o:ssl.termination=true
+    entrypoint: ""
+    command:
+      - sh
+      - -c
+      - >
+        openssl genpkey -algorithm RSA -out /etc/coolwsd/proof_key -pkeyopt rsa_keygen_bits:2048 &&
+        openssl rsa -in /etc/coolwsd/proof_key -outform PEM -pubout -out /etc/coolwsd/proof_key.pub &&
+        /start-collabora-online.sh
