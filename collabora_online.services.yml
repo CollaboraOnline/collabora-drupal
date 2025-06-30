@@ -11,6 +11,8 @@ services:
     class: Drupal\collabora_online\Jwt\JwtTranscoder
   Drupal\collabora_online\MediaHelperInterface:
     class: Drupal\collabora_online\MediaHelper
+  Drupal\collabora_online\Storage\WopiSettingsStorageInterface:
+    class: Drupal\collabora_online\Storage\WopiSettingsStorage
   Drupal\collabora_online\EventSubscriber\ExceptionWopiSubscriber: { }
   Drupal\collabora_online\Access\WopiProofAccessCheck:
     tags:

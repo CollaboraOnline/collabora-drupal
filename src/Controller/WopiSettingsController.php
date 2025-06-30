@@ -14,17 +14,21 @@ namespace Drupal\collabora_online\Controller;
 
 use Drupal\collabora_online\Exception\CollaboraJwtKeyException;
 use Drupal\collabora_online\Jwt\JwtTranscoderInterface;
+use Drupal\collabora_online\Storage\WopiSettingsStorageInterface;
 use Drupal\Component\Serialization\Yaml;
+use Drupal\Core\Config\ConfigFactoryInterface;
 use Drupal\Core\DependencyInjection\AutowireTrait;
 use Drupal\Core\DependencyInjection\ContainerInjectionInterface;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\StringTranslation\StringTranslationTrait;
+use Drupal\Core\Url;
 use Psr\Log\LoggerInterface;
 use Symfony\Component\DependencyInjection\Attribute\Autowire;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpKernel\Exception\AccessDeniedHttpException;
+use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 
 /**
  * Provides WOPI route responses Collabora settings page.
@@ -37,22 +41,182 @@ class WopiSettingsController implements ContainerInjectionInterface {
   public function __construct(
     protected readonly EntityTypeManagerInterface $entityTypeManager,
     protected readonly JwtTranscoderInterface $jwtTranscoder,
-    #[Autowire('logger.channel.collabora_online')]
+    protected readonly ConfigFactoryInterface $configFactory,
+    #[Autowire(service: 'logger.channel.collabora_online')]
     protected readonly LoggerInterface $logger,
+    protected readonly WopiSettingsStorageInterface $wopiSettingsStorage,
   ) {}
 
   /**
-   * The WOPI entry point.
+   * Gets a list of stored settings files.
    *
    * @param \Symfony\Component\HttpFoundation\Request $request
-   *   Request object for headers and query parameters.
-   * @param string $action
-   *   One of 'info'.
+   *   The WOPI request.
    *
    * @return \Symfony\Component\HttpFoundation\Response
-   *   Response to be consumed by Collabora Online.
+   *   The response.
    */
-  public function wopi(Request $request, string $action = 'info'): Response {
+  public function info(Request $request): Response {
+    $this->verify($request);
+    $type = $request->get('type');
+    if ($type === NULL) {
+      throw new AccessDeniedHttpException('Missing type.');
+    }
+    $response_data = $this->getInfoForType($type);
+    $this->logger->debug(
+      'Wopi settings info:<br>
+<h3>Query</h3>
+<pre>@query</pre>
+<h3>Response data</h3>
+<pre>@response</pre>',
+      [
+        '@query' => Yaml::encode(array_diff_key($request->query->all(), ['access_token' => TRUE])),
+        '@response' => Yaml::encode($response_data),
+      ],
+    );
+    return new JsonResponse($response_data, headers: ['content-type' => 'application/json']);
+  }
+
+  /**
+   * Builds response data for the 'info' request.
+   *
+   * @param 'userconfig'|'systemconfig' $type
+   *   The configuration type.
+   *
+   * @return array
+   *   Response data.
+   */
+  protected function getInfoForType(string $type): array {
+    $response_data = [];
+    $response_data['kind'] = match ($type) {
+      'userconfig' => 'user',
+      'systemconfig' => 'shared',
+    };
+
+    $stamps = $this->wopiSettingsStorage->list("/settings/$type/");
+    foreach ($stamps as $wopi_file_id => $stamp) {
+      $type_pattern = preg_quote($type, '@');
+      if (!preg_match("@^/settings/$type_pattern/(\w+)/\w+\.\w+$@", $wopi_file_id, $matches)) {
+        continue;
+      }
+      $category = $matches[1];
+      $download_url = $this->buildDownloadUrl($wopi_file_id);
+      $response_data[$category][] = [
+        'stamp' => $stamp,
+        'uri' => $download_url->toString(),
+      ];
+    }
+
+    return $response_data;
+  }
+
+  /**
+   * Builds a WOPI url to download a single settings file.
+   *
+   * @param string $wopi_file_id
+   *   File identifier as "/settings/$type/$category/$name.$extension".
+   *
+   * @return \Drupal\Core\Url
+   *   Url object with the correct WOPI base url.
+   */
+  protected function buildDownloadUrl(string $wopi_file_id): Url {
+    $wopi_base = $this->configFactory->get('collabora_online.settings')
+      ->get('cool.wopi_base');
+    if (!$wopi_base || !is_string($wopi_base)) {
+      throw new HttpException(500, 'The requested functionality is not available.');
+    }
+    return Url::fromRoute('collabora-online.wopi.settings.download')
+      // The token is added automatically by the WOPI client.
+      ->setOption('query', ['fileId' => $wopi_file_id])
+      ->setOption('base_url', rtrim($wopi_base, '/'))
+      ->setAbsolute();
+  }
+
+  /**
+   * Downloads a settings file content.
+   *
+   * @param \Symfony\Component\HttpFoundation\Request $request
+   *   The WOPI request.
+   *
+   * @return \Symfony\Component\HttpFoundation\Response
+   *   The response.
+   *
+   * @throws \Symfony\Component\HttpKernel\Exception\HttpException
+   *   Not found or no access.
+   */
+  public function download(Request $request): Response {
+    $this->verify($request);
+    $wopi_file_id = $request->query->get('fileId');
+    if ($wopi_file_id === NULL) {
+      throw new AccessDeniedHttpException('Missing fileId parameter.');
+    }
+    $content = $this->wopiSettingsStorage->read($wopi_file_id);
+    if ($content === NULL) {
+      throw new NotFoundHttpException('Settings file not found.');
+    }
+    $this->logger->debug(
+      'Wopi settings download:<br>
+<h3>Query</h3>
+<pre>@query</pre>
+<h3>Content</h3>
+<pre>@content</pre>',
+      [
+        '@query' => Yaml::encode(array_diff_key($request->query->all(), ['access_token' => TRUE])),
+        '@content' => $content,
+      ],
+    );
+    // @todo Detect MIME type and set 'content-type' header.
+    return new Response($content);
+  }
+
+  /**
+   * Uploads a settings file.
+   *
+   * @param \Symfony\Component\HttpFoundation\Request $request
+   *   The WOPI request.
+   *
+   * @return \Symfony\Component\HttpFoundation\Response
+   *   The response.
+   *
+   * @throws \Symfony\Component\HttpKernel\Exception\HttpException
+   *   Not found or no access.
+   */
+  public function upload(Request $request): Response {
+    $this->verify($request);
+    $wopi_file_id = $request->query->get('fileId');
+    $content = $request->getContent();
+    $this->logger->debug(
+      'Wopi settings upload:<br>
+<h3>Query</h3>
+<pre>@query</pre>
+<h3>Content</h3>
+<pre>@content</pre>',
+      [
+        '@query' => Yaml::encode(array_diff_key($request->query->all(), ['access_token' => TRUE])),
+        '@content' => $request->getContent(),
+      ],
+    );
+    $stamp = $this->wopiSettingsStorage->write($wopi_file_id, $content);
+    return new JsonResponse([
+      'success' => 'success',
+        'filename' => basename($wopi_file_id),
+      'details' => [
+        'stamp' => $stamp,
+          'uri' => $wopi_file_id,
+      ],
+    ], headers: ['content-type' => 'application/json']);
+  }
+
+  /**
+   * Verifies that a request has a valid token.
+   *
+   * @param \Symfony\Component\HttpFoundation\Request $request
+   *   The WOPI request to verify.
+   *
+   * @throws \Symfony\Component\HttpKernel\Exception\AccessDeniedHttpException
+   *   Bad or missing token.
+   */
+  protected function verify(Request $request): void {
     $token = $request->get('access_token');
     if ($token === NULL) {
       throw new AccessDeniedHttpException('Missing access token.');
@@ -61,75 +225,21 @@ class WopiSettingsController implements ContainerInjectionInterface {
       // A malformed request could have a non-string value for access_token.
       throw new AccessDeniedHttpException(sprintf('Expected a string access token, found %s.', gettype($token)));
     }
-    $jwt_payload = $this->verifyToken($token);
-
-    /** @var \Drupal\user\UserInterface|null $user */
-    $user = $this->entityTypeManager->getStorage('user')->load($jwt_payload['uid']);
-    if ($user === NULL) {
-      throw new AccessDeniedHttpException('User not found.');
-    }
-
-    switch ($action) {
-      case 'info':
-        $type = $request->get('type');
-        if ($type === NULL) {
-          throw new AccessDeniedHttpException('Missing type.');
-        }
-        return new JsonResponse(['kind' => $type], headers: ['content-type' => 'application/json']);
-
-      case 'upload':
-        $this->logger->debug(
-          'Wopi settings upload:<br>
-<h3>Query</h3>
-<pre>@query</pre>
-<h3>Content</h3>
-<pre>@content</pre>',
-          [
-            '@query' => Yaml::encode(array_diff_key($request->query->all(), ['access_token' => TRUE])),
-            '@content' => $request->getContent(),
-          ],
-        );
-        return new JsonResponse([], headers: ['content-type' => 'application/json']);
-    }
-
-    return new Response(
-      'Invalid WOPI action ' . $action,
-      Response::HTTP_BAD_REQUEST,
-      ['content-type' => 'text/plain'],
-    );
-  }
-
-  /**
-   * Decodes and verifies a JWT token.
-   *
-   * Verification include:
-   *  - matching $id with fid in the payload
-   *  - verifying the expiration.
-   *
-   * @param string $token
-   *   The token to verify.
-   *
-   * @return array
-   *   Data decoded from the token.
-   *
-   * @throws \Symfony\Component\HttpKernel\Exception\AccessDeniedHttpException
-   *   The token is malformed, invalid or has expired.
-   */
-  protected function verifyToken(
-    #[\SensitiveParameter]
-    string $token,
-  ): array {
     try {
-      $values = $this->jwtTranscoder->decode($token);
+      $jwt_payload = $this->jwtTranscoder->decode($token);
     }
     catch (CollaboraJwtKeyException $e) {
       $this->logger->warning('A token cannot be decoded: @message', ['@message' => $e->getMessage()]);
       throw new AccessDeniedHttpException('Token verification is not possible right now.');
     }
-    if ($values === NULL) {
+    if ($jwt_payload === NULL) {
       throw new AccessDeniedHttpException('Bad token');
     }
-    return $values;
+    /** @var \Drupal\user\UserInterface|null $user */
+    $user = $this->entityTypeManager->getStorage('user')->load($jwt_payload['uid']);
+    if ($user === NULL) {
+      throw new AccessDeniedHttpException('User not found.');
+    }
   }
 
 }
