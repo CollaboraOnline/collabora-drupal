@@ -88,14 +88,15 @@ class WopiSettingsStorage implements WopiSettingsStorageInterface {
   /**
    * {@inheritdoc}
    */
-  public function write(string $wopi_file_id, string $content): string {
+  public function write(string $wopi_file_id, string $content, string $stamp): bool {
     if (!preg_match('@^/settings/(userconfig|systemconfig)/\w+/\w+\.\w+@', $wopi_file_id, $matches)) {
       throw new \InvalidArgumentException('Invalid WOPI file id.');
     }
     $type = $matches[1];
-    $stamp = uniqid();
     $uri = $this->getFileUriFromWopiId($wopi_file_id);
+    $is_new = FALSE;
     if (!file_exists($uri)) {
+      $is_new = TRUE;
       mkdir(dirname($uri), recursive: TRUE);
     }
     file_put_contents($uri, $content);
@@ -113,7 +114,7 @@ class WopiSettingsStorage implements WopiSettingsStorageInterface {
       ->fields(['fid', 'type', 'stamp'])
       ->values([$fid, $type, $stamp])
       ->execute();
-    return $stamp;
+    return $is_new;
   }
 
   /**

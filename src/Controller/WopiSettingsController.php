@@ -196,15 +196,20 @@ class WopiSettingsController implements ContainerInjectionInterface {
         '@content' => $request->getContent(),
       ],
     );
-    $stamp = $this->wopiSettingsStorage->write($wopi_file_id, $content);
-    return new JsonResponse([
-      'success' => 'success',
+    $stamp = uniqid();
+    $is_new = $this->wopiSettingsStorage->write($wopi_file_id, $content, $stamp);
+    return new JsonResponse(
+      [
+        'success' => 'success',
         'filename' => basename($wopi_file_id),
-      'details' => [
-        'stamp' => $stamp,
+        'details' => [
+          'stamp' => $stamp,
           'uri' => $wopi_file_id,
+        ],
       ],
-    ], headers: ['content-type' => 'application/json']);
+      $is_new ? Response::HTTP_CREATED : Response::HTTP_OK,
+      ['content-type' => 'application/json'],
+    );
   }
 
   /**

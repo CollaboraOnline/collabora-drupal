@@ -38,10 +38,12 @@ interface WopiSettingsStorageInterface {
    *   File identifier as "/settings/$type/$category/$name.$extension".
    * @param string $content
    *   File content.
+   * @param string $stamp
+   *   A hash or random string to distinguish from older versions.
    *
-   * @return string
-   *   New stamp.
+   * @return bool
+   *   TRUE if newly created, FALSE if updated.
    */
-  public function write(string $wopi_file_id, string $content): string;
+  public function write(string $wopi_file_id, string $content, string $stamp): bool;
 
 }
