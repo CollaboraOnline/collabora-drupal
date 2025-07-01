@@ -40,12 +40,7 @@ class WopiSettingsStorage implements WopiSettingsStorageInterface {
   /**
    * {@inheritdoc}
    */
-  public function list(string $prefix): array {
-    $type = match ($prefix) {
-      '/settings/userconfig/' => 'userconfig',
-      '/settings/systemconfig/' => 'systemconfig',
-      default => throw new \InvalidArgumentException("Unexpected prefix '$prefix'."),
-    };
+  public function list(string $type): array {
     $query = $this->connection->select(self::TABLE_NAME, 'sf');
     $query->condition('type', $type);
     $query->fields('sf', ['fid', 'stamp']);
