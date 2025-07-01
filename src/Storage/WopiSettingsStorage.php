@@ -6,6 +6,7 @@ namespace Drupal\collabora_online\Storage;
 
 use Drupal\Core\Database\Connection;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
+use Drupal\Core\File\FileSystemInterface;
 use Drupal\file\Entity\File;
 use Drupal\file\FileInterface;
 use Psr\Log\LoggerInterface;
@@ -23,6 +24,7 @@ class WopiSettingsStorage implements WopiSettingsStorageInterface {
   public function __construct(
     protected readonly EntityTypeManagerInterface $entityTypeManager,
     protected readonly Connection $connection,
+    protected readonly FileSystemInterface $fileSystem,
     #[Autowire(service: 'logger.channel.collabora_online')]
     protected readonly LoggerInterface $logger,
   ) {}
@@ -97,7 +99,8 @@ class WopiSettingsStorage implements WopiSettingsStorageInterface {
     $is_new = FALSE;
     if (!file_exists($uri)) {
       $is_new = TRUE;
-      mkdir(dirname($uri), recursive: TRUE);
+      $directory = dirname($uri);
+      $this->fileSystem->prepareDirectory($directory, FileSystemInterface::CREATE_DIRECTORY);
     }
     file_put_contents($uri, $content);
     $file = $this->findFileByUri($uri);
