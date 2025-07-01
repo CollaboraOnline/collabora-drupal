@@ -55,4 +55,14 @@ interface WopiSettingsStorageInterface {
    */
   public function write(string $wopi_file_id, string $content, string $stamp): bool;
 
+  /**
+   * Deletes a stored settings file.
+   *
+   * Currently this is only used in tests.
+   *
+   * @return bool
+   *   TRUE if the file was deleted successfully, FALSE if it did not exist.
+   */
+  public function delete(string $wopi_file_id): bool;
+
 }
