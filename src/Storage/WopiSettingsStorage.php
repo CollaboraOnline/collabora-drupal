@@ -87,7 +87,9 @@ class WopiSettingsStorage implements WopiSettingsStorageInterface {
       ]);
       return NULL;
     }
-    return file_get_contents($uri);
+    $content = file_get_contents($uri);
+    assert($content !== FALSE);
+    return $content;
   }
 
   /**
