@@ -5,3 +5,4 @@
 /.gitattributes
 /phpunit.xml
 /docker-compose.*.yml
+/private/*
