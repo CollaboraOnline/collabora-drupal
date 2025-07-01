@@ -111,10 +111,39 @@ class WopiSettingsStorage implements WopiSettingsStorageInterface {
     if (!$file) {
       $file = File::create(['uri' => $uri]);
     }
+    elseif (!$is_new) {
+      $stored_meta = $this->readFileMeta((int) $file->id());
+      if ($stored_meta !== NULL) {
+        [$stored_type, $stored_stamp] = $stored_meta;
+        if ($stored_type === $type && $stored_stamp === $stamp) {
+          // The file has not changed. Do not update.
+          return FALSE;
+        }
+      }
+    }
     // Make sure the file 'changed' field is updated.
     $file->save();
     $this->writeFileMeta((int) $file->id(), $type, $stamp);
     return $is_new;
+  }
+
+  /**
+   * Reads the type and stamp for a file id.
+   *
+   * @param int $fid
+   *   Drupal file ID.
+   *
+   * @return array{string, string}|null
+   *   An array with type and stamp, or NULL if not found.
+   */
+  protected function readFileMeta(int $fid): ?array {
+    /** @var array{type: string, stamp: string}|false|null $record */
+    $record = $this->connection
+      ->select(self::TABLE_NAME, 't')
+      ->condition('fid', $fid)
+      ->fields('t', ['type', 'stamp'])
+      ->execute()?->fetchAssoc();
+    return $record ? array_values($record) : NULL;
   }
 
   /**
