@@ -95,7 +95,7 @@ class WopiSettingsController implements ContainerInjectionInterface {
       'systemconfig' => 'shared',
     };
 
-    $stamps = $this->wopiSettingsStorage->list("/settings/$type/");
+    $stamps = $this->wopiSettingsStorage->list($type);
     foreach ($stamps as $wopi_file_id => $stamp) {
       $type_pattern = preg_quote($type, '@');
       if (!preg_match("@^/settings/$type_pattern/(\w+)/\w+\.\w+$@", $wopi_file_id, $matches)) {

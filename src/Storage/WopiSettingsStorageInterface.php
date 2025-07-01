@@ -20,13 +20,14 @@ interface WopiSettingsStorageInterface {
   /**
    * Lists stored settings files.
    *
-   * @param string $prefix
-   *   A prefix to filter by.
+   * @param 'userconfig'|'systemconfig' $type
+   *   The type to filter by.
+   *   This is the second fragment in a WOPI file ID.
    *
    * @return array<string, string>
    *   List of files, as stamp by file id.
    */
-  public function list(string $prefix): array;
+  public function list(string $type): array;
 
   /**
    * Loads content of a stored settings file.
