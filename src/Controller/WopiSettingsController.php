@@ -246,7 +246,7 @@ class WopiSettingsController implements ContainerInjectionInterface {
    */
   protected function verify(Request $request): void {
     if (!$this->wopiSettingsStorage->isAvailable()) {
-      throw new HttpException(Response::HTTP_NOT_IMPLEMENTED, 'The settings storage is not available.');
+      throw new HttpException(Response::HTTP_INTERNAL_SERVER_ERROR, 'The settings storage is not available.');
     }
     $token = $request->get('access_token');
     if ($token === NULL) {
