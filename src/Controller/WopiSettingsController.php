@@ -64,6 +64,9 @@ class WopiSettingsController implements ContainerInjectionInterface {
     if ($type === NULL) {
       throw new AccessDeniedHttpException('Missing type.');
     }
+    if (!in_array($type, ['userconfig', 'systemconfig'], TRUE)) {
+      throw new AccessDeniedHttpException("Unexpected value for 'type' query parameter.");
+    }
     $response_data = $this->getInfoForType($type);
     $this->logger->debug(
       'Wopi settings info:<br>
