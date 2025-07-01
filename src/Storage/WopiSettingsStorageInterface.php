@@ -10,6 +10,14 @@ namespace Drupal\collabora_online\Storage;
 interface WopiSettingsStorageInterface {
 
   /**
+   * Determines whether this storage is available.
+   *
+   * @return bool
+   *   TRUE if available, FALSE if not.
+   */
+  public function isAvailable(): bool;
+
+  /**
    * Lists stored settings files.
    *
    * @param string $prefix
