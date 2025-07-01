@@ -28,6 +28,7 @@ use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpKernel\Exception\AccessDeniedHttpException;
+use Symfony\Component\HttpKernel\Exception\HttpException;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 
 /**
@@ -222,6 +223,9 @@ class WopiSettingsController implements ContainerInjectionInterface {
    *   Bad or missing token.
    */
   protected function verify(Request $request): void {
+    if (!$this->wopiSettingsStorage->isAvailable()) {
+      throw new HttpException(Response::HTTP_NOT_IMPLEMENTED, 'The settings storage is not available.');
+    }
     $token = $request->get('access_token');
     if ($token === NULL) {
       throw new AccessDeniedHttpException('Missing access token.');

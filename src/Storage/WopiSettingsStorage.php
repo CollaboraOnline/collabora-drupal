@@ -7,6 +7,7 @@ namespace Drupal\collabora_online\Storage;
 use Drupal\Core\Database\Connection;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\File\FileSystemInterface;
+use Drupal\Core\Site\Settings;
 use Drupal\file\Entity\File;
 use Drupal\file\FileInterface;
 use Psr\Log\LoggerInterface;
@@ -28,6 +29,13 @@ class WopiSettingsStorage implements WopiSettingsStorageInterface {
     #[Autowire(service: 'logger.channel.collabora_online')]
     protected readonly LoggerInterface $logger,
   ) {}
+
+  /**
+   * {@inheritdoc}
+   */
+  public function isAvailable(): bool {
+    return (bool) Settings::get('file_private_path');
+  }
 
   /**
    * {@inheritdoc}
