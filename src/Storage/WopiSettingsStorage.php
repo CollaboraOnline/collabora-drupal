@@ -44,7 +44,8 @@ class WopiSettingsStorage implements WopiSettingsStorageInterface {
     $query = $this->connection->select(self::TABLE_NAME, 'sf');
     $query->condition('type', $type);
     $query->fields('sf', ['fid', 'stamp']);
-    $stamps_by_fid = $query->execute()->fetchAllKeyed();
+    $stamps_by_fid = $query->execute()?->fetchAllKeyed();
+    assert($stamps_by_fid !== NULL);
     /** @var array<int, \Drupal\file\FileInterface> $files */
     $files = $this->entityTypeManager->getStorage('file')->loadMultiple(array_keys($stamps_by_fid));
     $missing = array_diff_key($stamps_by_fid, $files);
