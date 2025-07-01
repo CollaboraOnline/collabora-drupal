@@ -20,7 +20,7 @@
         "drupal/datetime_testing": "^1.0@beta",
         "drupal/groupmedia": "^3 || ^4",
         "drush/drush": "^12.4 || ^13.3",
-        "weitzman/drupal-test-traits": "^2.4"
+        "weitzman/drupal-test-traits": "^2.5"
     },
     "config": {
         "sort-packages": true,
