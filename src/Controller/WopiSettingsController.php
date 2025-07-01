@@ -148,10 +148,7 @@ class WopiSettingsController implements ContainerInjectionInterface {
    */
   public function download(Request $request): Response {
     $this->verify($request);
-    $wopi_file_id = $request->query->get('fileId');
-    if ($wopi_file_id === NULL) {
-      throw new BadRequestHttpException('Missing fileId parameter.');
-    }
+    $wopi_file_id = $this->readWopiFileId($request);
     $content = $this->wopiSettingsStorage->read($wopi_file_id);
     if ($content === NULL) {
       throw new NotFoundHttpException('Settings file not found.');
@@ -185,7 +182,7 @@ class WopiSettingsController implements ContainerInjectionInterface {
    */
   public function upload(Request $request): Response {
     $this->verify($request);
-    $wopi_file_id = $request->query->get('fileId');
+    $wopi_file_id = $this->readWopiFileId($request);
     $content = $request->getContent();
     $this->logger->debug(
       'Wopi settings upload:<br>
@@ -212,6 +209,30 @@ class WopiSettingsController implements ContainerInjectionInterface {
       $is_new ? Response::HTTP_CREATED : Response::HTTP_OK,
       ['content-type' => 'application/json'],
     );
+  }
+
+  /**
+   * Reads and validates the 'fileId' query parameter.
+   *
+   * @param \Symfony\Component\HttpFoundation\Request $request
+   *   The request.
+   *
+   * @return string
+   *   The value of the 'fileId' query parameter.
+   */
+  protected function readWopiFileId(Request $request): string {
+    $wopi_file_id = $request->query->get('fileId');
+    if ($wopi_file_id === NULL) {
+      throw new BadRequestHttpException("Missing 'fileId' query parameter.");
+    }
+    // For now, all known settings file paths match the simple pattern as below.
+    if (
+      !is_string($wopi_file_id) ||
+      !preg_match("@^/settings/(userconfig|systemconfig)/\w+/\w+\.\w+$@", $wopi_file_id)
+    ) {
+      throw new BadRequestHttpException("Invalid value for 'fileId' query parameter.");
+    }
+    return $wopi_file_id;
   }
 
   /**
