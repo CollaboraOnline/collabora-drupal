@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Drupal\collabora_online\Storage;
 
 use Drupal\Core\Database\Connection;
+use Drupal\Core\Entity\EntityStorageException;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\File\FileSystemInterface;
 use Drupal\Core\Site\Settings;
@@ -128,6 +129,31 @@ class WopiSettingsStorage implements WopiSettingsStorageInterface {
     $file->save();
     $this->writeFileMeta((int) $file->id(), $type, $stamp);
     return $is_new;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function delete(string $wopi_file_id): bool {
+    $uri = $this->getFileUriFromWopiId($wopi_file_id);
+    $file = $this->findFileByUri($uri);
+    if (!$file) {
+      return FALSE;
+    }
+    $fid = (int) $file->id();
+    try {
+      $file->delete();
+    }
+    catch (EntityStorageException $e) {
+      // Do not delete the record in the custom table, if the file entity cannot
+      // be deleted.
+      throw new \RuntimeException('Failed to delete the file entity.', previous: $e);
+    }
+    $this->connection
+      ->delete(self::TABLE_NAME)
+      ->condition('fid', $fid)
+      ->execute();
+    return TRUE;
   }
 
   /**
