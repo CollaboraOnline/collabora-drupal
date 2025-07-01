@@ -43,9 +43,9 @@ class FetchClientUrlTest extends ExistingSiteBase {
     $discovery = $discovery_fetcher->getDiscovery();
     $client_url = $discovery->getWopiClientURL();
     $this->assertNotNull($client_url);
-    // The protocol, domain and port are known when this test runs in the
-    // docker-compose setup.
-    $this->assertMatchesRegularExpression('@^http://collabora\.test:9980/browser/[0-9a-f]+/cool\.html\?$@', $client_url);
+    // The protocol, domain and port are known when this test runs in the ddev
+    // or docker-compose setup.
+    $this->assertMatchesRegularExpression('@^https?://(collabora\.test|collabora\-online\.ddev\.site):9980/browser/[0-9a-f]+/cool\.html\?$@', $client_url);
   }
 
   /**
