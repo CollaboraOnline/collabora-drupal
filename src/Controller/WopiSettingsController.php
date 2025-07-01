@@ -28,6 +28,7 @@ use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpKernel\Exception\AccessDeniedHttpException;
+use Symfony\Component\HttpKernel\Exception\BadRequestHttpException;
 use Symfony\Component\HttpKernel\Exception\HttpException;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 
@@ -149,7 +150,7 @@ class WopiSettingsController implements ContainerInjectionInterface {
     $this->verify($request);
     $wopi_file_id = $request->query->get('fileId');
     if ($wopi_file_id === NULL) {
-      throw new AccessDeniedHttpException('Missing fileId parameter.');
+      throw new BadRequestHttpException('Missing fileId parameter.');
     }
     $content = $this->wopiSettingsStorage->read($wopi_file_id);
     if ($content === NULL) {
