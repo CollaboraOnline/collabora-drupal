@@ -113,14 +113,27 @@ class WopiSettingsStorage implements WopiSettingsStorageInterface {
     }
     // Make sure the file 'changed' field is updated.
     $file->save();
-    $fid = $file->id();
+    $this->writeFileMeta((int) $file->id(), $type, $stamp);
+    return $is_new;
+  }
+
+  /**
+   * Writes the type and stamp for a file id.
+   *
+   * @param int $fid
+   *   Drupal file ID.
+   * @param string $type
+   *   One of 'userconfig' or 'systemconfig'.
+   * @param string $stamp
+   *   The stamp, typically a hash of the file contents.
+   */
+  protected function writeFileMeta(int $fid, string $type, string $stamp): void {
     $this->connection
       ->upsert(self::TABLE_NAME)
       ->key('fid')
       ->fields(['fid', 'type', 'stamp'])
       ->values([$fid, $type, $stamp])
       ->execute();
-    return $is_new;
   }
 
   /**
