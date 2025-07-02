@@ -1,0 +1,16 @@
+<!-- Reduced discovery.xml with a settings iframe url. -->
+<wopi-discovery>
+  <net-zone name="external-http">
+    <!-- Insert some bad entries to verify the selector. -->
+    <app name="Other">
+      <action ext="" name="iframe" urlsrc="http://collabora.test:9980/other-app"/>
+    </app>
+    <app name="Settings">
+      <action ext="" name="other" urlsrc="http://collabora.test:9980/other-action"/>
+    </app>
+    <!-- This is the correct entry to be retrieved. -->
+    <app name="Settings">
+      <action ext="" name="iframe" urlsrc="http://collabora.test:9980/browser/3dc280be53/admin/adminIntegratorSettings.html"/>
+    </app>
+  </net-zone>
+</wopi-discovery>
