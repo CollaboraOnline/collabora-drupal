@@ -92,4 +92,35 @@ class FieldFormatterSettingsTest extends BrowserTestBase {
     $this->assertFormatter('collabora_preview_embed', ['aspect_ratio' => '17 / 11']);
   }
 
+  /**
+   * Tests the configuration for the Collabora settings form.
+   *
+   * @covers \Drupal\collabora_online\Plugin\Field\FieldFormatter\CollaboraPreviewModal::settingsForm
+   */
+  public function testModalFormatterSettingsForm(): void {
+    $assert_session = $this->assertSession();
+    $this->drupalGet('/admin/structure/media/manage/document/display');
+
+    $tr = $assert_session->elementExists('xpath', '//td[text() = "Field with attached file"]')->getParent();
+    $select = $assert_session->selectExists('Plugin for Field with attached file', $tr);
+    $this->assertSame('file_default', $select->getValue());
+
+    $select->selectOption('Collabora Online preview modal');
+    $assert_session->buttonExists('Save')->press();
+    $this->assertFormatter('collabora_preview_modal', ['max_width' => NULL]);
+
+    $assert_session->elementExists('css', '#edit-fields-field-media-file-settings-edit', $tr)->press();
+    $aspect_ratio_field = $assert_session->fieldExists('Maximum dialog width', $tr);
+    $this->assertSame('', $aspect_ratio_field->getValue());
+
+    $aspect_ratio_field->setValue(-3);
+    $assert_session->buttonExists('Update', $tr)->press();
+    $assert_session->statusMessageContains('Maximum dialog width must be higher than or equal to 30.');
+
+    $aspect_ratio_field->setValue('333');
+    $assert_session->buttonExists('Update', $tr)->press();
+    $assert_session->buttonExists('Save')->press();
+    $this->assertFormatter('collabora_preview_modal', ['max_width' => 333]);
+  }
+
 }
