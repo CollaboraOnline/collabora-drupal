@@ -14,6 +14,10 @@ declare(strict_types=1);
 
 namespace Drupal\collabora_online\Form;
 
+use Drupal\collabora_online\Storage\WopiSettingsStorageInterface;
+use Drupal\Core\Config\ConfigFactoryInterface;
+use Drupal\Core\Config\TypedConfigManagerInterface;
+use Drupal\Core\DependencyInjection\AutowireTrait;
 use Drupal\Core\Form\ConfigFormBase;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Url;
@@ -23,7 +27,17 @@ use Drupal\Core\Url;
  */
 class ConfigForm extends ConfigFormBase {
 
+  use AutowireTrait;
+
   const SETTINGS = 'collabora_online.settings';
+
+  public function __construct(
+    ConfigFactoryInterface $config_factory,
+    TypedConfigManagerInterface $typedConfigManager,
+    protected readonly WopiSettingsStorageInterface $wopiSettingsStorage,
+  ) {
+    parent::__construct($config_factory, $typedConfigManager);
+  }
 
   /**
    * {@inheritdoc}
@@ -137,18 +151,25 @@ This applies equally to autosave, the editor\'s save button, and the close butto
       '#default_value' => $cool_settings['allowfullscreen'] ?? FALSE,
     ];
 
-    $settings_iframe_url = Url::fromRoute('collabora-online.settings-iframe');
-    $form['settings_iframe'] = [
-      '#type' => 'html_tag',
-      '#tag' => 'iframe',
-      '#attributes' => [
-        'src' => $settings_iframe_url->toString(),
-        'name' => 'settings-iframe-outer',
-        'id' => 'settings-iframe-outer',
-        'class' => ['cool-iframe'],
-      ],
-      '#attached' => ['library' => ['collabora_online/iframe']],
-    ];
+    if ($this->wopiSettingsStorage->isAvailable()) {
+      $settings_iframe_url = Url::fromRoute('collabora-online.settings-iframe');
+      $form['settings_iframe'] = [
+        '#type' => 'html_tag',
+        '#tag' => 'iframe',
+        '#attributes' => [
+          'src' => $settings_iframe_url->toString(),
+          'name' => 'settings-iframe-outer',
+          'id' => 'settings-iframe-outer',
+          'class' => ['cool-iframe'],
+        ],
+        '#attached' => ['library' => ['collabora_online/iframe']],
+      ];
+    }
+    else {
+      $form['settings_iframe'] = [
+        '#markup' => $this->t('The private file system is not configured. No settings iframe will be shown.'),
+      ];
+    }
 
     return parent::buildForm($form, $form_state);
   }
