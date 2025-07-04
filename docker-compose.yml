@@ -7,6 +7,7 @@ services:
     volumes:
       - .:/var/www/html
     environment:
+      COMPOSER: composer.legacy.json
       DOCUMENT_ROOT: /var/www/html/web
       # By leaving these variables empty Docker Compose will set them to their host values.
       # XDEBUG CONFIGURATION.

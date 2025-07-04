@@ -1,6 +1,7 @@
 /vendor/
-/composer.lock
+/composer.legacy.lock
 /web/
 /.editorconfig
 /.gitattributes
 /phpunit.xml
+/docker-compose.*.yml

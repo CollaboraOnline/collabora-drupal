@@ -27,7 +27,7 @@ It is recommended to generate a proof key as documented here:\
 https://sdk.collaboraonline.com/docs/advanced_integration.html#wopi-proof
 
 If not, the proof mechanism needs to be disabled in the module settings.\
-The Docker setup provided automatically generates a proof key at startup.
+The DDEV setup provided automatically generates a proof key at startup.
 
 ### Module installation steps
 
@@ -55,12 +55,11 @@ Please check the "Configuration" section below!
 Development / demo installation
 -------------------------------
 
-A local demo and testing instance can be installed using docker-compose.
+A local demo and testing instance can be installed using DDEV.
 
 ### Requirements
 
-- [Docker](https://www.docker.com/get-docker)
-- [Docker Compose](https://docs.docker.com/compose/)
+- [DDEV](https://ddev.readthedocs.io/en/stable/)
 
 ### Installation steps
 
@@ -73,21 +72,20 @@ git clone https://github.com/CollaboraOnline/collabora-drupal.git collabora_onli
 Then run the following steps.
 
 ```sh
-docker-compose up -d
-
-docker-compose exec web composer install
-docker-compose exec web ./vendor/bin/run drupal:site-install
-
+ddev start
+ddev poser
+ddev symlink-project
+ddev install
 ```
 
 Optionally, generate an admin login link.
 ```
-docker-compose exec web ./vendor/bin/drush uli
+ddev drush uli
 ```
 
 The last command will output a link to the local website, with login for the admin account.
 
-Otherwise, the local website will be available at http://web.test:8080/. The administrator login is 'admin'/'admin'.
+Otherwise, the local website will be available at https://collabora-online.ddev.site/.
 
 ### Configuration.
 
@@ -120,7 +118,7 @@ Advanced usage:
 To run the phpunit tests:
 
 ```bash
-docker-compose exec web ./vendor/bin/phpunit
+ddev phpunit
 ```
 
 
