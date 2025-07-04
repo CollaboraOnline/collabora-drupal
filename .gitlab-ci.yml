@@ -34,15 +34,16 @@ phpunit:
   before_script:
     - !reference [.setup-webserver]
     - !reference [.simpletest-db]
-    - $CI_PROJECT_DIR/vendor/bin/run drupal:settings-setup --skip-permissions-setup
-    - "$CI_PROJECT_DIR/vendor/bin/run drupal:site-install \
-      --database-scheme=mysql \
-      --database-name=$MYSQL_DATABASE \
-      --database-host=database \
-      --database-user=$MYSQL_USER \
-      --database-password=$MYSQL_PASSWORD \
-      --database-port="
+    - drush -y site-install minimal --db-url=mysql://$MYSQL_USER:$MYSQL_PASSWORD@database/$MYSQL_DATABASE
+    - drush -y pm:install collabora_online
     - drush -y config-set collabora_online.settings cool.wopi_base $DTT_BASE_URL
+    - drush -y config-set collabora_online.settings cool.server http://collabora.test:9980/
+    - drush -y config-set collabora_online.settings cool.key_id collabora
+    - drush -y config-set collabora_online.settings cool.disable_cert_check 1
+    - drush -y config-set media.settings standalone_url 1
+    - echo '$settings["extension_discovery_scan_tests"] = TRUE;' >> $CI_PROJECT_DIR/$_WEB_ROOT/sites/default/settings.php
+    - drush -y pm:install collabora_online_test
+    - drush -y pm:uninstall collabora_online_test
     - rm /var/www/html/web # Remove symlink to allow .setup-webserver to be re-executed.
 
 variables:

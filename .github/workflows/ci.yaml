@@ -37,6 +37,8 @@ jobs:
           sudo apt-get install -y docker-compose
 
       - name: Start docker-compose
+        env:
+          COMPOSER: "composer.legacy.json"
         run: |
           docker-compose up -d
 
