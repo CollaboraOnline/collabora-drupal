@@ -32,6 +32,11 @@ LINE='$settings["extension_discovery_scan_tests"] = TRUE;'
 FILE='web/sites/default/settings.php'
 grep -qF -- "$LINE" "$FILE" || echo "$LINE" >> "$FILE"
 
+# Set private files directory.
+LINE='$settings["file_private_path"] = "sites/default/files/private";'
+FILE='web/sites/default/settings.php'
+grep -qF -- "$LINE" "$FILE" || echo "$LINE" >> "$FILE"
+
 # Enable the test module to import its configuration.
 # This is needed both for manual testing and evaluation, and for the
 # ExistingSite tests.
