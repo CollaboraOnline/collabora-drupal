@@ -17,6 +17,7 @@ drupal:
     settings:
       # Allow the test module to be installed.
       extension_discovery_scan_tests: true
+      file_private_path: "sites/default/files/private"
   post_install:
     - "./vendor/bin/drush -y theme:enable olivero"
     - "./vendor/bin/drush -y theme:enable claro"

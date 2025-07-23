@@ -14,6 +14,7 @@ declare(strict_types=1);
 
 use Drupal\collabora_online\Discovery\DiscoveryFetcherInterface;
 use Drupal\collabora_online\Exception\CollaboraNotAvailableException;
+use Drupal\collabora_online\Storage\WopiSettingsStorage;
 
 /**
  * Implements hook_requirements().
@@ -68,4 +69,76 @@ function collabora_online_requirements(string $phase): array {
   }
 
   return $requirements;
+}
+
+/**
+ * Implements hook_schema().
+ */
+function collabora_online_schema(): array {
+  $schema[WopiSettingsStorage::TABLE_NAME] = [
+    'description' => 'List of settings files uploaded through WOPI requests.',
+    'fields' => [
+      'fid' => [
+        'description' => 'ID of the Drupal file entity.',
+        'type' => 'int',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+      ],
+      'type' => [
+        'description' => "One of 'systemconfig' or 'userconfig'. Redundant, but used for quick lookups.",
+        'type' => 'varchar_ascii',
+        'length' => 64,
+        'not null' => TRUE,
+        'default' => '',
+      ],
+      'stamp' => [
+        'description' => "A value to detect if file contents have changed.",
+        'type' => 'varchar_ascii',
+        'length' => 64,
+        'not null' => TRUE,
+        'default' => '',
+      ],
+    ],
+    'primary key' => ['fid'],
+    'indexes' => [
+      'type' => ['type'],
+    ],
+  ];
+  return $schema;
+}
+
+/**
+ * Creates the 'collabora_online_settings_files' table.
+ */
+function collabora_online_update_10000(): void {
+  $table_definition = [
+    'description' => 'List of settings files uploaded through WOPI requests.',
+    'fields' => [
+      'fid' => [
+        'description' => 'ID of the Drupal file entity.',
+        'type' => 'int',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+      ],
+      'type' => [
+        'description' => "One of 'systemconfig' or 'userconfig'. Redundant, but used for quick lookups.",
+        'type' => 'varchar_ascii',
+        'length' => 64,
+        'not null' => TRUE,
+        'default' => '',
+      ],
+      'stamp' => [
+        'description' => "A value to detect if file contents have changed.",
+        'type' => 'varchar_ascii',
+        'length' => 64,
+        'not null' => TRUE,
+        'default' => '',
+      ],
+    ],
+    'primary key' => ['fid'],
+    'indexes' => [
+      'type' => ['type'],
+    ],
+  ];
+  \Drupal::database()->schema()->createTable('collabora_online_settings_files', $table_definition);
 }

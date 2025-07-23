@@ -97,8 +97,20 @@ collabora-online.wopi.save:
 collabora-online.wopi.settings:
   path: '/cool/wopi/settings'
   defaults:
-    _controller: '\Drupal\collabora_online\Controller\WopiSettingsController::wopi'
-    action: 'info'
+    _controller: '\Drupal\collabora_online\Controller\WopiSettingsController::info'
+  methods: [ GET ]
+  requirements:
+    _access: 'TRUE'
+    _format: 'collabora_online_wopi'
+  options:
+    parameters:
+      action:
+        type: string
+
+collabora-online.wopi.settings.download:
+  path: '/cool/wopi/settings/download'
+  defaults:
+    _controller: '\Drupal\collabora_online\Controller\WopiSettingsController::download'
   methods: [ GET ]
   requirements:
     _access: 'TRUE'
@@ -111,8 +123,7 @@ collabora-online.wopi.settings:
 collabora-online.wopi.settings.upload:
   path: '/cool/wopi/settings/upload'
   defaults:
-    _controller: '\Drupal\collabora_online\Controller\WopiSettingsController::wopi'
-    action: 'upload'
+    _controller: '\Drupal\collabora_online\Controller\WopiSettingsController::upload'
   methods: [ POST ]
   requirements:
     _access: 'TRUE'
