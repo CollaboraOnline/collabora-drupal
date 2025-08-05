@@ -48,6 +48,7 @@ class CollaboraPreviewModal extends CollaboraFileFormatterBase {
    */
   public function settingsSummary(): array {
     $summary = parent::settingsSummary();
+    /** @var string|int|null $max_width */
     $max_width = $this->getSetting('max_width');
     $summary[] = $this->t('Maximum dialog width: @max_width', [
       '@max_width' => match ($max_width) {
