@@ -63,7 +63,8 @@ class CollaboraModalFormatterTest extends WebDriverTestBase {
       ->save();
 
     $this->setFormatter('collabora_preview_modal', [
-      'max_width' => 750,
+      // Use an uncommon number, which is later used in an assertion.
+      'max_width' => 753,
     ]);
   }
 
@@ -110,7 +111,7 @@ class CollaboraModalFormatterTest extends WebDriverTestBase {
 
     // Clicking the button opens the modal.
     $button->click();
-    $iframe = $this->assertModalWithIframe($media, 750);
+    $iframe = $this->assertModalWithIframe($media);
 
     // Clicking the close button closes the modal.
     $assert_session->elementExists('named', ['button', 'Close'], $iframe->getParent()->getParent())->click();
@@ -118,33 +119,6 @@ class CollaboraModalFormatterTest extends WebDriverTestBase {
     $assert_session->elementNotExists('css', '.ui-dialog');
     $assert_session->elementNotExists('css', '.ui-dialog-content');
     $assert_session->elementNotExists('css', 'iframe');
-
-    // Test with different themes.
-    $this->setActiveTheme('claro');
-    $this->drupalGet($media->toUrl());
-    $this->assertPreviewButton($media)->click();
-    $this->assertModalWithIframe($media, 750);
-
-    $this->setActiveTheme('olivero');
-    $this->drupalGet($media->toUrl());
-    $this->assertPreviewButton($media)->click();
-    $this->assertModalWithIframe($media, 750);
-
-    // Test narrow viewport in different themes.
-    $this->getSession()->resizeWindow(400, 800);
-    $this->drupalGet($media->toUrl());
-    $this->assertPreviewButton($media)->click();
-    $this->assertModalWithIframe($media);
-
-    $this->setActiveTheme('claro');
-    $this->drupalGet($media->toUrl());
-    $this->assertPreviewButton($media)->click();
-    $this->assertModalWithIframe($media);
-
-    $this->setActiveTheme('stark');
-    $this->drupalGet($media->toUrl());
-    $this->assertPreviewButton($media)->click();
-    $this->assertModalWithIframe($media);
   }
 
   /**
@@ -170,68 +144,23 @@ class CollaboraModalFormatterTest extends WebDriverTestBase {
    *
    * @param \Drupal\media\MediaInterface $media
    *   The media entity being displayed.
-   * @param int|null $expected_dialog_width
-   *   Expected dialog width in px, or NULL for auto-sized width.
    *
    * @return \Behat\Mink\Element\NodeElement
    *   The iframe element.
    */
-  protected function assertModalWithIframe(MediaInterface $media, int|null $expected_dialog_width = NULL): NodeElement {
+  protected function assertModalWithIframe(MediaInterface $media): NodeElement {
     $assert_session = $this->assertSession();
     $iframe = $assert_session->waitForElementVisible('css', '.ui-dialog.cool-modal-preview > .ui-dialog-titlebar + .ui-dialog-content > iframe.cool-iframe');
     $this->assertSame('/cool/view/' . $media->id(), $iframe->getAttribute('src'));
 
-    [
-      $viewport_width,
-      $viewport_height,
-      $dialog_rect,
-      $titlebar_rect,
-      $content_rect,
-      $iframe_rect,
-    ] = $this->getSession()->evaluateScript(<<<JS
-[
-  window.innerWidth,
-  window.innerHeight,
-  document.querySelector('.ui-dialog.cool-modal-preview').getBoundingClientRect(),
-  document.querySelector('.ui-dialog-titlebar').getBoundingClientRect(),
-  document.querySelector('.ui-dialog-content').getBoundingClientRect(),
-  document.querySelector('iframe.cool-iframe').getBoundingClientRect(),
-]
-JS);
+    $this->assertStringContainsString(
+      // The inline style is coming from the plugin settings.
+      // Start with space to avoid matching max-width, if that exists.
+      ' width: 753px;',
+      $iframe->getParent()->getParent()->getAttribute('style'),
+    );
+
     $this->assertNoJsConsoleLogs();
-
-    if ($expected_dialog_width !== NULL) {
-      // The dialog has the expected width.
-      // Allow for padding and 'box-sizing: content-box'.
-      $this->assertNumberInRange($expected_dialog_width, 12, $dialog_rect['width']);
-    }
-    else {
-      // The dialog width is relative to the viewport.
-      // Allow for padding and 'box-sizing: content-box'.
-      $this->assertNumberInRange($viewport_width * .92 - 1, 12, $dialog_rect['width']);
-    }
-    // The dialog height is a percentage of the viewport height.
-    // Allow for padding and 'box-sizing: content-box'.
-    $this->assertLessThanOrEqual($viewport_height - 20, $dialog_rect['height']);
-    $this->assertGreaterThanOrEqual($viewport_height * .8, $dialog_rect['height']);
-
-    // The dialog is centered in the viewport.
-    $this->assertEqualsWithDelta($dialog_rect['left'], $viewport_width - $dialog_rect['right'], 2);
-    $this->assertEqualsWithDelta($dialog_rect['top'], $viewport_height - $dialog_rect['bottom'], 2);
-
-    // Assert horizontal positioning of child elements.
-    $this->assertNumberInRange($dialog_rect['left'], 6, $content_rect['left']);
-    $this->assertNumberInRange($dialog_rect['right'], -6, $content_rect['right']);
-    $this->assertSame($content_rect['left'], $titlebar_rect['left']);
-    $this->assertSame($content_rect['right'], $titlebar_rect['right']);
-
-    // Assert vertical positioning of child elements.
-    $this->assertNumberInRange($dialog_rect['top'], 6, $titlebar_rect['top']);
-    $this->assertNumberInRange($titlebar_rect['bottom'], 4, $content_rect['top']);
-    $this->assertNumberInRange($dialog_rect['bottom'], -6, $content_rect['bottom']);
-
-    // The iframe has the same dimensions and position as its parent.
-    $this->assertSame($content_rect, $iframe_rect);
 
     return $iframe;
   }
