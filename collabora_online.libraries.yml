@@ -22,3 +22,10 @@ iframe:
   css:
     component:
       css/collabora-iframe.css: {}
+
+modal_preview:
+  css:
+    component:
+      css/collabora-modal-preview.css: {}
+  dependencies:
+    - collabora_online/iframe

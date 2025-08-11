@@ -29,6 +29,20 @@ collabora-online.edit:
     media: \d+
     _entity_access: 'media.edit in collabora'
 
+collabora-online.modal:
+  path: '/cool/modal/{media}'
+  defaults:
+    _controller: '\Drupal\collabora_online\Controller\ModalController::modalPreview'
+    _title: 'Collabora Online Preview'
+    _title_callback: '\Drupal\collabora_online\Controller\ModalController::modalPreviewTitle'
+  options:
+    parameters:
+      media:
+        type: entity:media
+  requirements:
+    media: \d+
+    _entity_access: 'media.preview in collabora'
+
 collabora-online.settings:
   path: '/admin/config/cool/settings'
   defaults:
