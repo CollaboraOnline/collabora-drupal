@@ -1,6 +1,7 @@
 /vendor/
 /composer.legacy.lock
 /web/
+/recipes/
 /.editorconfig
 /.gitattributes
 /phpunit.xml
