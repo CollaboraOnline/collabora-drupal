@@ -45,6 +45,9 @@ phpunit:
     - drush -y pm:install collabora_online_test
     - drush -y pm:uninstall collabora_online_test
     - rm /var/www/html/web # Remove symlink to allow .setup-webserver to be re-executed.
+  script:
+    - curl http://collabora.test:9980/hosting/capabilities | json_pp
+    - !reference [.phpunit-base, script]
 
 variables:
   DTT_BASE_URL: $SIMPLETEST_BASE_URL
