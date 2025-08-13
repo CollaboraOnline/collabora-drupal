@@ -34,6 +34,7 @@ phpunit:
   before_script:
     - !reference [.setup-webserver]
     - !reference [.simpletest-db]
+    - curl http://collabora.test:9980/hosting/capabilities | json_pp
     - drush -y site-install minimal --db-url=mysql://$MYSQL_USER:$MYSQL_PASSWORD@database/$MYSQL_DATABASE
     - drush -y pm:install collabora_online
     - drush -y config-set collabora_online.settings cool.wopi_base $DTT_BASE_URL
@@ -45,9 +46,6 @@ phpunit:
     - drush -y pm:install collabora_online_test
     - drush -y pm:uninstall collabora_online_test
     - rm /var/www/html/web # Remove symlink to allow .setup-webserver to be re-executed.
-  script:
-    - curl http://collabora.test:9980/hosting/capabilities | json_pp
-    - !reference [.phpunit-base, script]
 
 variables:
   DTT_BASE_URL: $SIMPLETEST_BASE_URL
