@@ -59,6 +59,10 @@ jobs:
           docker-compose exec -T web php --version
           docker-compose exec -T web php --info | grep xdebug.mode || true
 
+      - name: Collabora server capabilities
+        run: |
+          docker-compose exec -T web curl http://collabora.test:9980/hosting/capabilities | json_pp
+
       - name: Prepare composer.json
         run: |
           set -x
