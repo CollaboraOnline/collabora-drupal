@@ -1,0 +1,29 @@
+
+.ui-dialog.cool-modal-preview {
+  max-width: 92%;
+}
+
+.ui-dialog.cool-modal-preview > .ui-dialog-content {
+  padding: 0;
+  overflow-y: hidden;
+  position: relative;
+}
+
+.cool-modal-preview > .ui-dialog-content:before {
+  content: '';
+  display: block;
+  padding-bottom: 1000%;
+  visibility: hidden;
+}
+
+.cool-modal-preview > .ui-dialog-content > iframe.cool-iframe {
+  position: absolute;
+  left: 0;
+  top: 0;
+  right: 0;
+  height: 100%;
+  aspect-ratio: unset;
+  border: none;
+}
+
+

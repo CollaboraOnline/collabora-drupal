@@ -14,3 +14,4 @@ parameters:
     - "#^Unsafe usage of new static\\(\\).$#"
     # Allow to omit `<mixed>` as iterable or generic type qualifier.
     - identifier: missingType.iterableValue
+    - identifier: missingType.generics
