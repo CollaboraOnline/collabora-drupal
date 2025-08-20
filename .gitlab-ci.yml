@@ -34,7 +34,7 @@ phpunit:
   before_script:
     - !reference [.setup-webserver]
     - !reference [.simpletest-db]
-    - curl http://collabora.test:9980/hosting/capabilities | json_pp
+    - curl -s http://collabora.test:9980/hosting/capabilities | json_pp
     - drush -y site-install minimal --db-url=mysql://$MYSQL_USER:$MYSQL_PASSWORD@database/$MYSQL_DATABASE
     - drush -y pm:install collabora_online
     - drush -y config-set collabora_online.settings cool.wopi_base $DTT_BASE_URL
