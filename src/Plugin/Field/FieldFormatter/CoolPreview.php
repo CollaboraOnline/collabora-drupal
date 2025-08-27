@@ -25,10 +25,6 @@ use Drupal\Core\StringTranslation\TranslatableMarkup;
 
 /**
  * Plugin implementation of the 'collabora_preview' formatter.
- *
- * @template-extends EntityReferenceFormatterBase<\Drupal\file\FileInterface>
- *
- * @see ../../../../vendor/mglaman/phpstan-drupal/stubs/Drupal/Core/Field/Plugin/Field/FieldFormatter/EntityReferenceFormatterBase.stub
  */
 #[FieldFormatter(
   id: 'collabora_preview',
