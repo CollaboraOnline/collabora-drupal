@@ -15,6 +15,7 @@ declare(strict_types=1);
 namespace Drupal\Tests\collabora_online\FunctionalJavascript;
 
 use Behat\Mink\Element\NodeElement;
+use Drupal\Core\Url;
 use Drupal\field\Entity\FieldConfig;
 use Drupal\FunctionalJavascriptTests\WebDriverTestBase;
 use Drupal\media\MediaInterface;
@@ -81,7 +82,7 @@ class CollaboraModalFormatterTest extends WebDriverTestBase {
       'access content',
     ]);
     $this->drupalLogin($account);
-    $expected_modal_url = '/cool/modal/' . $media->id();
+    $expected_modal_url = Url::fromUserInput('/cool/modal/' . $media->id())->toString();
     $this->drupalGet($media->toUrl());
     $assert_session = $this->assertSession();
     $this->assertSame(
@@ -134,7 +135,10 @@ class CollaboraModalFormatterTest extends WebDriverTestBase {
     $button = $this->assertSession()->elementExists('named', ['link', 'Preview']);
 
     // Assert button attributes.
-    $this->assertSame('/cool/modal/' . $media->id(), $button->getAttribute('href'));
+    $this->assertSame(
+      Url::fromUserInput('/cool/modal/' . $media->id())->toString(),
+      $button->getAttribute('href'),
+    );
 
     return $button;
   }
@@ -151,7 +155,10 @@ class CollaboraModalFormatterTest extends WebDriverTestBase {
   protected function assertModalWithIframe(MediaInterface $media): NodeElement {
     $assert_session = $this->assertSession();
     $iframe = $assert_session->waitForElementVisible('css', '.ui-dialog.cool-modal-preview > .ui-dialog-titlebar + .ui-dialog-content > iframe.cool-iframe');
-    $this->assertSame('/cool/view/' . $media->id(), $iframe->getAttribute('src'));
+    $this->assertSame(
+      Url::fromUserInput('/cool/view/' . $media->id())->toString(),
+      $iframe->getAttribute('src'),
+    );
 
     $this->assertStringContainsString(
       // The inline style is coming from the plugin settings.
