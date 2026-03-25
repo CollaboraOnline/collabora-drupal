@@ -366,8 +366,8 @@ User ID: @user_id',
    *   Response to be consumed by Collabora Online.
    */
   public function wopi(string $action, MediaInterface $media, Request $request): Response {
-    $token = $request->query->get('access_token');
-    if ($token === NULL) {
+    $token = $request->query->getString('access_token');
+    if ($token === '') {
       throw new AccessDeniedHttpException('Missing access token.');
     }
     $jwt_payload = $this->verifyTokenForMedia($token, $media);
