@@ -382,11 +382,14 @@ User ID: @user_id',
     foreach ($requests as $name => $request) {
       // Replace the token with a value that is not in the JWT format.
       $request->query->set('access_token', ['not a string']);
-      $this->assertAccessDeniedResponse(
-        'Expected a string access token, found array.',
+      $this->assertResponse(
+        Response::HTTP_BAD_REQUEST,
+        'Input value "access_token" contains a non-scalar value.',
+        'text/plain',
         $request,
         $name,
       );
+      $this->assertLogMessage(channel: 'client error', position: -1);
     }
   }
 
