@@ -55,6 +55,9 @@
         }
     },
     "config": {
+        "audit": {
+            "block-insecure": false
+        },
         "sort-packages": true,
         "allow-plugins": {
             "composer/installers": true,

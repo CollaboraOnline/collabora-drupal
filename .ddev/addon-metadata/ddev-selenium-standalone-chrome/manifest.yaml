@@ -1,19 +1,9 @@
 name: ddev-selenium-standalone-chrome
 repository: ddev/ddev-selenium-standalone-chrome
-version: 1.2.2
-install_date: "2025-06-30T10:08:54+02:00"
+version: 2.1.2
+install_date: "2026-03-24T18:22:50+01:00"
 project_files:
     - docker-compose.selenium-chrome.yaml
     - config.selenium-standalone-chrome.yaml
 global_files: []
-removal_actions:
-    - |
-      #ddev-nodisplay
-      #ddev-description:Remove docker-compose.selenium-chrome_extras.yaml file
-      if [ -f docker-compose.selenium-chrome_extras.yaml ]; then
-        if grep -q '#ddev-generated' docker-compose.selenium-chrome_extras.yaml; then
-          rm -f docker-compose.selenium-chrome_extras.yaml
-        else
-          echo "Unwilling to remove '$DDEV_APPROOT/.ddev/docker-compose.selenium-chrome_extras.yaml' because it does not have #ddev-generated in it; you can manually delete it if it is safe to delete."
-        fi
-      fi
+removal_actions: []

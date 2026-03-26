@@ -366,13 +366,9 @@ User ID: @user_id',
    *   Response to be consumed by Collabora Online.
    */
   public function wopi(string $action, MediaInterface $media, Request $request): Response {
-    $token = $request->get('access_token');
-    if ($token === NULL) {
+    $token = $request->query->getString('access_token');
+    if ($token === '') {
       throw new AccessDeniedHttpException('Missing access token.');
-    }
-    if (!is_string($token)) {
-      // A malformed request could have a non-string value for access_token.
-      throw new AccessDeniedHttpException(sprintf('Expected a string access token, found %s.', gettype($token)));
     }
     $jwt_payload = $this->verifyTokenForMedia($token, $media);
 
