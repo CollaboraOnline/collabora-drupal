@@ -1,29 +1,26 @@
-
 .ui-dialog.cool-modal-preview {
   max-width: 92%;
 }
 
 .ui-dialog.cool-modal-preview > .ui-dialog-content {
-  padding: 0;
-  overflow-y: hidden;
   position: relative;
+  overflow-y: hidden;
+  padding: 0;
 }
 
-.cool-modal-preview > .ui-dialog-content:before {
-  content: '';
+.cool-modal-preview > .ui-dialog-content::before {
   display: block;
-  padding-bottom: 1000%;
   visibility: hidden;
+  padding-bottom: 1000%;
+  content: "";
 }
 
 .cool-modal-preview > .ui-dialog-content > iframe.cool-iframe {
   position: absolute;
-  left: 0;
   top: 0;
   right: 0;
+  left: 0;
   height: 100%;
-  aspect-ratio: unset;
   border: none;
+  aspect-ratio: unset;
 }
-
-

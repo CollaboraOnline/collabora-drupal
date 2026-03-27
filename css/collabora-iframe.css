@@ -11,8 +11,8 @@
 
 iframe.cool-iframe {
   display: block;
-  width: 100%;
-  aspect-ratio: 3 / 2;
-  border: none;
   box-sizing: border-box;
+  width: 100%;
+  border: none;
+  aspect-ratio: 3 / 2;
 }
