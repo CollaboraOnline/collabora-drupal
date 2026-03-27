@@ -20,12 +20,12 @@ function postReady() {
   postMessage({
     MessageId: 'Hide_Button',
     Values: {
-      id: 'renamedocument'
-    }
+      id: 'renamedocument',
+    },
   });
 }
 
-function receiveMessage(close_button_url, event) {
+function receiveMessage(closeButtonUrl, event) {
   const msg = JSON.parse(event.data);
   if (!msg) {
     return;
@@ -39,14 +39,14 @@ function receiveMessage(close_button_url, event) {
       break;
 
     case 'UI_Close':
-      if (close_button_url) {
+      if (closeButtonUrl) {
         if (msg.Values && msg.Values.EverModified) {
           const reply = { MessageId: 'Action_Close' };
           postMessage(reply);
         }
         if (window.parent.location === window.location) {
           // eslint-disable-next-line no-restricted-globals
-          document.location.href = close_button_url;
+          document.location.href = closeButtonUrl;
         } else {
           /* we send back the UI_Close message to the parent frame. */
           window.parent.postMessage(event.data);
@@ -56,6 +56,7 @@ function receiveMessage(close_button_url, event) {
   }
 }
 
+// eslint-disable-next-line no-unused-vars
 function loadDocument(wopiClient, wopiSrc, options = {}) {
   let wopiUrl = `${wopiClient}WOPISrc=${wopiSrc}`;
   if (options.close_button_url) {
@@ -71,6 +72,7 @@ function loadDocument(wopiClient, wopiSrc, options = {}) {
   const formElem = document.getElementById('collabora-submit-form');
 
   if (!formElem) {
+    // eslint-disable-next-line no-console
     console.log('error: submit form not found');
     return;
   }
