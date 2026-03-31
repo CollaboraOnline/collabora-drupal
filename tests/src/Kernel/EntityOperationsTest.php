@@ -167,7 +167,7 @@ class EntityOperationsTest extends CollaboraKernelTestBase {
   }
 
   /**
-   * Gets operation shortnames for a given entity.
+   * Gets operation short names for a given entity.
    *
    * @param \Drupal\Core\Entity\EntityInterface $entity
    *   The entity for which to build the operations.
@@ -175,7 +175,7 @@ class EntityOperationsTest extends CollaboraKernelTestBase {
    *   A message to pass to assertions.
    *
    * @return list<'preview'|'edit'>
-   *   Shortnames for the operations found.
+   *   Short names for the operations found.
    */
   protected function assertAndGetOperations(EntityInterface $entity, string $message): array {
     // Set a fake destination.

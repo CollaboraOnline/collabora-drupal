@@ -9,6 +9,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
+// eslint-disable-next-line no-unused-vars
 function previewField(coolUrl) {
   const iframe = document.querySelector(
     '#cool-editor__dialog > .cool-frame__preview',
@@ -29,7 +30,7 @@ function postReady() {
   postMessage({ MessageId: 'Host_PostmessageReady' });
 }
 
-(function () {
+(function init() {
   function receiveMessage(event) {
     const msg = JSON.parse(event.data);
     if (!msg) {
